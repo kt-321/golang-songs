@@ -1,8 +1,12 @@
 package main
 
 import (
+	"golang-songs/controller"
 	"golang-songs/model"
+	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -19,10 +23,15 @@ import (
 )
 
 func gormConnect() *gorm.DB {
-	//mysqlConfig := os.Getenv("mysqlConfig")
-	//log.Println("mysqlConfig:",mysqlConfig)
-	//db, err := gorm.Open("mysql", mysqlConfig)
-	db, err := gorm.Open("mysql", "root:@/golang_songs?charset=utf8&parseTime=True&loc=Local")
+	err := godotenv.Load()
+	if err != nil {
+		log.Println(".envファイルの読み込み失敗")
+	}
+	mysqlConfig := os.Getenv("mysqlConfig")
+	log.Println("mysqlConfig:", mysqlConfig)
+	db, err := gorm.Open("mysql", mysqlConfig)
+
+	//db, err := gorm.Open("mysql", "root:@/golang_songs?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -210,8 +219,13 @@ func main() {
 
 	r.HandleFunc("/api/signup", SignUpHandler).Methods("POST")
 	r.HandleFunc("/api/login", LoginHandler).Methods("POST")
+
 	//JWT認証のテスト
 	r.Handle("/api/test", JwtMiddleware.Handler(TestHandler)).Methods("GET")
+
+	//r.GET("/api/tracks", controller.GetTracks)
+	r.Handle("/api/test", JwtMiddleware.Handler(controller.GetTracks)).Methods("GET")
+
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		fmt.Println(err)
 	}
