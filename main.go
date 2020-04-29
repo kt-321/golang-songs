@@ -2,6 +2,7 @@ package main
 
 import (
 	"golang-songs/model"
+	"log"
 	"os"
 
 	"github.com/gorilla/mux"
@@ -15,14 +16,19 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	jwt "github.com/dgrijalva/jwt-go"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 )
 
+//MySQLへの接続
 func gormConnect() *gorm.DB {
-	//mysqlConfig := os.Getenv("mysqlConfig")
-	//log.Println("mysqlConfig:",mysqlConfig)
-	//db, err := gorm.Open("mysql", mysqlConfig)
-	db, err := gorm.Open("mysql", "root:@/golang_songs?charset=utf8&parseTime=True&loc=Local")
+	err := godotenv.Load()
+	if err != nil {
+		log.Println(".envファイルの読み込み失敗")
+	}
+
+	mysqlConfig := os.Getenv("mysqlConfig")
+	db, err := gorm.Open("mysql", mysqlConfig)
 	if err != nil {
 		fmt.Println(err)
 	}
