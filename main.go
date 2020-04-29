@@ -1,14 +1,14 @@
 package main
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 	"golang-songs/model"
 	"os"
 
+	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
+
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
@@ -19,9 +19,12 @@ import (
 )
 
 func gormConnect() *gorm.DB {
+	//mysqlConfig := os.Getenv("mysqlConfig")
+	//log.Println("mysqlConfig:",mysqlConfig)
+	//db, err := gorm.Open("mysql", mysqlConfig)
 	db, err := gorm.Open("mysql", "root:@/golang_songs?charset=utf8&parseTime=True&loc=Local")
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err)
 	}
 	return db
 }
@@ -40,7 +43,6 @@ type Form struct {
 
 func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	user := model.User{}
-	error := model.Error{}
 
 	dec := json.NewDecoder(r.Body)
 	var d Form
@@ -50,12 +52,14 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	password := d.Password
 
 	if email == "" {
+		error := model.Error{}
 		error.Message = "Emailは必須です。"
 		errorInResponse(w, http.StatusBadRequest, error)
 		return
 	}
 
 	if password == "" {
+		error := model.Error{}
 		error.Message = "パスワードは必須です。"
 		errorInResponse(w, http.StatusBadRequest, error)
 		return
@@ -67,7 +71,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 
 	user.Email = email
@@ -76,23 +80,26 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 
 	db := gormConnect()
 	defer db.Close()
-	db.Create(&model.User{Email: email, Password: password})
+	if err := db.Create(&model.User{Email: email, Password: password}).Error; err != nil {
+		error := model.Error{}
+		error.Message = "アカウントの作成に失敗しました"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
 
 	user.Password = ""
 	w.Header().Set("Content-Type", "application/json")
 
 	v, err := json.Marshal(user)
 	if err != nil {
-		println(string(v))
+		fmt.Println(err)
 	}
 	w.Write(v)
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	user := model.User{}
-	user2 := model.User{}
 
-	error := model.Error{}
 	jwt := model.JWT{}
 
 	dec := json.NewDecoder(r.Body)
@@ -102,39 +109,46 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	email := d.Email
 	password := d.Password
 
-
 	if email == "" {
-		error.Message = "Email は,必須です。"
+		error := model.Error{}
+		error.Message = "Email は必須です。"
 		errorInResponse(w, http.StatusBadRequest, error)
 		return
 	}
 
 	if password == "" {
-		error.Message = "パスワードは、必須です。"
+		error := model.Error{}
+		error.Message = "パスワードは必須です。"
 		errorInResponse(w, http.StatusBadRequest, error)
 	}
 
 	user.Email = email
 	user.Password = password
 
-
 	db := gormConnect()
 	defer db.Close()
 
-	row := db.Where("email = ?", user.Email).Find(&user2)
-
-	_, err := json.Marshal(row)
-	if err != nil {
+	userData := model.User{}
+	row := db.Where("email = ?", user.Email).Find(&userData)
+	if err := db.Where("email = ?", user.Email).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
 		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
 	}
 
-	password2 := user2.Password
+	if _, err := json.Marshal(row); err != nil {
+		error := model.Error{}
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(password2), []byte(password))
+	passwordData := userData.Password
 
+	err := bcrypt.CompareHashAndPassword([]byte(passwordData), []byte(password))
 	if err != nil {
+		error := model.Error{}
 		error.Message = "無効なパスワードです。"
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
@@ -142,9 +156,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	//トークン作成
 	token, err := createToken(user)
-
 	if err != nil {
-		log.Fatal(err)
+		error := model.Error{}
+		error.Message = "トークンの作成に失敗しました"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -152,7 +168,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	v2, err := json.Marshal(jwt)
 	if err != nil {
-		println(string(v2))
+		fmt.Println(err)
 	}
 	w.Write(v2)
 }
@@ -169,17 +185,15 @@ func createToken(user model.User) (string, error) {
 	// HS254 -> 証明生成用(https://ja.wikipedia.org/wiki/JSON_Web_Token)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email": user.Email,
-		"iss": "__init__", // JWT の発行者が入る(文字列(__init__)は任意)
+		"iss":   "__init__", // JWT の発行者が入る(文字列(__init__)は任意)
 	})
-
 
 	//Dumpを吐く
 	spew.Dump(token)
 
 	tokenString, err := token.SignedString([]byte(secret))
-
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 
 	return tokenString, nil
@@ -191,11 +205,7 @@ var TestHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(post)
 })
 
-
 func main() {
-	db := gormConnect()
-	defer db.Close()
-
 	r := mux.NewRouter()
 
 	r.HandleFunc("/api/signup", SignUpHandler).Methods("POST")
@@ -203,7 +213,7 @@ func main() {
 	//JWT認証のテスト
 	r.Handle("/api/test", JwtMiddleware.Handler(TestHandler)).Methods("GET")
 	if err := http.ListenAndServe(":8081", r); err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 }
 
