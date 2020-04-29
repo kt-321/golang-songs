@@ -3,6 +3,7 @@ module golang-songs
 go 1.14
 
 require (
+	github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.6.2

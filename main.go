@@ -4,17 +4,16 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	"golang-songs/model"
-	//"golang-songs/router"
+	"os"
 
 	"encoding/json"
 	"fmt"
-	//"golang-songs/utils"
 	"log"
 	"net/http"
 
+	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/davecgh/go-spew/spew"
-	"github.com/dgrijalva/jwt-go"
-	//"github.com/jinzhu/gorm"
+	jwt "github.com/dgrijalva/jwt-go"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -34,12 +33,21 @@ func errorInResponse(w http.ResponseWriter, status int, error model.Error) {
 	return
 }
 
+type Form struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	user := model.User{}
 	error := model.Error{}
 
-	email := r.FormValue("email")
-	password := r.FormValue("password")
+	dec := json.NewDecoder(r.Body)
+	var d Form
+	dec.Decode(&d)
+
+	email := d.Email
+	password := d.Password
 
 	if email == "" {
 		error.Message = "Emailは必須です。"
@@ -53,8 +61,6 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(user)
-
 	// dump も出せる
 	fmt.Println("---------------------")
 	spew.Dump(user)
@@ -63,8 +69,6 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("パスワード: ", password)
-	fmt.Println("ハッシュ化されたパスワード", hash)
 
 	user.Email = email
 	user.Password = string(hash)
@@ -91,12 +95,16 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	error := model.Error{}
 	jwt := model.JWT{}
 
-	email := r.FormValue("email")
-	password := r.FormValue("password")
+	dec := json.NewDecoder(r.Body)
+	var d Form
+	dec.Decode(&d)
+
+	email := d.Email
+	password := d.Password
 
 
 	if email == "" {
-		error.Message = "Email は必須です。"
+		error.Message = "Email は,必須です。"
 		errorInResponse(w, http.StatusBadRequest, error)
 		return
 	}
@@ -153,7 +161,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 func createToken(user model.User) (string, error) {
 	var err error
 
-	secret := "secret"
+	secret := os.Getenv("SIGNINGKEY")
 
 	// Token を作成
 	// jwt -> JSON Web Token - JSON をセキュアにやり取りするための仕様
@@ -177,15 +185,33 @@ func createToken(user model.User) (string, error) {
 	return tokenString, nil
 }
 
+//JWT認証のテスト 成功
+var TestHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	post := "test"
+	json.NewEncoder(w).Encode(post)
+})
+
+
 func main() {
 	db := gormConnect()
 	defer db.Close()
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/signup", SignUpHandler).Methods("POST")
-	r.HandleFunc("/login", LoginHandler).Methods("GET")
+	r.HandleFunc("/api/signup", SignUpHandler).Methods("POST")
+	r.HandleFunc("/api/login", LoginHandler).Methods("POST")
+	//JWT認証のテスト
+	r.Handle("/api/test", JwtMiddleware.Handler(TestHandler)).Methods("GET")
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		log.Fatal(err)
 	}
 }
+
+// JwtMiddleware check token
+var JwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
+	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+		secret := os.Getenv("SIGNINGKEY")
+		return []byte(secret), nil
+	},
+	SigningMethod: jwt.SigningMethodHS256,
+})
