@@ -150,7 +150,7 @@ func GetTracks(token string, title string) (*model.Response, error) {
 	//log.Println("b:", b)
 
 	var tracks model.Tracks
-	log.Print("model.Tracks:", tracks)
+	//log.Print("model.Tracks:", tracks)
 
 	json.Unmarshal(b, &tracks)
 

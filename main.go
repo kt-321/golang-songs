@@ -224,6 +224,10 @@ func main() {
 	r.Handle("/api/test", JwtMiddleware.Handler(TestHandler)).Methods("GET")
 
 	//r.GET("/api/tracks", controller.GetTracks)
+	//r.Handle("/api/oauth", JwtMiddleware.Handler(controller.OAuth)).Methods("GET")
+	//r.Handle("/api/oauth", JwtMiddleware.Handler(controller.OAuth)).Methods("POST")
+	r.HandleFunc("/api/oauth", controller.OAuth).Methods("POST")
+	r.HandleFunc("/api/tracks", controller.GetTracks).Methods("POST")
 	r.Handle("/api/test", JwtMiddleware.Handler(controller.GetTracks)).Methods("GET")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
