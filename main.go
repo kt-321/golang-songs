@@ -1,16 +1,15 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"golang-songs/model"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
-
-	"encoding/json"
-	"fmt"
-	"net/http"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/davecgh/go-spew/spew"
@@ -31,6 +30,7 @@ func gormConnect() *gorm.DB {
 	db, err := gorm.Open("mysql", mysqlConfig)
 	if err != nil {
 		fmt.Println(err)
+		//return db, err
 	}
 	return db
 }
@@ -48,7 +48,7 @@ type Form struct {
 }
 
 func SignUpHandler(w http.ResponseWriter, r *http.Request) {
-	user := model.User{}
+	var user model.User
 
 	dec := json.NewDecoder(r.Body)
 	var d Form
@@ -58,14 +58,14 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	password := d.Password
 
 	if email == "" {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "Emailは必須です。"
 		errorInResponse(w, http.StatusBadRequest, error)
 		return
 	}
 
 	if password == "" {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "パスワードは必須です。"
 		errorInResponse(w, http.StatusBadRequest, error)
 		return
@@ -87,7 +87,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	db := gormConnect()
 	defer db.Close()
 	if err := db.Create(&model.User{Email: email, Password: password}).Error; err != nil {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "アカウントの作成に失敗しました"
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
@@ -99,14 +99,21 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	v, err := json.Marshal(user)
 	if err != nil {
 		fmt.Println(err)
+		//return _, err
 	}
+	//if err := db.Create(&model.User{Email: email, Password: password}).Error; err != nil {
+	//	error := model.Error{}
+	//	error.Message = "アカウントの作成に失敗しました"
+	//	errorInResponse(w, http.StatusUnauthorized, error)
+	//	return
+	//}
 	w.Write(v)
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	user := model.User{}
+	var user model.User
 
-	jwt := model.JWT{}
+	var jwt model.JWT
 
 	dec := json.NewDecoder(r.Body)
 	var d Form
@@ -116,14 +123,14 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	password := d.Password
 
 	if email == "" {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "Email は必須です。"
 		errorInResponse(w, http.StatusBadRequest, error)
 		return
 	}
 
 	if password == "" {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "パスワードは必須です。"
 		errorInResponse(w, http.StatusBadRequest, error)
 	}
@@ -134,17 +141,17 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	db := gormConnect()
 	defer db.Close()
 
-	userData := model.User{}
+	var userData model.User
 	row := db.Where("email = ?", user.Email).Find(&userData)
 	if err := db.Where("email = ?", user.Email).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
 	}
 
 	if _, err := json.Marshal(row); err != nil {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
@@ -154,7 +161,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := bcrypt.CompareHashAndPassword([]byte(passwordData), []byte(password))
 	if err != nil {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "無効なパスワードです。"
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
@@ -163,7 +170,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	//トークン作成
 	token, err := createToken(user)
 	if err != nil {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "トークンの作成に失敗しました"
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
