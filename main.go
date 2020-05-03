@@ -20,7 +20,7 @@ import (
 )
 
 //MySQLへの接続
-func gormConnect() *gorm.DB {
+func gormConnect() (*gorm.DB, error) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println(".envファイルの読み込み失敗")
@@ -29,10 +29,9 @@ func gormConnect() *gorm.DB {
 	mysqlConfig := os.Getenv("mysqlConfig")
 	db, err := gorm.Open("mysql", mysqlConfig)
 	if err != nil {
-		fmt.Println(err)
-		//return db, err
+		return nil, err
 	}
-	return db
+	return db, nil
 }
 
 // レスポンスにエラーを突っ込んで、返却するメソッド
@@ -77,14 +76,17 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
-		fmt.Println(err)
+		var error model.Error
+		error.Message = "パスワードのハッシュ化に失敗しました"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
 	}
 
 	user.Email = email
 	user.Password = string(hash)
 	password = string(hash)
 
-	db := gormConnect()
+	db, _ := gormConnect()
 	defer db.Close()
 	if err := db.Create(&model.User{Email: email, Password: password}).Error; err != nil {
 		var error model.Error
@@ -98,15 +100,11 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 
 	v, err := json.Marshal(user)
 	if err != nil {
-		fmt.Println(err)
-		//return _, err
+		var error model.Error
+		error.Message = "JSONへの変換に失敗しました"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
 	}
-	//if err := db.Create(&model.User{Email: email, Password: password}).Error; err != nil {
-	//	error := model.Error{}
-	//	error.Message = "アカウントの作成に失敗しました"
-	//	errorInResponse(w, http.StatusUnauthorized, error)
-	//	return
-	//}
 	w.Write(v)
 }
 
@@ -138,7 +136,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	user.Email = email
 	user.Password = password
 
-	db := gormConnect()
+	db, _ := gormConnect()
 	defer db.Close()
 
 	var userData model.User
@@ -181,7 +179,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	v2, err := json.Marshal(jwt)
 	if err != nil {
-		fmt.Println(err)
+		var error model.Error
+		error.Message = "JSONへの変換に失敗しました"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
 	}
 	w.Write(v2)
 }
@@ -206,7 +207,7 @@ func createToken(user model.User) (string, error) {
 
 	tokenString, err := token.SignedString([]byte(secret))
 	if err != nil {
-		fmt.Println(err)
+		return tokenString, err
 	}
 
 	return tokenString, nil
@@ -226,7 +227,7 @@ func main() {
 	//JWT認証のテスト
 	r.Handle("/api/test", JwtMiddleware.Handler(TestHandler)).Methods("GET")
 	if err := http.ListenAndServe(":8081", r); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 }
 
