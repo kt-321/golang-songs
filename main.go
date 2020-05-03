@@ -172,6 +172,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//log.Println(userData)
+
 	w.WriteHeader(http.StatusOK)
 	jwt.Token = token
 
@@ -180,6 +182,77 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 	}
 	w.Write(v2)
+}
+
+func UserHandler(w http.ResponseWriter, r *http.Request) {
+	//user := model.User{}
+
+	log.Println("r.Body", r.Body)
+	log.Println("r.Header", r.Header)
+
+	//dec := json.NewDecoder(r.Body)
+	//var d Form
+	//dec.Decode(&d)
+
+	//jwt := model.JWT{}
+
+	dec := json.NewDecoder(r.Body)
+	var d Form
+	dec.Decode(&d)
+
+	db := gormConnect()
+	defer db.Close()
+
+	//userData := model.User{}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+	log.Println(id)
+
+	//row := db.Where("id = ?", user.ID).Find(&userData)
+	//if err := db.Where("id = ?", user.ID).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+	//	error := model.Error{}
+	//	error.Message = "該当するユーザーが見つかりません。"
+	//	errorInResponse(w, http.StatusUnauthorized, error)
+	//	return
+	//}
+
+	//log.Println(row)
+
+	//if _, err := json.Marshal(row); err != nil {
+	//	error := model.Error{}
+	//	error.Message = "該当するアカウントが見つかりません。"
+	//	errorInResponse(w, http.StatusUnauthorized, error)
+	//	return
+	//}
+
+	//passwordData := userData.Password
+
+	//err := bcrypt.CompareHashAndPassword([]byte(passwordData), []byte(password))
+	//if err != nil {
+	//	error := model.Error{}
+	//	error.Message = "無効なパスワードです。"
+	//	errorInResponse(w, http.StatusUnauthorized, error)
+	//	return
+	//}
+
+	//トークン作成
+	//token, err := createToken(user)
+	//if err != nil {
+	//	error := model.Error{}
+	//	error.Message = "トークンの作成に失敗しました"
+	//	errorInResponse(w, http.StatusUnauthorized, error)
+	//	return
+	//}
+
+	//w.WriteHeader(http.StatusOK)
+	//jwt.Token = token
+
+	//v2, err := json.Marshal(jwt)
+	//if err != nil {
+	//	fmt.Println(err)
+	//}
+	//w.Write(v2)
 }
 
 //JWT
@@ -214,21 +287,46 @@ var TestHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(post)
 })
 
-//func LoginHandler(w http.ResponseWriter, r *http.Request) {
-func CookieTest(w http.ResponseWriter, r *http.Request) {
-	//別サイト参考に作った
-	cookie := &http.Cookie{
-		Name:  "test",
-		Value: "cookietest",
+//ユーザー情報取得
+var GetUserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	log.Println("id:", id)
+
+	db := gormConnect()
+	defer db.Close()
+
+	user := model.User{}
+	//userData := model.User{}
+
+	//row := db.Where("id = ?", id).Find(&userData)
+	row := db.Where("id = ?", id).Find(&user)
+	if err := db.Where("id = ?", id).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当するユーザーが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
 	}
-	http.SetCookie(w, cookie)
-}
+	if _, err := json.Marshal(row); err != nil {
+		error := model.Error{}
+		error.Message = "JSONへの変換失敗"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+	v, err := json.Marshal(user)
+	if err != nil {
+		println(string(v))
+	}
+	w.Write(v)
+})
 
 func main() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/api/signup", SignUpHandler).Methods("POST")
 	r.HandleFunc("/api/login", LoginHandler).Methods("POST")
+	r.HandleFunc("/api/user", UserHandler).Methods("GET")
+	r.HandleFunc("/api/user/{id}", GetUserHandler).Methods("GET")
 
 	//JWT認証のテスト
 	r.Handle("/api/test", JwtMiddleware.Handler(TestHandler)).Methods("GET")
@@ -241,8 +339,6 @@ func main() {
 	r.HandleFunc("/api/tracks", controller.GetTracks).Methods("POST")
 	r.HandleFunc("/api/getRedirectUrl", controller.GetRedirectURL).Methods("GET")
 	//r.Handle("/api/test", JwtMiddleware.Handler(controller.GetTracks)).Methods("GET")
-	//r.Handle("/api/cookietest", JwtMiddleware.Handler(CookieTest).Methods("GET")
-	r.HandleFunc("/api/cookietest", CookieTest).Methods("POST")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		fmt.Println(err)
