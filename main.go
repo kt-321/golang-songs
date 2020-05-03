@@ -214,6 +214,16 @@ var TestHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(post)
 })
 
+//func LoginHandler(w http.ResponseWriter, r *http.Request) {
+func CookieTest(w http.ResponseWriter, r *http.Request) {
+	//別サイト参考に作った
+	cookie := &http.Cookie{
+		Name:  "test",
+		Value: "cookietest",
+	}
+	http.SetCookie(w, cookie)
+}
+
 func main() {
 	r := mux.NewRouter()
 
@@ -227,8 +237,12 @@ func main() {
 	//r.Handle("/api/oauth", JwtMiddleware.Handler(controller.OAuth)).Methods("GET")
 	//r.Handle("/api/oauth", JwtMiddleware.Handler(controller.OAuth)).Methods("POST")
 	r.HandleFunc("/api/oauth", controller.OAuth).Methods("POST")
+	r.HandleFunc("/api/getToken", controller.GetToken).Methods("POST")
 	r.HandleFunc("/api/tracks", controller.GetTracks).Methods("POST")
-	r.Handle("/api/test", JwtMiddleware.Handler(controller.GetTracks)).Methods("GET")
+	r.HandleFunc("/api/getRedirectUrl", controller.GetRedirectURL).Methods("GET")
+	//r.Handle("/api/test", JwtMiddleware.Handler(controller.GetTracks)).Methods("GET")
+	//r.Handle("/api/cookietest", JwtMiddleware.Handler(CookieTest).Methods("GET")
+	r.HandleFunc("/api/cookietest", CookieTest).Methods("POST")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		fmt.Println(err)
