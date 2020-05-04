@@ -5,14 +5,14 @@ import "github.com/jinzhu/gorm"
 type User struct {
 	gorm.Model
 	Name             string `json:"name"`
-	Email            string `json:"email,omitempty"`
+	Email            string `json:"email"`
 	Age              int    `json:"age,omitempty"`
 	Gender           int    `json:"gender,omitempty"`
 	ImageUrl         string `json:"imageUrl,omitempty"`
 	FavoriteMusicAge int    `json:"favoriteMusicAge,omitempty"`
 	FavoriteArtist   string `json:"favoriteArtist,omitempty"`
 	Comment          string `json:"comment,omitempty"`
-	Password         string `json:"password"`
+	Password         string `json:"-"`
 }
 
 //type UserInResponse struct {
