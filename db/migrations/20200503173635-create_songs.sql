@@ -3,7 +3,7 @@
 CREATE TABLE IF NOT EXISTS songs (
 --     id BIGINT PRIMARY KEY AUTO_INCREMENT NOT NULL UNSIGNED,
 --     id BIGINT PRIMARY KEY AUTO_INCREMENT NOT NULL,
-    id BIGINT AUTO_INCREMENT NOT NULL,
+    id BIGINT AUTO_INCREMENT UNSIGNED NOT NULL,
     title varchar(255) NOT NULL,
     artist varchar(255) NOT NULL,
     music_age int NOT NULL,
@@ -12,16 +12,7 @@ CREATE TABLE IF NOT EXISTS songs (
     album varchar(255),
     description varchar(255),
     spotify_id BIGINT,
-    user_id BIGINT NOT NULL,
---     user_id BIGINT FOREIGN KEY ('id') REFERENCES 'users'
-
-
---     外部キー設定したい
---     user_id int,
---     user_id BIGINT FOREIGN KEY ('id') REFERENCES 'users',
---     CONSTRAINT 'songs_user_id_users_id_foreign' FOREIGN KEY ('user_id') REFERENCES 'users' ('id')
---     email varchar(255),
---     date timestamp NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
     created_at timestamp NOT NULL,
     updated_at timestamp NOT NULL,
     deleted_at timestamp,

@@ -72,7 +72,8 @@ var OAuth = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//RedirectURL: "https://musi-app.now.sh/oauth",
 		//RedirectURL: "http://localhost:8081/api/oauth",
 		//RedirectURL: "http://localhost:3000/dashboard",
-		RedirectURL: "http://localhost:3000/dashboard/songs",
+		//RedirectURL: "http://localhost:3000/dashboard/songs",
+		RedirectURL: "http://localhost:3000/spotify/songs",
 		//今回はリダイレクトしない
 		//RedirectURL: "urn:ietf:wg:oauth:2.0:oob",
 		//Scopes: []string{"playlist-modify", "user-read-private", "user-library-read"},
@@ -174,7 +175,8 @@ var GetToken = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			TokenURL: "https://accounts.spotify.com/api/token",
 		},
 
-		RedirectURL: "http://localhost:3000/dashboard/songs",
+		//RedirectURL: "http://localhost:3000/dashboard/songs",
+		RedirectURL: "http://localhost:3000/spotify/songs",
 		Scopes:      []string{},
 	}
 	token, err := config.Exchange(oauth2.NoContext, code)
@@ -216,7 +218,8 @@ var GetRedirectURL = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reques
 		//RedirectURL: "https://musi-app.now.sh/oauth",
 		//RedirectURL: "http://localhost:8081/api/oauth",
 		//RedirectURL: "http://localhost:3000/dashboard",
-		RedirectURL: "http://localhost:3000/dashboard/songs",
+		//RedirectURL: "http://localhost:3000/dashboard/songs",
+		RedirectURL: "http://localhost:3000/spotify/songs",
 		//今回はリダイレクトしない
 		//RedirectURL: "urn:ietf:wg:oauth:2.0:oob",
 		//Scopes: []string{"playlist-modify", "user-read-private", "user-library-read"},
