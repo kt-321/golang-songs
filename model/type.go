@@ -8,7 +8,7 @@ type User struct {
 	Email            string `json:"email,omitempty"`
 	Age              int    `json:"age,omitempty"`
 	Gender           int    `json:"gender,omitempty"`
-	ImageUrl         string `json:"age,omitempty"`
+	ImageUrl         string `json:"imageUrl,omitempty"`
 	FavoriteMusicAge int    `json:"favoriteMusicAge,omitempty"`
 	FavoriteArtist   string `json:"favoriteArtist,omitempty"`
 	Comment          string `json:"comment,omitempty"`
