@@ -77,8 +77,8 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
 		var error model.Error
-		error.Message = "パスワードのハッシュ化に失敗しました"
-		errorInResponse(w, http.StatusUnauthorized, error)
+		error.Message = "パスワードの値が不正です。"
+		errorInResponse(w, http.StatusBadRequest, error)
 		return
 	}
 
@@ -102,7 +102,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var error model.Error
 		error.Message = "JSONへの変換に失敗しました"
-		errorInResponse(w, http.StatusUnauthorized, error)
+		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
 	w.Write(v)
@@ -181,7 +181,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var error model.Error
 		error.Message = "JSONへの変換に失敗しました"
-		errorInResponse(w, http.StatusUnauthorized, error)
+		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
 	w.Write(v2)
