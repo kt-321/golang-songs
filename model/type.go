@@ -6,12 +6,12 @@ type User struct {
 	gorm.Model
 	Name             string `json:"name"`
 	Email            string `json:"email"`
-	Age              int    `json:"age,omitempty"`
-	Gender           int    `json:"gender,omitempty"`
-	ImageUrl         string `json:"imageUrl,omitempty"`
-	FavoriteMusicAge int    `json:"favoriteMusicAge,omitempty"`
-	FavoriteArtist   string `json:"favoriteArtist,omitempty"`
-	Comment          string `json:"comment,omitempty"`
+	Age              int    `json:"age"`
+	Gender           int    `json:"gender"`
+	ImageUrl         string `json:"imageUrl"`
+	FavoriteMusicAge int    `json:"favoriteMusicAge"`
+	FavoriteArtist   string `json:"favoriteArtist"`
+	Comment          string `json:"comment"`
 	Password         string `json:"-"`
 }
 
