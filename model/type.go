@@ -1,9 +1,22 @@
 package model
 
-import "github.com/jinzhu/gorm"
+import (
+	"time"
+)
+
+//type Model struct {
+//	ID        uint       `json:"id"`
+//	CreatedAt time.Time  `json:"createdAt"`
+//	UpdatedAt time.Time  `json:"updatedAt"`
+//	DeletedAt *time.Time `json:"deletedAt"`
+//}
 
 type User struct {
-	gorm.Model
+	ID        uint       `json:"id"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+	DeletedAt *time.Time `json:"deletedAt"`
+	//Model            Model
 	Name             string `json:"name"`
 	Email            string `json:"email"`
 	Age              int    `json:"age"`

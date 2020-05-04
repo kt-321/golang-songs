@@ -340,10 +340,10 @@ func Parse(signedString string) (*Auth, error) {
 }
 
 //JWT認証のテスト 成功
-var TestHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	post := "test"
-	json.NewEncoder(w).Encode(post)
-})
+//var TestHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//	post := "test"
+//	json.NewEncoder(w).Encode(post)
+//})
 
 //ユーザー情報取得
 var GetUserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -405,20 +405,26 @@ func AllUsersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
-	//クエリパラメータの取得
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	//フォームの値を取得
-	name := r.FormValue("Name")
-	log.Println(name)
+	dec := json.NewDecoder(r.Body)
+	var d model.User
+	dec.Decode(&d)
 
-	//UPDATE成功
+	email := d.Email
+	name := d.Name
+	age := d.Age
+	gender := d.Gender
+	favoriteMusicAge := d.FavoriteMusicAge
+	favoriteArtist := d.FavoriteArtist
+	comment := d.Comment
+
 	db := gormConnect()
 	defer db.Close()
 	var user model.User
 
-	db.Model(&user).Where("id = ?", id).Update("name", name)
+	db.Model(&user).Where("id = ?", id).Update(model.User{Email: email, Name: name, Age: age, Gender: gender, FavoriteMusicAge: favoriteMusicAge, FavoriteArtist: favoriteArtist, Comment: comment})
 }
 
 func main() {
@@ -429,9 +435,10 @@ func main() {
 	r.HandleFunc("/api/user", UserHandler).Methods("GET")
 	r.HandleFunc("/api/user/{id}", GetUserHandler).Methods("GET")
 	r.HandleFunc("/api/users", AllUsersHandler).Methods("GET")
+	r.HandleFunc("/api/user/{id}/update", UpdateUserHandler).Methods("PUT")
 
 	//JWT認証のテスト
-	r.Handle("/api/test", JwtMiddleware.Handler(TestHandler)).Methods("GET")
+	//r.Handle("/api/test", JwtMiddleware.Handler(TestHandler)).Methods("GET")
 
 	//r.GET("/api/tracks", controller.GetTracks)
 	//r.Handle("/api/oauth", JwtMiddleware.Handler(controller.OAuth)).Methods("GET")
