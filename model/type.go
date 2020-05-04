@@ -12,7 +12,7 @@ type User struct {
 	FavoriteMusicAge int    `json:"favoriteMusicAge,omitempty"`
 	FavoriteArtist   string `json:"favoriteArtist,omitempty"`
 	Comment          string `json:"comment,omitempty"`
-	Password         string `json:"password"`
+	Password         string `json:"-"`
 }
 
 type JWT struct {
