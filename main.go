@@ -236,6 +236,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 
 	//user.Password = ""
 
+	log.Println("user:", user.Age)
 	v, err := json.Marshal(user)
 	if err != nil {
 		fmt.Println(err)
@@ -385,12 +386,40 @@ var GetUserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reques
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
 	}
+	log.Println("user:", user.Age)
 	v, err := json.Marshal(user)
 	if err != nil {
 		println(string(v))
 	}
 	w.Write(v)
 })
+
+func AllUsersHandler(w http.ResponseWriter, r *http.Request) {
+	db := gormConnect()
+	defer db.Close()
+	allUsers := []model.User{}
+
+	db.Find(&allUsers)
+	v, _ := json.Marshal(allUsers)
+	w.Write(v)
+}
+
+func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+	//クエリパラメータの取得
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	//フォームの値を取得
+	name := r.FormValue("Name")
+	log.Println(name)
+
+	//UPDATE成功
+	db := gormConnect()
+	defer db.Close()
+	var user model.User
+
+	db.Model(&user).Where("id = ?", id).Update("name", name)
+}
 
 func main() {
 	r := mux.NewRouter()
@@ -399,6 +428,7 @@ func main() {
 	r.HandleFunc("/api/login", LoginHandler).Methods("POST")
 	r.HandleFunc("/api/user", UserHandler).Methods("GET")
 	r.HandleFunc("/api/user/{id}", GetUserHandler).Methods("GET")
+	r.HandleFunc("/api/users", AllUsersHandler).Methods("GET")
 
 	//JWT認証のテスト
 	r.Handle("/api/test", JwtMiddleware.Handler(TestHandler)).Methods("GET")
