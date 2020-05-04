@@ -1,0 +1,4 @@
+development:
+  dialect: mysql
+  datasource: root:@/golang_songs?charset=utf8&parseTime=True&loc=Local
+  dir: db/migrations
