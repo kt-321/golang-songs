@@ -5,6 +5,7 @@ import (
 	"golang-songs/model"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 
@@ -48,6 +49,12 @@ func errorInResponse(w http.ResponseWriter, status int, error model.Error) {
 type Form struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+// Auth は署名前の認証トークン情報を表す。
+type Auth struct {
+	Email string
+	Iss   int64
 }
 
 func SignUpHandler(w http.ResponseWriter, r *http.Request) {
@@ -137,7 +144,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	db := gormConnect()
 	defer db.Close()
 
-	userData := model.User{}
+	var userData model.User
 	row := db.Where("email = ?", user.Email).Find(&userData)
 	if err := db.Where("email = ?", user.Email).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
 		error := model.Error{}
@@ -185,20 +192,16 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func UserHandler(w http.ResponseWriter, r *http.Request) {
-	//user := model.User{}
+	header_hoge := r.Header.Get("Authorization")
+	//log.Println("header_hoge:", header_hoge)
+	bearerToken := strings.Split(header_hoge, " ")
+	authToken := bearerToken[1]
+	//fmt.Println("bearerToken: ", bearerToken)
+	fmt.Println("authToken: ", authToken)
 
-	log.Println("r.Body", r.Body)
-	log.Println("r.Header", r.Header)
-
-	//dec := json.NewDecoder(r.Body)
-	//var d Form
-	//dec.Decode(&d)
-
-	//jwt := model.JWT{}
-
-	dec := json.NewDecoder(r.Body)
-	var d Form
-	dec.Decode(&d)
+	parsedToken, err := Parse(authToken)
+	userEmail := parsedToken.Email
+	log.Println("userEmail:", userEmail)
 
 	db := gormConnect()
 	defer db.Close()
@@ -209,15 +212,19 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	id := vars["id"]
 	log.Println(id)
 
-	//row := db.Where("id = ?", user.ID).Find(&userData)
-	//if err := db.Where("id = ?", user.ID).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
-	//	error := model.Error{}
-	//	error.Message = "該当するユーザーが見つかりません。"
-	//	errorInResponse(w, http.StatusUnauthorized, error)
-	//	return
-	//}
+	var user model.User
+	//var user model.UserInResponse
 
-	//log.Println(row)
+	//row := db.Where("email = ?", user.Email).Find(&userData)
+	row := db.Where("email = ?", userEmail).Find(&user)
+	if err := db.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当するユーザーが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	log.Println(row)
 
 	//if _, err := json.Marshal(row); err != nil {
 	//	error := model.Error{}
@@ -225,34 +232,16 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	//	errorInResponse(w, http.StatusUnauthorized, error)
 	//	return
 	//}
+	//
 
-	//passwordData := userData.Password
+	//user.Password = ""
 
-	//err := bcrypt.CompareHashAndPassword([]byte(passwordData), []byte(password))
-	//if err != nil {
-	//	error := model.Error{}
-	//	error.Message = "無効なパスワードです。"
-	//	errorInResponse(w, http.StatusUnauthorized, error)
-	//	return
-	//}
-
-	//トークン作成
-	//token, err := createToken(user)
-	//if err != nil {
-	//	error := model.Error{}
-	//	error.Message = "トークンの作成に失敗しました"
-	//	errorInResponse(w, http.StatusUnauthorized, error)
-	//	return
-	//}
-
-	//w.WriteHeader(http.StatusOK)
-	//jwt.Token = token
-
-	//v2, err := json.Marshal(jwt)
-	//if err != nil {
-	//	fmt.Println(err)
-	//}
-	//w.Write(v2)
+	v, err := json.Marshal(user)
+	if err != nil {
+		fmt.Println(err)
+	}
+	log.Println(v)
+	w.Write(v)
 }
 
 //JWT
@@ -281,6 +270,74 @@ func createToken(user model.User) (string, error) {
 	return tokenString, nil
 }
 
+// Parse は jwt トークンから元になった認証情報を取り出す。
+func Parse(signedString string) (*Auth, error) {
+	//追加
+	secret := os.Getenv("SIGNINGKEY")
+	//var err model.Error
+	var err error
+
+	token, err := jwt.Parse(signedString, func(token *jwt.Token) (interface{}, error) {
+		//if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		//return "", err.Errorf("unexpected signing method: %v", token.Header["alg"])
+		//}
+		return []byte(secret), nil
+	})
+
+	//if err != nil {
+	//	if ve, ok := err.(*jwt.ValidationError); ok {
+	//		if ve.Errors&jwt.ValidationErrorExpired != 0 {
+	//			return nil, err.Wrapf(err, "%s is expired", signedString)
+	//		} else {
+	//			return nil, err.Wrapf(err, "%s is invalid", signedString)
+	//		}
+	//	} else {
+	//		return nil, err.Wrapf(err, "%s is invalid", signedString)
+	//	}
+	//}
+
+	if token == nil {
+		//err.Message = "not found token in signedString"
+		return nil, err
+	}
+
+	//claims, ok := token.Claims.(jwt.MapClaims)
+	claims, _ := token.Claims.(jwt.MapClaims)
+	//if !ok {
+	//	return nil, err.Errorf("not found claims in %s", signedString)
+	//}
+
+	//userID, ok := claims[userIDKey].(string)
+	//if !ok {
+	//	return nil, err.Errorf("not found %s in %s", userIDKey, signedString)
+	//}
+	//email, ok := claims[email].(string)
+	email, _ := claims["email"].(string)
+	//if !ok {
+	//	error := model.Error{}
+	//	error.Message = "JSONへの変換失敗"
+	//errorInResponse(w, http.StatusUnauthorized, error)
+	//return nil, errorInResponse(w, http.StatusUnauthorized, error)
+	//return nil, error.Message
+	//return nil, err.Errorf("not found %s in %s", email, signedString)
+	//}
+	//iss, ok := claims[iss].(float64)
+	iss, _ := claims["iss"].(float64)
+	//if !ok {
+	//	return nil, err.Errorf("not found %s in %s", iss, signedString)
+	//}
+
+	//return &Auth{
+	//	Email: email,
+	//	Iss:   int64(iss),
+	//}, nil
+
+	return &Auth{
+		Email: email,
+		Iss:   int64(iss),
+	}, nil
+}
+
 //JWT認証のテスト 成功
 var TestHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	post := "test"
@@ -292,6 +349,21 @@ var GetUserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reques
 	vars := mux.Vars(r)
 	id := vars["id"]
 	log.Println("id:", id)
+
+	header_hoge := r.Header.Get("Authorization")
+	//log.Println("header_hoge:", header_hoge)
+	bearerToken := strings.Split(header_hoge, " ")
+	authToken := bearerToken[1]
+	//fmt.Println("bearerToken: ", bearerToken)
+	fmt.Println("authToken: ", authToken)
+
+	parsedToken, err := Parse(authToken)
+	userEmail := parsedToken.Email
+	log.Println("userEmail:", userEmail)
+	//parsedToken2 := *parsedToken
+	//userEmail := parsedToken2
+	//log.Println("parsedToken", parsedToken)
+	//log.Println("parsedToken2", parsedToken2)
 
 	db := gormConnect()
 	defer db.Close()
