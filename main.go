@@ -234,7 +234,7 @@ var AllUsersHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reque
 	if err := db.Find(&allUsers).Error; gorm.IsRecordNotFoundError(err) {
 		var error model.Error
 		error.Message = "該当するアカウントが見つかりません。"
-		errorInResponse(w, http.StatusUnauthorized, error)
+		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
 
@@ -246,6 +246,35 @@ var AllUsersHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	w.Write(v)
+})
+
+var UpdateUserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	dec := json.NewDecoder(r.Body)
+	var d model.User
+	dec.Decode(&d)
+
+	email := d.Email
+	name := d.Name
+	age := d.Age
+	gender := d.Gender
+	favoriteMusicAge := d.FavoriteMusicAge
+	favoriteArtist := d.FavoriteArtist
+	comment := d.Comment
+
+	db, _ := gormConnect()
+	defer db.Close()
+
+	var user model.User
+
+	if err := db.Model(&user).Where("id = ?", id).Update(model.User{Email: email, Name: name, Age: age, Gender: gender, FavoriteMusicAge: favoriteMusicAge, FavoriteArtist: favoriteArtist, Comment: comment}).Error; err != nil {
+		var error model.Error
+		error.Message = "ユーザー情報の更新に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 })
 
 //JWT
@@ -281,6 +310,7 @@ func main() {
 	r.HandleFunc("/api/login", LoginHandler).Methods("POST")
 	r.Handle("/api/user", JwtMiddleware.Handler(UserHandler)).Methods("GET")
 	r.Handle("/api/users", JwtMiddleware.Handler(AllUsersHandler)).Methods("GET")
+	r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(UpdateUserHandler)).Methods("PUT")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		log.Println(err)
