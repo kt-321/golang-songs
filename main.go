@@ -190,7 +190,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(v2)
 }
 
-func UserHandler(w http.ResponseWriter, r *http.Request) {
+//リクエストユーザーの情報を返す
+var UserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	headerAuthorization := r.Header.Get("Authorization")
 	bearerToken := strings.Split(headerAuthorization, " ")
 	authToken := bearerToken[1]
@@ -203,18 +204,10 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 
 	var user model.User
 
-	row := db.Where("email = ?", userEmail).Find(&user)
 	if err := db.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
 		error := model.Error{}
 		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusUnauthorized, error)
-		return
-	}
-
-	if _, err := json.Marshal(row); err != nil {
-		var error model.Error
-		error.Message = "JSONへの変換に失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
 
@@ -227,7 +220,33 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(v)
-}
+})
+
+//全てのユーザーを返す
+var AllUsersHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	db, _ := gormConnect()
+	defer db.Close()
+
+	allUsers := []model.User{}
+
+	db.Find(&allUsers)
+
+	if err := db.Find(&allUsers).Error; gorm.IsRecordNotFoundError(err) {
+		var error model.Error
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	v, err := json.Marshal(allUsers)
+	if err != nil {
+		var error model.Error
+		error.Message = "ユーザー一覧の取得に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+	w.Write(v)
+})
 
 //JWT
 func createToken(user model.User) (string, error) {
@@ -260,7 +279,8 @@ func main() {
 
 	r.HandleFunc("/api/signup", SignUpHandler).Methods("POST")
 	r.HandleFunc("/api/login", LoginHandler).Methods("POST")
-	r.HandleFunc("/api/user", UserHandler).Methods("GET")
+	r.Handle("/api/user", JwtMiddleware.Handler(UserHandler)).Methods("GET")
+	r.Handle("/api/users", JwtMiddleware.Handler(AllUsersHandler)).Methods("GET")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		log.Println(err)
