@@ -195,39 +195,36 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	bearerToken := strings.Split(headerAuthorization, " ")
 	authToken := bearerToken[1]
 
-	log.Println("authToken: ", authToken)
-
 	parsedToken, err := Parse(authToken)
 	userEmail := parsedToken.Email
 
-	log.Println("userEmail:", userEmail)
-
 	db, _ := gormConnect()
 	defer db.Close()
-
-	vars := mux.Vars(r)
-	id := vars["id"]
-
-	log.Println(id)
 
 	var user model.User
 
 	row := db.Where("email = ?", userEmail).Find(&user)
 	if err := db.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
 		error := model.Error{}
-		error.Message = "該当するユーザーが見つかりません。"
+		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
 	}
 
-	log.Println(row)
+	if _, err := json.Marshal(row); err != nil {
+		var error model.Error
+		error.Message = "JSONへの変換に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 
 	v, err := json.Marshal(user)
 	if err != nil {
-		fmt.Println(err)
+		var error model.Error
+		error.Message = "JSONへの変換に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
 	}
-
-	log.Println(v)
 
 	w.Write(v)
 }
