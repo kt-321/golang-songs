@@ -7,6 +7,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -187,6 +190,48 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(v2)
 }
 
+func UserHandler(w http.ResponseWriter, r *http.Request) {
+	headerAuthorization := r.Header.Get("Authorization")
+	bearerToken := strings.Split(headerAuthorization, " ")
+	authToken := bearerToken[1]
+
+	log.Println("authToken: ", authToken)
+
+	parsedToken, err := Parse(authToken)
+	userEmail := parsedToken.Email
+
+	log.Println("userEmail:", userEmail)
+
+	db, _ := gormConnect()
+	defer db.Close()
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	log.Println(id)
+
+	var user model.User
+
+	row := db.Where("email = ?", userEmail).Find(&user)
+	if err := db.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当するユーザーが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	log.Println(row)
+
+	v, err := json.Marshal(user)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	log.Println(v)
+
+	w.Write(v)
+}
+
 //JWT
 func createToken(user model.User) (string, error) {
 	var err error
@@ -213,19 +258,13 @@ func createToken(user model.User) (string, error) {
 	return tokenString, nil
 }
 
-//JWT認証のテスト 成功
-var TestHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	post := "test"
-	json.NewEncoder(w).Encode(post)
-})
-
 func main() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/api/signup", SignUpHandler).Methods("POST")
 	r.HandleFunc("/api/login", LoginHandler).Methods("POST")
-	//JWT認証のテスト
-	r.Handle("/api/test", JwtMiddleware.Handler(TestHandler)).Methods("GET")
+	r.HandleFunc("/api/user", UserHandler).Methods("GET")
+
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		log.Println(err)
 	}
@@ -239,3 +278,32 @@ var JwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 	},
 	SigningMethod: jwt.SigningMethodHS256,
 })
+
+// Parse は jwt トークンから元になった認証情報を取り出す。
+func Parse(signedString string) (*model.Auth, error) {
+	//追加
+	secret := os.Getenv("SIGNINGKEY")
+
+	token, err := jwt.Parse(signedString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return "", errors.Errorf("unexpected signing method: %v", token.Header)
+		}
+		return []byte(secret), nil
+	})
+
+	if token == nil {
+		return nil, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, errors.Errorf("not found claims in %s", signedString)
+	}
+
+	email, ok := claims["email"].(string)
+	if !ok {
+		return nil, errors.Errorf("not found %s in %s", email, signedString)
+	}
+
+	return &model.Auth{Email: email}, nil
+}

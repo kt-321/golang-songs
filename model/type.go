@@ -25,3 +25,8 @@ type JWT struct {
 type Error struct {
 	Message string `json:"message"`
 }
+
+// Auth は署名前の認証トークン情報を表す。
+type Auth struct {
+	Email string
+}
