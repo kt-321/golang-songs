@@ -121,7 +121,13 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-	w.Write(v)
+
+	if _, err := w.Write(v); err != nil {
+		var error model.Error
+		error.Message = "ユーザー情報の取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 }
 
 //type LoginHandler func(w http.ResponseWriter, r *http.Request) error
@@ -212,11 +218,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if _, err := w.Write(v2); err != nil {
-		log.Println(err)
+		var error model.Error
+		error.Message = "JWTトークンの取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
 	}
-	//if err := http.ListenAndServe(":8081", r); err != nil {
-	//	log.Println(err)
-	//}
 }
 
 //リクエストユーザーの情報を返す
@@ -255,7 +261,12 @@ var UserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	w.Write(v)
+	if _, err := w.Write(v); err != nil {
+		var error model.Error
+		error.Message = "ユーザー情報の取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 })
 
 //全てのユーザーを返す
@@ -279,7 +290,12 @@ var AllUsersHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reque
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-	w.Write(v)
+	if _, err := w.Write(v); err != nil {
+		var error model.Error
+		error.Message = "ユーザー一覧の取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 })
 
 var UpdateUserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
