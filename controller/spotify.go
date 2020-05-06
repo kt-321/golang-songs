@@ -26,19 +26,6 @@ type Title struct {
 	Token string
 }
 
-//gin使うか
-//func Login(c *gin.Context) {
-//	c.Redirect(http.StatusTemporaryRedirect, service.GetRedirectURL())
-//}
-
-//コンテキスト使うのか
-//func OAuth(w http.ResponseWriter, r *http.Request) {
-//func OAuth(ctx context.Context) {
-
-//code := ctx.Value("code")
-
-//gin使わない形に書き換えるか
-
 var OAuth = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	//func OAuth(c *gin.Context) {
 
@@ -69,10 +56,6 @@ var OAuth = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			TokenURL: "https://accounts.spotify.com/api/token",
 		},
 
-		//RedirectURL: "https://musi-app.now.sh/oauth",
-		//RedirectURL: "http://localhost:8081/api/oauth",
-		//RedirectURL: "http://localhost:3000/dashboard",
-		//RedirectURL: "http://localhost:3000/dashboard/songs",
 		RedirectURL: "http://localhost:3000/spotify/songs",
 		//今回はリダイレクトしない
 		//RedirectURL: "urn:ietf:wg:oauth:2.0:oob",

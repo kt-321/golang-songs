@@ -1,9 +1,7 @@
 
 -- +migrate Up
 CREATE TABLE IF NOT EXISTS songs (
---     id BIGINT PRIMARY KEY AUTO_INCREMENT NOT NULL UNSIGNED,
---     id BIGINT PRIMARY KEY AUTO_INCREMENT NOT NULL,
-    id BIGINT AUTO_INCREMENT UNSIGNED NOT NULL,
+    id BIGINT AUTO_INCREMENT NOT NULL,
     title varchar(255) NOT NULL,
     artist varchar(255) NOT NULL,
     music_age int NOT NULL,
@@ -11,8 +9,8 @@ CREATE TABLE IF NOT EXISTS songs (
     video varchar(255),
     album varchar(255),
     description varchar(255),
-    spotify_id BIGINT,
-    user_id BIGINT UNSIGNED NOT NULL,
+    spotify_track_id BIGINT,
+    user_id BIGINT NOT NULL,
     created_at timestamp NOT NULL,
     updated_at timestamp NOT NULL,
     deleted_at timestamp,

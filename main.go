@@ -427,6 +427,72 @@ func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	db.Model(&user).Where("id = ?", id).Update(model.User{Email: email, Name: name, Age: age, Gender: gender, FavoriteMusicAge: favoriteMusicAge, FavoriteArtist: favoriteArtist, Comment: comment})
 }
 
+var CreateSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	dec := json.NewDecoder(r.Body)
+	var d model.Song
+	dec.Decode(&d)
+
+	title := d.Title
+	artist := d.Artist
+	musicAge := d.MusicAge
+	image := d.Image
+	video := d.Video
+	album := d.Album
+	description := d.Description
+	spotifyTrackId := d.SpotifyTrackId
+
+	db := gormConnect()
+	defer db.Close()
+
+	if err := db.Create(&model.Song{
+		Title:          title,
+		Artist:         artist,
+		MusicAge:       musicAge,
+		Image:          image,
+		Video:          video,
+		Album:          album,
+		Description:    description,
+		SpotifyTrackId: spotifyTrackId}).Error; err != nil {
+		var error model.Error
+		error.Message = "曲の追加に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+})
+
+var GetSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	db := gormConnect()
+	defer db.Close()
+
+	song := model.Song{}
+
+	row := db.Where("id = ?", id).Find(&song)
+	if err := db.Where("id = ?", id).Find(&song).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当する曲が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+	if _, err := json.Marshal(row); err != nil {
+		error := model.Error{}
+		error.Message = "JSONへの変換失敗"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	v, err := json.Marshal(song)
+	if err != nil {
+		var error model.Error
+		error.Message = "曲の取得に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+	w.Write(v)
+})
+
 func main() {
 	r := mux.NewRouter()
 
@@ -447,7 +513,10 @@ func main() {
 	r.HandleFunc("/api/getToken", controller.GetToken).Methods("POST")
 	r.HandleFunc("/api/tracks", controller.GetTracks).Methods("POST")
 	r.HandleFunc("/api/getRedirectUrl", controller.GetRedirectURL).Methods("GET")
-	//r.Handle("/api/test", JwtMiddleware.Handler(controller.GetTracks)).Methods("GET")
+
+	r.Handle("/api/song", JwtMiddleware.Handler(CreateSongHandler)).Methods("POST")
+	r.Handle("/api/song/{id}", JwtMiddleware.Handler(GetSongHandler)).Methods("GET")
+	r.Handle("/api/songs", JwtMiddleware.Handler(AllSongsHandler)).Methods("GET")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		fmt.Println(err)
