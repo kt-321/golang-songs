@@ -23,20 +23,19 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func gormConnect() *gorm.DB {
+//MySQLへの接続
+func gormConnect() (*gorm.DB, error) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println(".envファイルの読み込み失敗")
 	}
-	mysqlConfig := os.Getenv("mysqlConfig")
-	log.Println("mysqlConfig:", mysqlConfig)
-	db, err := gorm.Open("mysql", mysqlConfig)
 
-	//db, err := gorm.Open("mysql", "root:@/golang_songs?charset=utf8&parseTime=True&loc=Local")
+	mysqlConfig := os.Getenv("mysqlConfig")
+	db, err := gorm.Open("mysql", mysqlConfig)
 	if err != nil {
-		fmt.Println(err)
+		return nil, err
 	}
-	return db
+	return db, nil
 }
 
 // レスポンスにエラーを突っ込んで、返却するメソッド
@@ -94,7 +93,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	user.Password = string(hash)
 	password = string(hash)
 
-	db := gormConnect()
+	db, _ := gormConnect()
 	defer db.Close()
 	if err := db.Create(&model.User{Email: email, Password: password}).Error; err != nil {
 		error := model.Error{}
@@ -141,7 +140,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	user.Email = email
 	user.Password = password
 
-	db := gormConnect()
+	db, _ := gormConnect()
 	defer db.Close()
 
 	var userData model.User
@@ -203,7 +202,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	userEmail := parsedToken.Email
 	log.Println("userEmail:", userEmail)
 
-	db := gormConnect()
+	db, _ := gormConnect()
 	defer db.Close()
 
 	//userData := model.User{}
@@ -366,7 +365,7 @@ var GetUserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reques
 	//log.Println("parsedToken", parsedToken)
 	//log.Println("parsedToken2", parsedToken2)
 
-	db := gormConnect()
+	db, _ := gormConnect()
 	defer db.Close()
 
 	user := model.User{}
@@ -395,11 +394,10 @@ var GetUserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reques
 })
 
 func AllUsersHandler(w http.ResponseWriter, r *http.Request) {
-	db := gormConnect()
+	db, _ := gormConnect()
 	defer db.Close()
 	allUsers := []model.User{}
 
-	db.Find(&allUsers)
 	v, _ := json.Marshal(allUsers)
 	w.Write(v)
 }
@@ -420,7 +418,7 @@ func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	favoriteArtist := d.FavoriteArtist
 	comment := d.Comment
 
-	db := gormConnect()
+	db, _ := gormConnect()
 	defer db.Close()
 	var user model.User
 
@@ -441,7 +439,7 @@ var CreateSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	description := d.Description
 	spotifyTrackId := d.SpotifyTrackId
 
-	db := gormConnect()
+	db, _ := gormConnect()
 	defer db.Close()
 
 	if err := db.Create(&model.Song{
@@ -464,7 +462,7 @@ var GetSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reques
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	db := gormConnect()
+	db, _ := gormConnect()
 	defer db.Close()
 
 	song := model.Song{}
@@ -490,7 +488,42 @@ var GetSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reques
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-	w.Write(v)
+
+	if _, err := w.Write(v); err != nil {
+		var error model.Error
+		error.Message = "曲の取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+})
+
+var AllSongsHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	db, _ := gormConnect()
+	defer db.Close()
+
+	allSongs := []model.Song{}
+
+	if err := db.Find(&allSongs).Error; gorm.IsRecordNotFoundError(err) {
+		var error model.Error
+		error.Message = "曲が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	v, err := json.Marshal(allSongs)
+	if err != nil {
+		var error model.Error
+		error.Message = "曲一覧の取得に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	if _, err := w.Write(v); err != nil {
+		var error model.Error
+		error.Message = "曲一覧の取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 })
 
 func main() {
