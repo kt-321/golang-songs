@@ -213,8 +213,12 @@ func (f *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type UserHandler struct {
+	Db *gorm.DB
+}
+
 //リクエストユーザーの情報を返す
-var UserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (f *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	headerAuthorization := r.Header.Get("Authorization")
 	bearerToken := strings.Split(headerAuthorization, " ")
 	authToken := bearerToken[1]
@@ -229,8 +233,7 @@ var UserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) 
 
 	userEmail := parsedToken.Email
 
-	db, _ := gormConnect()
-	defer db.Close()
+	db := f.Db
 
 	var user model.User
 
@@ -255,12 +258,16 @@ var UserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) 
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-})
+}
+
+type AllUsersHandler struct {
+	Db *gorm.DB
+}
 
 //全てのユーザーを返す
-var AllUsersHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	db, _ := gormConnect()
-	defer db.Close()
+func (f *AllUsersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	db := f.Db
 
 	allUsers := []model.User{}
 
@@ -284,9 +291,13 @@ var AllUsersHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reque
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-})
+}
 
-var UpdateUserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+type UpdateUserHandler struct {
+	Db *gorm.DB
+}
+
+func (f *UpdateUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 	if !ok {
@@ -313,8 +324,7 @@ var UpdateUserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	favoriteArtist := d.FavoriteArtist
 	comment := d.Comment
 
-	db, _ := gormConnect()
-	defer db.Close()
+	db := f.Db
 
 	var user model.User
 
@@ -324,7 +334,7 @@ var UpdateUserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-})
+}
 
 //JWT
 func createToken(user model.User) (string, error) {
@@ -372,9 +382,9 @@ func main() {
 
 	r.Handle("/api/signup", &SignUpHandler{Db: db}).Methods("POST")
 	r.Handle("/api/login", &LoginHandler{Db: db}).Methods("POST")
-	r.Handle("/api/user", JwtMiddleware.Handler(UserHandler)).Methods("GET")
-	r.Handle("/api/users", JwtMiddleware.Handler(AllUsersHandler)).Methods("GET")
-	r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(UpdateUserHandler)).Methods("PUT")
+	r.Handle("/api/user", JwtMiddleware.Handler(&UserHandler{Db: db})).Methods("GET")
+	r.Handle("/api/users", JwtMiddleware.Handler(&AllUsersHandler{Db: db})).Methods("GET")
+	r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(&UpdateUserHandler{Db: db})).Methods("PUT")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		log.Println(err)
