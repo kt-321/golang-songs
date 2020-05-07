@@ -51,18 +51,13 @@ type Form struct {
 
 type DB struct {
 	Db *gorm.DB
-	//Db DB
 }
 
-//構造体DBにServeHTTP メソッドを生やす
-//func (db DB) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-//	//func (db *DB) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-//	var db2 DB
-//	db2.Db = db.Db
-//	return
-//}
+type SignUpHandler struct {
+	Db *gorm.DB
+}
 
-func SignUpHandler(w http.ResponseWriter, r *http.Request) {
+func (f *SignUpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 
 	dec := json.NewDecoder(r.Body)
@@ -102,8 +97,8 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	user.Password = string(hash)
 	password = string(hash)
 
-	db, _ := gormConnect()
-	defer db.Close()
+	db := f.Db
+
 	if err := db.Create(&model.User{Email: email, Password: password}).Error; err != nil {
 		var error model.Error
 		error.Message = "アカウントの作成に失敗しました"
@@ -130,10 +125,11 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//type LoginHandler func(w http.ResponseWriter, r *http.Request) error
+type LoginHandler struct {
+	Db *gorm.DB
+}
 
-//func (f LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+func (f *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 
 	var jwt model.JWT
@@ -161,19 +157,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	user.Email = email
 	user.Password = password
 
-	//db, _ := gormConnect()
-	//defer db.Close()
-
-	//db = db2.Db
-
-	db, _ := gormConnect()
-	defer db.Close()
+	db := f.Db
 
 	var userData model.User
 	row := db.Where("email = ?", user.Email).Find(&userData)
-	//row := db2.Where("email = ?", user.Email).Find(&userData)
 	if err := db.Where("email = ?", user.Email).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
-		//if err := db2.Where("email = ?", user.Email).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
 		var error model.Error
 		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusUnauthorized, error)
@@ -376,22 +364,14 @@ func main() {
 	if err != nil {
 		log.Println(err)
 	}
-	log.Println("db", db)
-	log.Printf("%T", db)
-
-	var db2 DB
-
-	db2.Db = db
 
 	db.DB().SetMaxIdleConns(10)
 	defer db.Close()
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/api/signup", SignUpHandler).Methods("POST")
-	//r.HandleFunc("/api/login", LoginHandler, DB(db2)).Methods("POST")
-	//r.HandleFunc("/api/login", LoginHandler(db2)).Methods("POST")
-	r.HandleFunc("/api/login", LoginHandler).Methods("POST")
+	r.Handle("/api/signup", &SignUpHandler{Db: db}).Methods("POST")
+	r.Handle("/api/login", &LoginHandler{Db: db}).Methods("POST")
 	r.Handle("/api/user", JwtMiddleware.Handler(UserHandler)).Methods("GET")
 	r.Handle("/api/users", JwtMiddleware.Handler(AllUsersHandler)).Methods("GET")
 	r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(UpdateUserHandler)).Methods("PUT")
