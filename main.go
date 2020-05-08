@@ -322,17 +322,17 @@ func (f *UpdateUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email := d.Email
-	name := d.Name
-	age := d.Age
-	gender := d.Gender
-	favoriteMusicAge := d.FavoriteMusicAge
-	favoriteArtist := d.FavoriteArtist
-	comment := d.Comment
+	//email := d.Email
+	//name := d.Name
+	//age := d.Age
+	//gender := d.Gender
+	//favoriteMusicAge := d.FavoriteMusicAge
+	//favoriteArtist := d.FavoriteArtist
+	//comment := d.Comment
 
 	var user model.User
 
-	if err := f.DB.Model(&user).Where("id = ?", id).Update(model.User{Email: email, Name: name, Age: age, Gender: gender, FavoriteMusicAge: favoriteMusicAge, FavoriteArtist: favoriteArtist, Comment: comment}).Error; err != nil {
+	if err := f.DB.Model(&user).Where("id = ?", id).Update(model.User{Email: d.Email, Name: d.Name, Age: d.Age, Gender: d.Gender, FavoriteMusicAge: d.FavoriteMusicAge, FavoriteArtist: d.FavoriteArtist, Comment: d.Comment}).Error; err != nil {
 		var error model.Error
 		error.Message = "ユーザー情報の更新に失敗しました。"
 		errorInResponse(w, http.StatusInternalServerError, error)
