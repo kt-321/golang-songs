@@ -50,11 +50,11 @@ type Form struct {
 }
 
 type DB struct {
-	Db *gorm.DB
+	DB *gorm.DB
 }
 
 type SignUpHandler struct {
-	Db *gorm.DB
+	DB *gorm.DB
 }
 
 func (f *SignUpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -97,7 +97,7 @@ func (f *SignUpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	user.Password = string(hash)
 	password = string(hash)
 
-	db := f.Db
+	db := f.DB
 
 	if err := db.Create(&model.User{Email: email, Password: password}).Error; err != nil {
 		var error model.Error
@@ -126,7 +126,7 @@ func (f *SignUpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type LoginHandler struct {
-	Db *gorm.DB
+	DB *gorm.DB
 }
 
 func (f *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -157,7 +157,7 @@ func (f *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	user.Email = email
 	user.Password = password
 
-	db := f.Db
+	db := f.DB
 
 	var userData model.User
 	row := db.Where("email = ?", user.Email).Find(&userData)
@@ -214,7 +214,7 @@ func (f *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type UserHandler struct {
-	Db *gorm.DB
+	DB *gorm.DB
 }
 
 //リクエストユーザーの情報を返す
@@ -247,7 +247,7 @@ func (f *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	userEmail := parsedToken.Email
 
-	db := f.Db
+	db := f.DB
 
 	var user model.User
 
@@ -275,13 +275,13 @@ func (f *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type AllUsersHandler struct {
-	Db *gorm.DB
+	DB *gorm.DB
 }
 
 //全てのユーザーを返す
 func (f *AllUsersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	db := f.Db
+	db := f.DB
 
 	allUsers := []model.User{}
 
@@ -308,7 +308,7 @@ func (f *AllUsersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 type UpdateUserHandler struct {
-	Db *gorm.DB
+	DB *gorm.DB
 }
 
 func (f *UpdateUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -338,7 +338,7 @@ func (f *UpdateUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	favoriteArtist := d.FavoriteArtist
 	comment := d.Comment
 
-	db := f.Db
+	db := f.DB
 
 	var user model.User
 
@@ -394,11 +394,11 @@ func main() {
 
 	r := mux.NewRouter()
 
-	r.Handle("/api/signup", &SignUpHandler{Db: db}).Methods("POST")
-	r.Handle("/api/login", &LoginHandler{Db: db}).Methods("POST")
-	r.Handle("/api/user", JwtMiddleware.Handler(&UserHandler{Db: db})).Methods("GET")
-	r.Handle("/api/users", JwtMiddleware.Handler(&AllUsersHandler{Db: db})).Methods("GET")
-	r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(&UpdateUserHandler{Db: db})).Methods("PUT")
+	r.Handle("/api/signup", &SignUpHandler{DB: db}).Methods("POST")
+	r.Handle("/api/login", &LoginHandler{DB: db}).Methods("POST")
+	r.Handle("/api/user", JwtMiddleware.Handler(&UserHandler{DB: db})).Methods("GET")
+	r.Handle("/api/users", JwtMiddleware.Handler(&AllUsersHandler{DB: db})).Methods("GET")
+	r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(&UpdateUserHandler{DB: db})).Methods("PUT")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		log.Println(err)
