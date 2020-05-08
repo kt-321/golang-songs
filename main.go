@@ -220,7 +220,21 @@ type UserHandler struct {
 //リクエストユーザーの情報を返す
 func (f *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	headerAuthorization := r.Header.Get("Authorization")
+	if len(headerAuthorization) == 0 {
+		var error model.Error
+		error.Message = "認証トークンの取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
 	bearerToken := strings.Split(headerAuthorization, " ")
+	if len(bearerToken) < 2 {
+		var error model.Error
+		error.Message = "bearerトークンの取得に失敗しました。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
 	authToken := bearerToken[1]
 
 	parsedToken, err := Parse(authToken)
