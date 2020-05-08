@@ -97,9 +97,7 @@ func (f *SignUpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	user.Password = string(hash)
 	password = string(hash)
 
-	db := f.DB
-
-	if err := db.Create(&model.User{Email: email, Password: password}).Error; err != nil {
+	if err := f.DB.Create(&model.User{Email: email, Password: password}).Error; err != nil {
 		var error model.Error
 		error.Message = "アカウントの作成に失敗しました"
 		errorInResponse(w, http.StatusUnauthorized, error)
@@ -157,11 +155,9 @@ func (f *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	user.Email = email
 	user.Password = password
 
-	db := f.DB
-
 	var userData model.User
-	row := db.Where("email = ?", user.Email).Find(&userData)
-	if err := db.Where("email = ?", user.Email).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+	row := f.DB.Where("email = ?", user.Email).Find(&userData)
+	if err := f.DB.Where("email = ?", user.Email).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
 		var error model.Error
 		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusUnauthorized, error)
@@ -247,11 +243,9 @@ func (f *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	userEmail := parsedToken.Email
 
-	db := f.DB
-
 	var user model.User
 
-	if err := db.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+	if err := f.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
 		error := model.Error{}
 		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusUnauthorized, error)
@@ -281,11 +275,9 @@ type AllUsersHandler struct {
 //全てのユーザーを返す
 func (f *AllUsersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	db := f.DB
-
 	allUsers := []model.User{}
 
-	if err := db.Find(&allUsers).Error; gorm.IsRecordNotFoundError(err) {
+	if err := f.DB.Find(&allUsers).Error; gorm.IsRecordNotFoundError(err) {
 		var error model.Error
 		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusInternalServerError, error)
@@ -338,11 +330,9 @@ func (f *UpdateUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	favoriteArtist := d.FavoriteArtist
 	comment := d.Comment
 
-	db := f.DB
-
 	var user model.User
 
-	if err := db.Model(&user).Where("id = ?", id).Update(model.User{Email: email, Name: name, Age: age, Gender: gender, FavoriteMusicAge: favoriteMusicAge, FavoriteArtist: favoriteArtist, Comment: comment}).Error; err != nil {
+	if err := f.DB.Model(&user).Where("id = ?", id).Update(model.User{Email: email, Name: name, Age: age, Gender: gender, FavoriteMusicAge: favoriteMusicAge, FavoriteArtist: favoriteArtist, Comment: comment}).Error; err != nil {
 		var error model.Error
 		error.Message = "ユーザー情報の更新に失敗しました。"
 		errorInResponse(w, http.StatusInternalServerError, error)
