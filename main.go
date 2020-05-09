@@ -466,7 +466,6 @@ var CreateSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	header_hoge := r.Header.Get("Authorization")
 	bearerToken := strings.Split(header_hoge, " ")
 	authToken := bearerToken[1]
-	fmt.Println("authToken: ", authToken)
 
 	parsedToken, _ := Parse(authToken)
 	userEmail := parsedToken.Email
@@ -636,6 +635,54 @@ var DeleteSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	}
 })
 
+var UserFollowHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	dec := json.NewDecoder(r.Body)
+	var d model.Song
+	dec.Decode(&d)
+
+	db, _ := gormConnect()
+	defer db.Close()
+
+	var targetUser model.User
+
+	//row := db.Where("id = ?", id).Find(&targetUser)
+	if err := db.Where("id = ?", id).Find(&targetUser).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当する曲が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	header_hoge := r.Header.Get("Authorization")
+	bearerToken := strings.Split(header_hoge, " ")
+	authToken := bearerToken[1]
+
+	parsedToken, _ := Parse(authToken)
+	userEmail := parsedToken.Email
+
+	var requestUser model.User
+
+	if err := db.Where("email = ?", userEmail).Find(&requestUser).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	if err := db.Create(&model.UserFollow{
+		UserID:   requestUser.ID,
+		FollowID: targetUser.ID}).Error; err != nil {
+		var error model.Error
+		error.Message = "曲の追加に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+})
+
 func main() {
 	r := mux.NewRouter()
 
@@ -645,9 +692,6 @@ func main() {
 	r.HandleFunc("/api/user/{id}", GetUserHandler).Methods("GET")
 	r.HandleFunc("/api/users", AllUsersHandler).Methods("GET")
 	r.HandleFunc("/api/user/{id}/update", UpdateUserHandler).Methods("PUT")
-
-	//JWT認証のテスト
-	//r.Handle("/api/test", JwtMiddleware.Handler(TestHandler)).Methods("GET")
 
 	//r.GET("/api/tracks", controller.GetTracks)
 	//r.Handle("/api/oauth", JwtMiddleware.Handler(controller.OAuth)).Methods("GET")
@@ -662,6 +706,8 @@ func main() {
 	r.Handle("/api/songs", JwtMiddleware.Handler(AllSongsHandler)).Methods("GET")
 	r.Handle("/api/song/{id}", JwtMiddleware.Handler(UpdateSongHandler)).Methods("PUT")
 	r.Handle("/api/song/{id}", JwtMiddleware.Handler(DeleteSongHandler)).Methods("DELETE")
+
+	r.Handle("/api/user/{id}/follow", JwtMiddleware.Handler(UserFollowHandler)).Methods("POST")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		fmt.Println(err)
