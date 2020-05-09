@@ -398,9 +398,42 @@ func AllUsersHandler(w http.ResponseWriter, r *http.Request) {
 	defer db.Close()
 	allUsers := []model.User{}
 
+	if err := db.Find(&allUsers).Error; gorm.IsRecordNotFoundError(err) {
+		var error model.Error
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
 	v, _ := json.Marshal(allUsers)
 	w.Write(v)
 }
+
+//func (f *AllUsersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+//
+//	allUsers := []model.User{}
+//
+//	if err := f.DB.Find(&allUsers).Error; gorm.IsRecordNotFoundError(err) {
+//		var error model.Error
+//		error.Message = "該当するアカウントが見つかりません。"
+//		errorInResponse(w, http.StatusInternalServerError, error)
+//		return
+//	}
+//
+//	v, err := json.Marshal(allUsers)
+//	if err != nil {
+//		var error model.Error
+//		error.Message = "ユーザー一覧の取得に失敗しました"
+//		errorInResponse(w, http.StatusInternalServerError, error)
+//		return
+//	}
+//	if _, err := w.Write(v); err != nil {
+//		var error model.Error
+//		error.Message = "ユーザー一覧の取得に失敗しました。"
+//		errorInResponse(w, http.StatusInternalServerError, error)
+//		return
+//	}
+//}
 
 func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -430,6 +463,26 @@ var CreateSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	var d model.Song
 	dec.Decode(&d)
 
+	header_hoge := r.Header.Get("Authorization")
+	bearerToken := strings.Split(header_hoge, " ")
+	authToken := bearerToken[1]
+	fmt.Println("authToken: ", authToken)
+
+	parsedToken, _ := Parse(authToken)
+	userEmail := parsedToken.Email
+
+	db, _ := gormConnect()
+	defer db.Close()
+
+	var user model.User
+
+	if err := db.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
 	title := d.Title
 	artist := d.Artist
 	musicAge := d.MusicAge
@@ -439,9 +492,6 @@ var CreateSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	description := d.Description
 	spotifyTrackId := d.SpotifyTrackId
 
-	db, _ := gormConnect()
-	defer db.Close()
-
 	if err := db.Create(&model.Song{
 		Title:          title,
 		Artist:         artist,
@@ -450,7 +500,8 @@ var CreateSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 		Video:          video,
 		Album:          album,
 		Description:    description,
-		SpotifyTrackId: spotifyTrackId}).Error; err != nil {
+		SpotifyTrackId: spotifyTrackId,
+		UserID:         user.ID}).Error; err != nil {
 		var error model.Error
 		error.Message = "曲の追加に失敗しました"
 		errorInResponse(w, http.StatusInternalServerError, error)
@@ -526,7 +577,7 @@ var AllSongsHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reque
 	}
 })
 
-func UpdateSongHandler(w http.ResponseWriter, r *http.Request) {
+var UpdateSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
@@ -562,7 +613,7 @@ func UpdateSongHandler(w http.ResponseWriter, r *http.Request) {
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-}
+})
 
 var DeleteSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -609,6 +660,7 @@ func main() {
 	r.Handle("/api/song", JwtMiddleware.Handler(CreateSongHandler)).Methods("POST")
 	r.Handle("/api/song/{id}", JwtMiddleware.Handler(GetSongHandler)).Methods("GET")
 	r.Handle("/api/songs", JwtMiddleware.Handler(AllSongsHandler)).Methods("GET")
+	r.Handle("/api/song/{id}", JwtMiddleware.Handler(UpdateSongHandler)).Methods("PUT")
 	r.Handle("/api/song/{id}", JwtMiddleware.Handler(DeleteSongHandler)).Methods("DELETE")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {

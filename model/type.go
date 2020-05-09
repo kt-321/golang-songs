@@ -34,12 +34,13 @@ type Song struct {
 	DeletedAt      *time.Time `json:"deletedAt"`
 	Title          string     `json:"title"`
 	Artist         string     `json:"artist"`
-	MusicAge       int        `json:"musidAge"`
+	MusicAge       int        `json:"musicAge"`
 	Image          string     `json:"image"`
 	Video          string     `json:"video"`
 	Album          string     `json:"album"`
 	Description    string     `json:"description"`
-	SpotifyTrackId int        `json:"spotifyTrackId"`
+	SpotifyTrackId string     `json:"spotifyTrackId"`
+	UserID         uint       `json:"userId"`
 }
 
 //type UserInResponse struct {

@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS songs (
     video varchar(255),
     album varchar(255),
     description varchar(255),
-    spotify_track_id BIGINT,
+    spotify_track_id varchar(255),
     user_id BIGINT NOT NULL,
     created_at timestamp NOT NULL,
     updated_at timestamp NOT NULL,
