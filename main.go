@@ -349,6 +349,60 @@ func createToken(user model.User) (string, error) {
 	return tokenString, nil
 }
 
+type CreateSongHandler struct {
+	DB *gorm.DB
+}
+
+func (f *CreateSongHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	dec := json.NewDecoder(r.Body)
+	var d model.Song
+	if err := dec.Decode(&d); err != nil {
+		var error model.Error
+		error.Message = "リクエストボディのデコードに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	header_hoge := r.Header.Get("Authorization")
+	bearerToken := strings.Split(header_hoge, " ")
+	authToken := bearerToken[1]
+
+	parsedToken, err := Parse(authToken)
+	if err != nil {
+		var error model.Error
+		error.Message = "認証コードのパースに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	userEmail := parsedToken.Email
+
+	var user model.User
+
+	if err := f.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	if err := f.DB.Create(&model.Song{
+		Title:          d.Title,
+		Artist:         d.Artist,
+		MusicAge:       d.MusicAge,
+		Image:          d.Image,
+		Video:          d.Video,
+		Album:          d.Album,
+		Description:    d.Description,
+		SpotifyTrackId: d.SpotifyTrackId,
+		UserID:         user.ID}).Error; err != nil {
+		var error model.Error
+		error.Message = "曲の追加に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -372,6 +426,8 @@ func main() {
 	r.Handle("/api/user", JwtMiddleware.Handler(&UserHandler{DB: db})).Methods("GET")
 	r.Handle("/api/users", JwtMiddleware.Handler(&AllUsersHandler{DB: db})).Methods("GET")
 	r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(&UpdateUserHandler{DB: db})).Methods("PUT")
+
+	r.Handle("/api/users", JwtMiddleware.Handler(&CreateSongHandler{DB: db})).Methods("GET")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		log.Println(err)
