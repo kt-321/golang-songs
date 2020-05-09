@@ -18,6 +18,22 @@ type User struct {
 	Password         string     `json:"-"`
 }
 
+type Song struct {
+	ID             uint       `json:"id"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	UpdatedAt      time.Time  `json:"updatedAt"`
+	DeletedAt      *time.Time `json:"deletedAt"`
+	Title          string     `json:"title"`
+	Artist         string     `json:"artist"`
+	MusicAge       int        `json:"musicAge"`
+	Image          string     `json:"image"`
+	Video          string     `json:"video"`
+	Album          string     `json:"album"`
+	Description    string     `json:"description"`
+	SpotifyTrackId string     `json:"spotifyTrackId"`
+	UserID         uint       `json:"userId"`
+}
+
 type JWT struct {
 	Token string `json:"token"`
 }
