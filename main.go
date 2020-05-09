@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"golang-songs/controller"
 	"golang-songs/model"
 	"log"
 	"net/http"
@@ -403,6 +404,50 @@ func (f *CreateSongHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//type GetRedirectURL struct {
+//	DB *gorm.DB
+//}
+//
+//func (f *GetRedirectURL) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+//	//var GetRedirectURL = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//	err := godotenv.Load()
+//	if err != nil {
+//		log.Println(".envファイルの読み込み失敗")
+//	}
+//
+//	//func GetRedirectURL() string {
+//	config = oauth2.Config{
+//		ClientID:     os.Getenv("client_id"),
+//		ClientSecret: os.Getenv("client_secret"),
+//		Endpoint: oauth2.Endpoint{
+//			AuthURL:  "https://accounts.spotify.com/authorize",
+//			TokenURL: "https://accounts.spotify.com/api/token",
+//		},
+//
+//		RedirectURL: "http://localhost:3000/spotify/songs",
+//		Scopes:      []string{},
+//	}
+//
+//	url := config.AuthCodeURL("state")
+//	log.Println(url)
+//
+//	w.Header().Set("Content-Type", "application/json")
+//
+//	v, err := json.Marshal(url)
+//	if err != nil {
+//		fmt.Println(err)
+//	}
+//	log.Println(v)
+//	b, err := JSONSafeMarshal(url, true)
+//	if err != nil {
+//		//c.AbortWithStatus(http.StatusInternalServerError)
+//		//return
+//		log.Println("Marshal取得失敗")
+//	}
+//	//log.Println(v)
+//	w.Write(b)
+//}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -427,7 +472,12 @@ func main() {
 	r.Handle("/api/users", JwtMiddleware.Handler(&AllUsersHandler{DB: db})).Methods("GET")
 	r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(&UpdateUserHandler{DB: db})).Methods("PUT")
 
-	r.Handle("/api/users", JwtMiddleware.Handler(&CreateSongHandler{DB: db})).Methods("GET")
+	r.Handle("/api/song", JwtMiddleware.Handler(&CreateSongHandler{DB: db})).Methods("POST")
+
+	r.Handle("/api/getRedirectUrl", JwtMiddleware.Handler(&controller.GetRedirectURL{DB: db})).Methods("GET")
+	r.Handle("/api/getToken", JwtMiddleware.Handler(&controller.GetToken{DB: db})).Methods("POST")
+	r.Handle("/api/tracks", JwtMiddleware.Handler(&controller.GetTracks{DB: db})).Methods("POST")
+	//r.HandleFunc("/api/tracks", controller.GetTracks).Methods("POST")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		log.Println(err)
