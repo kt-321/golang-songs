@@ -1,18 +1,21 @@
 package model
 
-import "github.com/jinzhu/gorm"
+import "time"
 
 type User struct {
-	gorm.Model
-	Name             string `json:"name"`
-	Email            string `json:"email,omitempty"`
-	Age              int    `json:"age,omitempty"`
-	Gender           int    `json:"gender,omitempty"`
-	ImageUrl         string `json:"age,omitempty"`
-	FavoriteMusicAge int    `json:"favoriteMusicAge,omitempty"`
-	FavoriteArtist   string `json:"favoriteArtist,omitempty"`
-	Comment          string `json:"comment,omitempty"`
-	Password         string `json:"password"`
+	ID               uint       `json:"id"`
+	CreatedAt        time.Time  `json:"createdAt"`
+	UpdatedAt        time.Time  `json:"updatedAt"`
+	DeletedAt        *time.Time `json:"deletedAt"`
+	Name             string     `json:"name"`
+	Email            string     `json:"email"`
+	Age              int        `json:"age"`
+	Gender           int        `json:"gender"`
+	ImageUrl         string     `json:"imageUrl"`
+	FavoriteMusicAge int        `json:"favoriteMusicAge"`
+	FavoriteArtist   string     `json:"favoriteArtist"`
+	Comment          string     `json:"comment"`
+	Password         string     `json:"-"`
 }
 
 type JWT struct {
@@ -21,4 +24,9 @@ type JWT struct {
 
 type Error struct {
 	Message string `json:"message"`
+}
+
+// Auth は署名前の認証トークン情報を表す。
+type Auth struct {
+	Email string
 }

@@ -7,6 +7,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
@@ -46,7 +49,15 @@ type Form struct {
 	Password string `json:"password"`
 }
 
-func SignUpHandler(w http.ResponseWriter, r *http.Request) {
+type DB struct {
+	DB *gorm.DB
+}
+
+type SignUpHandler struct {
+	DB *gorm.DB
+}
+
+func (f *SignUpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 
 	dec := json.NewDecoder(r.Body)
@@ -86,9 +97,7 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	user.Password = string(hash)
 	password = string(hash)
 
-	db, _ := gormConnect()
-	defer db.Close()
-	if err := db.Create(&model.User{Email: email, Password: password}).Error; err != nil {
+	if err := f.DB.Create(&model.User{Email: email, Password: password}).Error; err != nil {
 		var error model.Error
 		error.Message = "アカウントの作成に失敗しました"
 		errorInResponse(w, http.StatusUnauthorized, error)
@@ -105,10 +114,20 @@ func SignUpHandler(w http.ResponseWriter, r *http.Request) {
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-	w.Write(v)
+
+	if _, err := w.Write(v); err != nil {
+		var error model.Error
+		error.Message = "ユーザー情報の取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 }
 
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+type LoginHandler struct {
+	DB *gorm.DB
+}
+
+func (f *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 
 	var jwt model.JWT
@@ -136,12 +155,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	user.Email = email
 	user.Password = password
 
-	db, _ := gormConnect()
-	defer db.Close()
-
 	var userData model.User
-	row := db.Where("email = ?", user.Email).Find(&userData)
-	if err := db.Where("email = ?", user.Email).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+	row := f.DB.Where("email = ?", user.Email).Find(&userData)
+	if err := f.DB.Where("email = ?", user.Email).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
 		var error model.Error
 		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusUnauthorized, error)
@@ -184,7 +200,144 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-	w.Write(v2)
+
+	if _, err := w.Write(v2); err != nil {
+		var error model.Error
+		error.Message = "JWTトークンの取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+}
+
+type UserHandler struct {
+	DB *gorm.DB
+}
+
+//リクエストユーザーの情報を返す
+func (f *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	headerAuthorization := r.Header.Get("Authorization")
+	if len(headerAuthorization) == 0 {
+		var error model.Error
+		error.Message = "認証トークンの取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	bearerToken := strings.Split(headerAuthorization, " ")
+	if len(bearerToken) < 2 {
+		var error model.Error
+		error.Message = "bearerトークンの取得に失敗しました。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	authToken := bearerToken[1]
+
+	parsedToken, err := Parse(authToken)
+	if err != nil {
+		var error model.Error
+		error.Message = "認証コードのパースに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	userEmail := parsedToken.Email
+
+	var user model.User
+
+	if err := f.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	v, err := json.Marshal(user)
+	if err != nil {
+		var error model.Error
+		error.Message = "JSONへの変換に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	if _, err := w.Write(v); err != nil {
+		var error model.Error
+		error.Message = "ユーザー情報の取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+}
+
+type AllUsersHandler struct {
+	DB *gorm.DB
+}
+
+//全てのユーザーを返す
+func (f *AllUsersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	allUsers := []model.User{}
+
+	if err := f.DB.Find(&allUsers).Error; gorm.IsRecordNotFoundError(err) {
+		var error model.Error
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	v, err := json.Marshal(allUsers)
+	if err != nil {
+		var error model.Error
+		error.Message = "ユーザー一覧の取得に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+	if _, err := w.Write(v); err != nil {
+		var error model.Error
+		error.Message = "ユーザー一覧の取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+}
+
+type UpdateUserHandler struct {
+	DB *gorm.DB
+}
+
+func (f *UpdateUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "ユーザーのidを取得できません。"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
+
+	dec := json.NewDecoder(r.Body)
+	var d model.User
+	if err := dec.Decode(&d); err != nil {
+		var error model.Error
+		error.Message = "リクエストボディのデコードに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	//email := d.Email
+	//name := d.Name
+	//age := d.Age
+	//gender := d.Gender
+	//favoriteMusicAge := d.FavoriteMusicAge
+	//favoriteArtist := d.FavoriteArtist
+	//comment := d.Comment
+
+	var user model.User
+
+	if err := f.DB.Model(&user).Where("id = ?", id).Update(model.User{Email: d.Email, Name: d.Name, Age: d.Age, Gender: d.Gender, FavoriteMusicAge: d.FavoriteMusicAge, FavoriteArtist: d.FavoriteArtist, Comment: d.Comment}).Error; err != nil {
+		var error model.Error
+		error.Message = "ユーザー情報の更新に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 }
 
 //JWT
@@ -213,19 +366,30 @@ func createToken(user model.User) (string, error) {
 	return tokenString, nil
 }
 
-//JWT認証のテスト 成功
-var TestHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	post := "test"
-	json.NewEncoder(w).Encode(post)
-})
-
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println(".envファイルの読み込み失敗")
+	}
+
+	mysqlConfig := os.Getenv("mysqlConfig")
+
+	db, err := gorm.Open("mysql", mysqlConfig)
+	if err != nil {
+		log.Println(err)
+	}
+
+	db.DB().SetMaxIdleConns(10)
+	defer db.Close()
+
 	r := mux.NewRouter()
 
-	r.HandleFunc("/api/signup", SignUpHandler).Methods("POST")
-	r.HandleFunc("/api/login", LoginHandler).Methods("POST")
-	//JWT認証のテスト
-	r.Handle("/api/test", JwtMiddleware.Handler(TestHandler)).Methods("GET")
+	r.Handle("/api/signup", &SignUpHandler{DB: db}).Methods("POST")
+	r.Handle("/api/login", &LoginHandler{DB: db}).Methods("POST")
+	r.Handle("/api/user", JwtMiddleware.Handler(&UserHandler{DB: db})).Methods("GET")
+	r.Handle("/api/users", JwtMiddleware.Handler(&AllUsersHandler{DB: db})).Methods("GET")
+	r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(&UpdateUserHandler{DB: db})).Methods("PUT")
+
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		log.Println(err)
 	}
@@ -239,3 +403,32 @@ var JwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 	},
 	SigningMethod: jwt.SigningMethodHS256,
 })
+
+// Parse は jwt トークンから元になった認証情報を取り出す。
+func Parse(signedString string) (*model.Auth, error) {
+	//追加
+	secret := os.Getenv("SIGNINGKEY")
+
+	token, err := jwt.Parse(signedString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return "", errors.Errorf("unexpected signing method: %v", token.Header)
+		}
+		return []byte(secret), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, errors.Errorf("not found claims in %s", signedString)
+	}
+
+	email, ok := claims["email"].(string)
+	if !ok {
+		return nil, errors.Errorf("not found %s in %s", email, signedString)
+	}
+
+	return &model.Auth{Email: email}, nil
+}
