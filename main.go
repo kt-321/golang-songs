@@ -526,6 +526,65 @@ var AllSongsHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reque
 	}
 })
 
+func UpdateSongHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	dec := json.NewDecoder(r.Body)
+	var d model.Song
+	dec.Decode(&d)
+
+	title := d.Title
+	artist := d.Artist
+	musicAge := d.MusicAge
+	image := d.Image
+	video := d.Video
+	album := d.Album
+	description := d.Description
+	spotifyTrackId := d.SpotifyTrackId
+
+	db, _ := gormConnect()
+	defer db.Close()
+
+	var song model.Song
+
+	if err := db.Model(&song).Where("id = ?", id).Update(model.Song{
+		Title:          title,
+		Artist:         artist,
+		MusicAge:       musicAge,
+		Image:          image,
+		Video:          video,
+		Album:          album,
+		Description:    description,
+		SpotifyTrackId: spotifyTrackId}).Error; err != nil {
+		var error model.Error
+		error.Message = "曲の更新に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+}
+
+var DeleteSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	dec := json.NewDecoder(r.Body)
+	var d model.Song
+	dec.Decode(&d)
+
+	db, _ := gormConnect()
+	defer db.Close()
+
+	var song model.Song
+
+	if err := db.Where("id = ?", id).Delete(&song).Error; err != nil {
+		var error model.Error
+		error.Message = "曲の削除に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+})
+
 func main() {
 	r := mux.NewRouter()
 
@@ -550,6 +609,7 @@ func main() {
 	r.Handle("/api/song", JwtMiddleware.Handler(CreateSongHandler)).Methods("POST")
 	r.Handle("/api/song/{id}", JwtMiddleware.Handler(GetSongHandler)).Methods("GET")
 	r.Handle("/api/songs", JwtMiddleware.Handler(AllSongsHandler)).Methods("GET")
+	r.Handle("/api/song/{id}", JwtMiddleware.Handler(DeleteSongHandler)).Methods("DELETE")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		fmt.Println(err)
