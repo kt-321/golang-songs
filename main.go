@@ -22,21 +22,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-//MySQLへの接続
-func gormConnect() (*gorm.DB, error) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println(".envファイルの読み込み失敗")
-	}
-
-	mysqlConfig := os.Getenv("mysqlConfig")
-	db, err := gorm.Open("mysql", mysqlConfig)
-	if err != nil {
-		return nil, err
-	}
-	return db, nil
-}
-
 // レスポンスにエラーを突っ込んで、返却するメソッド
 func errorInResponse(w http.ResponseWriter, status int, error model.Error) {
 	w.WriteHeader(status)
@@ -49,10 +34,6 @@ type Form struct {
 	Password string `json:"password"`
 }
 
-type DB struct {
-	DB *gorm.DB
-}
-
 type SignUpHandler struct {
 	DB *gorm.DB
 }
@@ -62,7 +43,12 @@ func (f *SignUpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	dec := json.NewDecoder(r.Body)
 	var d Form
-	dec.Decode(&d)
+	if err := dec.Decode(&d); err != nil {
+		var error model.Error
+		error.Message = "リクエストボディのデコードに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 
 	email := d.Email
 	password := d.Password
@@ -134,7 +120,12 @@ func (f *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	dec := json.NewDecoder(r.Body)
 	var d Form
-	dec.Decode(&d)
+	if err := dec.Decode(&d); err != nil {
+		var error model.Error
+		error.Message = "リクエストボディのデコードに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 
 	email := d.Email
 	password := d.Password
@@ -321,14 +312,6 @@ func (f *UpdateUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-
-	//email := d.Email
-	//name := d.Name
-	//age := d.Age
-	//gender := d.Gender
-	//favoriteMusicAge := d.FavoriteMusicAge
-	//favoriteArtist := d.FavoriteArtist
-	//comment := d.Comment
 
 	var user model.User
 
