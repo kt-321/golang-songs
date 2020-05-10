@@ -192,30 +192,16 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 func UserHandler(w http.ResponseWriter, r *http.Request) {
 	header_hoge := r.Header.Get("Authorization")
-	//log.Println("header_hoge:", header_hoge)
 	bearerToken := strings.Split(header_hoge, " ")
 	authToken := bearerToken[1]
-	//fmt.Println("bearerToken: ", bearerToken)
-	fmt.Println("authToken: ", authToken)
 
 	parsedToken, err := Parse(authToken)
 	userEmail := parsedToken.Email
-	log.Println("userEmail:", userEmail)
 
 	db, _ := gormConnect()
 	defer db.Close()
 
-	//userData := model.User{}
-
-	vars := mux.Vars(r)
-	id := vars["id"]
-	log.Println(id)
-
 	var user model.User
-	//var user model.UserInResponse
-
-	//row := db.Where("email = ?", user.Email).Find(&userData)
-	row := db.Where("email = ?", userEmail).Find(&user)
 	if err := db.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
 		error := model.Error{}
 		error.Message = "該当するユーザーが見つかりません。"
@@ -223,7 +209,11 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Println(row)
+	followings := []model.User{}
+	db.Preload("Followings").Find(&user)
+	db.Model(&user).Related(&followings, "Followings")
+
+	log.Println("user:", user)
 
 	//if _, err := json.Marshal(row); err != nil {
 	//	error := model.Error{}
@@ -233,9 +223,6 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	//}
 	//
 
-	//user.Password = ""
-
-	log.Println("user:", user.Age)
 	v, err := json.Marshal(user)
 	if err != nil {
 		fmt.Println(err)
@@ -338,12 +325,6 @@ func Parse(signedString string) (*Auth, error) {
 	}, nil
 }
 
-//JWT認証のテスト 成功
-//var TestHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//	post := "test"
-//	json.NewEncoder(w).Encode(post)
-//})
-
 //ユーザー情報取得
 var GetUserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -354,16 +335,10 @@ var GetUserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reques
 	//log.Println("header_hoge:", header_hoge)
 	bearerToken := strings.Split(header_hoge, " ")
 	authToken := bearerToken[1]
-	//fmt.Println("bearerToken: ", bearerToken)
-	fmt.Println("authToken: ", authToken)
 
 	parsedToken, err := Parse(authToken)
 	userEmail := parsedToken.Email
 	log.Println("userEmail:", userEmail)
-	//parsedToken2 := *parsedToken
-	//userEmail := parsedToken2
-	//log.Println("parsedToken", parsedToken)
-	//log.Println("parsedToken2", parsedToken2)
 
 	db, _ := gormConnect()
 	defer db.Close()
@@ -372,20 +347,20 @@ var GetUserHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reques
 	//userData := model.User{}
 
 	//row := db.Where("id = ?", id).Find(&userData)
-	row := db.Where("id = ?", id).Find(&user)
+	//row := db.Where("id = ?", id).Find(&user)
 	if err := db.Where("id = ?", id).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
 		error := model.Error{}
 		error.Message = "該当するユーザーが見つかりません。"
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
 	}
-	if _, err := json.Marshal(row); err != nil {
-		error := model.Error{}
-		error.Message = "JSONへの変換失敗"
-		errorInResponse(w, http.StatusUnauthorized, error)
-		return
-	}
-	log.Println("user:", user.Age)
+
+	//if _, err := json.Marshal(row); err != nil {
+	//	error := model.Error{}
+	//	error.Message = "JSONへの変換失敗"
+	//	errorInResponse(w, http.StatusUnauthorized, error)
+	//	return
+	//}
 	v, err := json.Marshal(user)
 	if err != nil {
 		println(string(v))
@@ -405,7 +380,17 @@ func AllUsersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	followings := []model.User{}
+	db.Preload("Followings").Find(&allUsers)
+	db.Model(&allUsers).Related(&followings, "Followings")
+
+	log.Println("allUsers:", allUsers)
+
 	v, _ := json.Marshal(allUsers)
+
+	log.Println("v:", v)
+	log.Println("allUsers:", allUsers)
+
 	w.Write(v)
 }
 
@@ -635,7 +620,11 @@ var DeleteSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	}
 })
 
-var UserFollowHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+type FollowUserHandler struct {
+	DB *gorm.DB
+}
+
+func (f *FollowUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
@@ -643,20 +632,14 @@ var UserFollowHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 	var d model.Song
 	dec.Decode(&d)
 
-	db, _ := gormConnect()
-	defer db.Close()
-
 	var targetUser model.User
 
-	//row := db.Where("id = ?", id).Find(&targetUser)
-	if err := db.Where("id = ?", id).Find(&targetUser).Error; gorm.IsRecordNotFoundError(err) {
+	if err := f.DB.Where("id = ?", id).Find(&targetUser).Error; gorm.IsRecordNotFoundError(err) {
 		error := model.Error{}
 		error.Message = "該当する曲が見つかりません。"
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-
-	//db.Model(&model.User).Association("Friends").Append(&User{Name: "friend1"}, &User{Name: "friend2"})
 
 	header_hoge := r.Header.Get("Authorization")
 	bearerToken := strings.Split(header_hoge, " ")
@@ -667,28 +650,115 @@ var UserFollowHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 
 	var requestUser model.User
 
-	if err := db.Where("email = ?", userEmail).Find(&requestUser).Error; gorm.IsRecordNotFoundError(err) {
+	if err := f.DB.Where("email = ?", userEmail).Find(&requestUser).Error; gorm.IsRecordNotFoundError(err) {
 		error := model.Error{}
 		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
 	}
 
-	db.Model(&requestUser).Association("Followings").Append(&targetUser)
+	if err := f.DB.Create(&model.UserFollow{
+		UserID:   requestUser.ID,
+		FollowID: targetUser.ID}).Error; err != nil {
+		var error model.Error
+		error.Message = "曲の追加に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	f.DB.Preload("Followings").Find(&requestUser)
+	f.DB.Model(&requestUser).Association("Followings").Append(&targetUser)
+
+	//nの値は増えてる
+	n := f.DB.Model(&requestUser).Association("Followings").Count() //動作
+	log.Println("n:", n)
 
 	log.Println("requestUser:", requestUser)
 
-	//if err := db.Create(&model.UserFollow{
-	//	UserID:   requestUser.ID,
-	//	FollowID: targetUser.ID}).Error; err != nil {
-	//	var error model.Error
-	//	error.Message = "曲の追加に失敗しました"
-	//	errorInResponse(w, http.StatusInternalServerError, error)
-	//	return
-	//}
-})
+	log.Println("==============")
+	followings := []model.User{}
+	f.DB.Model(&requestUser).Related(&followings, "Followings")
+
+	log.Println("requestUser:", requestUser) //Followingsに値入っているぽい
+	log.Println("followings:", followings)
+}
+
+type UnfollowUserHandler struct {
+	DB *gorm.DB
+}
+
+func (f *UnfollowUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	dec := json.NewDecoder(r.Body)
+	var d model.Song
+	dec.Decode(&d)
+
+	var targetUser model.User
+
+	if err := f.DB.Where("id = ?", id).Find(&targetUser).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当する曲が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	header_hoge := r.Header.Get("Authorization")
+	bearerToken := strings.Split(header_hoge, " ")
+	authToken := bearerToken[1]
+
+	parsedToken, _ := Parse(authToken)
+	userEmail := parsedToken.Email
+
+	var requestUser model.User
+
+	if err := f.DB.Where("email = ?", userEmail).Find(&requestUser).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	if err := f.DB.Create(&model.UserFollow{
+		UserID:   requestUser.ID,
+		FollowID: targetUser.ID}).Error; err != nil {
+		var error model.Error
+		error.Message = "曲の追加に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	f.DB.Preload("Followings").Find(&requestUser)
+	f.DB.Model(&requestUser).Association("Followings").Delete(&targetUser)
+
+	n := f.DB.Model(&requestUser).Association("Followings").Count() //動作
+	log.Println("n:", n)
+
+	log.Println("==============")
+	followings := []model.User{}
+	f.DB.Model(&requestUser).Related(&followings, "Followings")
+
+	log.Println("requestUser:", requestUser) //Followingsに値入っているぽい
+	log.Println("followings:", followings)
+}
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println(".envファイルの読み込み失敗")
+	}
+
+	mysqlConfig := os.Getenv("mysqlConfig")
+
+	db, err := gorm.Open("mysql", mysqlConfig)
+	if err != nil {
+		log.Println(err)
+	}
+
+	db.DB().SetMaxIdleConns(10)
+	defer db.Close()
+
 	r := mux.NewRouter()
 
 	r.HandleFunc("/api/signup", SignUpHandler).Methods("POST")
@@ -698,9 +768,6 @@ func main() {
 	r.HandleFunc("/api/users", AllUsersHandler).Methods("GET")
 	r.HandleFunc("/api/user/{id}/update", UpdateUserHandler).Methods("PUT")
 
-	//r.GET("/api/tracks", controller.GetTracks)
-	//r.Handle("/api/oauth", JwtMiddleware.Handler(controller.OAuth)).Methods("GET")
-	//r.Handle("/api/oauth", JwtMiddleware.Handler(controller.OAuth)).Methods("POST")
 	r.HandleFunc("/api/oauth", controller.OAuth).Methods("POST")
 	r.HandleFunc("/api/getToken", controller.GetToken).Methods("POST")
 	r.HandleFunc("/api/tracks", controller.GetTracks).Methods("POST")
@@ -712,7 +779,8 @@ func main() {
 	r.Handle("/api/song/{id}", JwtMiddleware.Handler(UpdateSongHandler)).Methods("PUT")
 	r.Handle("/api/song/{id}", JwtMiddleware.Handler(DeleteSongHandler)).Methods("DELETE")
 
-	r.Handle("/api/user/{id}/follow", JwtMiddleware.Handler(UserFollowHandler)).Methods("POST")
+	r.Handle("/api/user/{id}/follow", JwtMiddleware.Handler(&FollowUserHandler{DB: db})).Methods("POST")
+	r.Handle("/api/user/{id}/unfollow", JwtMiddleware.Handler(&UnfollowUserHandler{DB: db})).Methods("POST")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		fmt.Println(err)

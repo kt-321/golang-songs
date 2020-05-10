@@ -25,7 +25,9 @@ type User struct {
 	FavoriteArtist   string     `json:"favoriteArtist"`
 	Comment          string     `json:"comment"`
 	Password         string     `json:"-"`
-	Followings       []*User    `json:"followings"`
+	//Followings       []*User    `json:"followings"`
+	//Followings []*User `gorm:"many2many:user_follows;association_jointable_foreignkey:follow_id"`
+	Followings []*User `json:"followings" gorm:"many2many:user_follows;association_jointable_foreignkey:follow_id"`
 	//Followings       []*User    `json:"followings"`
 	//Followings []*User `gorm:"many2many:user_follows;association_jointable_foreignkey:follow_id;json:"followings"`
 	//Followings []*User `gorm:"many2many:user_follows;association_jointable_foreignkey:user_id;json:"followings"`
