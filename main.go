@@ -30,11 +30,6 @@ func errorInResponse(w http.ResponseWriter, status int, error model.Error) {
 	return
 }
 
-type Form struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
 type SignUpHandler struct {
 	DB *gorm.DB
 }
@@ -43,7 +38,7 @@ func (f *SignUpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 
 	dec := json.NewDecoder(r.Body)
-	var d Form
+	var d model.Form
 	if err := dec.Decode(&d); err != nil {
 		var error model.Error
 		error.Message = "リクエストボディのデコードに失敗しました。"
@@ -120,7 +115,7 @@ func (f *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var jwt model.JWT
 
 	dec := json.NewDecoder(r.Body)
-	var d Form
+	var d model.Form
 	if err := dec.Decode(&d); err != nil {
 		var error model.Error
 		error.Message = "リクエストボディのデコードに失敗しました。"
@@ -404,50 +399,6 @@ func (f *CreateSongHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//type GetRedirectURL struct {
-//	DB *gorm.DB
-//}
-//
-//func (f *GetRedirectURL) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-//	//var GetRedirectURL = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-//	err := godotenv.Load()
-//	if err != nil {
-//		log.Println(".envファイルの読み込み失敗")
-//	}
-//
-//	//func GetRedirectURL() string {
-//	config = oauth2.Config{
-//		ClientID:     os.Getenv("client_id"),
-//		ClientSecret: os.Getenv("client_secret"),
-//		Endpoint: oauth2.Endpoint{
-//			AuthURL:  "https://accounts.spotify.com/authorize",
-//			TokenURL: "https://accounts.spotify.com/api/token",
-//		},
-//
-//		RedirectURL: "http://localhost:3000/spotify/songs",
-//		Scopes:      []string{},
-//	}
-//
-//	url := config.AuthCodeURL("state")
-//	log.Println(url)
-//
-//	w.Header().Set("Content-Type", "application/json")
-//
-//	v, err := json.Marshal(url)
-//	if err != nil {
-//		fmt.Println(err)
-//	}
-//	log.Println(v)
-//	b, err := JSONSafeMarshal(url, true)
-//	if err != nil {
-//		//c.AbortWithStatus(http.StatusInternalServerError)
-//		//return
-//		log.Println("Marshal取得失敗")
-//	}
-//	//log.Println(v)
-//	w.Write(b)
-//}
-
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -474,10 +425,9 @@ func main() {
 
 	r.Handle("/api/song", JwtMiddleware.Handler(&CreateSongHandler{DB: db})).Methods("POST")
 
-	r.Handle("/api/getRedirectUrl", JwtMiddleware.Handler(&controller.GetRedirectURL{DB: db})).Methods("GET")
-	r.Handle("/api/getToken", JwtMiddleware.Handler(&controller.GetToken{DB: db})).Methods("POST")
-	r.Handle("/api/tracks", JwtMiddleware.Handler(&controller.GetTracks{DB: db})).Methods("POST")
-	//r.HandleFunc("/api/tracks", controller.GetTracks).Methods("POST")
+	r.HandleFunc("/api/getRedirectUrl", controller.GetRedirectURL).Methods("GET")
+	r.HandleFunc("/api/getToken", controller.GetToken).Methods("POST")
+	r.HandleFunc("/api/tracks", controller.GetTracks).Methods("POST")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		log.Println(err)
