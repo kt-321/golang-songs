@@ -2,6 +2,7 @@ package controller
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"golang-songs/model"
 	"net/http"
@@ -98,7 +99,7 @@ func GetToken(w http.ResponseWriter, r *http.Request) {
 		Scopes:      []string{},
 	}
 
-	token, err := config.Exchange(oauth2.NoContext, d.Code)
+	token, err := config.Exchange(context.TODO(), d.Code)
 	if err != nil {
 		var error model.Error
 		error.Message = "トークンの取得に失敗しました"

@@ -44,7 +44,6 @@ func GetTracks(token string, title string) (*model.Response, error) {
 
 	var tracks model.Tracks
 
-	json.Unmarshal(b, &tracks)
 	if err := json.Unmarshal(b, &tracks); err != nil {
 		return nil, err
 	}
