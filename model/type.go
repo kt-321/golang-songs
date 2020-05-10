@@ -26,6 +26,7 @@ type User struct {
 	Comment          string     `json:"comment"`
 	Password         string     `json:"-"`
 	Followings       []*User    `json:"followings"`
+	//Followings       []*User    `json:"followings"`
 	//Followings []*User `gorm:"many2many:user_follows;association_jointable_foreignkey:follow_id;json:"followings"`
 	//Followings []*User `gorm:"many2many:user_follows;association_jointable_foreignkey:user_id;json:"followings"`
 }

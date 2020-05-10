@@ -656,6 +656,8 @@ var UserFollowHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	//db.Model(&model.User).Association("Friends").Append(&User{Name: "friend1"}, &User{Name: "friend2"})
+
 	header_hoge := r.Header.Get("Authorization")
 	bearerToken := strings.Split(header_hoge, " ")
 	authToken := bearerToken[1]
@@ -672,15 +674,18 @@ var UserFollowHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if err := db.Create(&model.UserFollow{
-		UserID:   requestUser.ID,
-		FollowID: targetUser.ID}).Error; err != nil {
-		var error model.Error
-		error.Message = "曲の追加に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
-	}
+	db.Model(&requestUser).Association("Followings").Append(&targetUser)
 
+	log.Println("requestUser:", requestUser)
+
+	//if err := db.Create(&model.UserFollow{
+	//	UserID:   requestUser.ID,
+	//	FollowID: targetUser.ID}).Error; err != nil {
+	//	var error model.Error
+	//	error.Message = "曲の追加に失敗しました"
+	//	errorInResponse(w, http.StatusInternalServerError, error)
+	//	return
+	//}
 })
 
 func main() {
