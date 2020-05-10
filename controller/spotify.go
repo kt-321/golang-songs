@@ -19,8 +19,12 @@ var config oauth2.Config
 // レスポンスにエラーを突っ込んで、返却するメソッド
 func errorInResponse(w http.ResponseWriter, status int, error model.Error) {
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(error)
-	return
+	if err := json.NewEncoder(w).Encode(error); err != nil {
+		var error model.Error
+		error.Message = "リクエストボディのデコードに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 }
 
 func GetRedirectURL(w http.ResponseWriter, r *http.Request) {
