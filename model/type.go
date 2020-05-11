@@ -25,12 +25,8 @@ type User struct {
 	FavoriteArtist   string     `json:"favoriteArtist"`
 	Comment          string     `json:"comment"`
 	Password         string     `json:"-"`
-	//Followings       []*User    `json:"followings"`
-	//Followings []*User `gorm:"many2many:user_follows;association_jointable_foreignkey:follow_id"`
-	Followings []*User `json:"followings" gorm:"many2many:user_follows;association_jointable_foreignkey:follow_id"`
-	//Followings       []*User    `json:"followings"`
-	//Followings []*User `gorm:"many2many:user_follows;association_jointable_foreignkey:follow_id;json:"followings"`
-	//Followings []*User `gorm:"many2many:user_follows;association_jointable_foreignkey:user_id;json:"followings"`
+	Followings       []*User    `json:"followings" gorm:"many2many:user_follows;association_jointable_foreignkey:follow_id"`
+	Bookmarkings     []*Song    `json:"bookmarkings" gorm:"many2many:bookmarks;"`
 }
 
 type Song struct {
@@ -47,6 +43,7 @@ type Song struct {
 	Description    string     `json:"description"`
 	SpotifyTrackId string     `json:"spotifyTrackId"`
 	UserID         uint       `json:"userId"`
+	Bookmarkers    []*User    `json:"bookmarkers" gorm:"many2many:bookmarks;"`
 }
 
 type UserFollow struct {
@@ -55,21 +52,17 @@ type UserFollow struct {
 	UpdatedAt time.Time  `json:"updatedAt"`
 	DeletedAt *time.Time `json:"deletedAt"`
 	UserID    uint       `json:"userId"`
-	FollowID  uint       `json:"FollowId"`
+	FollowID  uint       `json:"followId"`
 }
 
-//type UserInResponse struct {
-//	//gorm.Model
-//	Name             string `json:"name"`
-//	Email            string `json:"email,omitempty"`
-//	Age              int    `json:"age,omitempty"`
-//	Gender           int    `json:"gender,omitempty"`
-//	ImageUrl         string `json:"age,omitempty"`
-//	FavoriteMusicAge int    `json:"favoriteMusicAge,omitempty"`
-//	FavoriteArtist   string `json:"favoriteArtist,omitempty"`
-//	Comment          string `json:"comment,omitempty"`
-//	//Password         string `json:"password"`
-//}
+type Bookmark struct {
+	ID        uint       `json:"id"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+	DeletedAt *time.Time `json:"deletedAt"`
+	UserID    uint       `json:"userId"`
+	SongID    uint       `json:"songId"`
+}
 
 type JWT struct {
 	Token string `json:"token"`

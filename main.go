@@ -213,6 +213,10 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	db.Preload("Followings").Find(&user)
 	db.Model(&user).Related(&followings, "Followings")
 
+	bookmarkings := []model.Song{}
+	db.Preload("Bookmarkings").Find(&user)
+	db.Model(&user).Related(&bookmarkings, "Bookmarkings")
+
 	log.Println("user:", user)
 
 	//if _, err := json.Marshal(row); err != nil {
@@ -743,6 +747,132 @@ func (f *UnfollowUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	log.Println("followings:", followings)
 }
 
+type BookmarkHandler struct {
+	DB *gorm.DB
+}
+
+func (f *BookmarkHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	dec := json.NewDecoder(r.Body)
+	var d model.Song
+	dec.Decode(&d)
+
+	var song model.Song
+
+	if err := f.DB.Where("id = ?", id).Find(&song).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当する曲が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	header_hoge := r.Header.Get("Authorization")
+	bearerToken := strings.Split(header_hoge, " ")
+	authToken := bearerToken[1]
+
+	parsedToken, _ := Parse(authToken)
+	userEmail := parsedToken.Email
+
+	var user model.User
+
+	if err := f.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	if err := f.DB.Create(&model.Bookmark{
+		UserID: user.ID,
+		SongID: song.ID}).Error; err != nil {
+		var error model.Error
+		error.Message = "曲のお気に入り登録に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	f.DB.Preload("Bookmarkings").Find(&user)
+	f.DB.Model(&user).Association("Bookmarkings").Append(&song)
+
+	//nの値は増えてる
+	n := f.DB.Model(&user).Association("Bookmarkings").Count() //動作
+	log.Println("n:", n)
+
+	log.Println("user:", user)
+
+	log.Println("==============")
+	bookmarkings := []model.Song{}
+	f.DB.Model(&user).Related(&bookmarkings, "Bookmarikings")
+
+	log.Println("user:", user)
+	log.Println("bookmarkings:", bookmarkings)
+}
+
+type RemoveBookmarkHandler struct {
+	DB *gorm.DB
+}
+
+func (f *RemoveBookmarkHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	dec := json.NewDecoder(r.Body)
+	var d model.Song
+	dec.Decode(&d)
+
+	var song model.Song
+
+	if err := f.DB.Where("id = ?", id).Find(&song).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当する曲が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	header_hoge := r.Header.Get("Authorization")
+	bearerToken := strings.Split(header_hoge, " ")
+	authToken := bearerToken[1]
+
+	parsedToken, _ := Parse(authToken)
+	userEmail := parsedToken.Email
+
+	var user model.User
+
+	if err := f.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	//if err := f.DB.Create(&model.Bookmark{
+	//	UserID: user.ID,
+	//	SongID: song.ID}).Error; err != nil {
+	//	var error model.Error
+	//	error.Message = "曲のお気に入り解除に失敗しました"
+	//	errorInResponse(w, http.StatusInternalServerError, error)
+	//	return
+	//}
+
+	f.DB.Preload("Bookmarkings").Find(&user)
+	f.DB.Model(&user).Association("Bookmarkings").Delete(&song)
+
+	//nの値は増えてる
+	n := f.DB.Model(&user).Association("Bookmarkings").Count() //動作
+	log.Println("n:", n)
+
+	log.Println("user:", user)
+
+	log.Println("==============")
+	bookmarkings := []model.Song{}
+	f.DB.Model(&user).Related(&bookmarkings, "Bookmarikings")
+
+	log.Println("user:", user)
+	log.Println("bookmarkings:", bookmarkings)
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -781,6 +911,9 @@ func main() {
 
 	r.Handle("/api/user/{id}/follow", JwtMiddleware.Handler(&FollowUserHandler{DB: db})).Methods("POST")
 	r.Handle("/api/user/{id}/unfollow", JwtMiddleware.Handler(&UnfollowUserHandler{DB: db})).Methods("POST")
+
+	r.Handle("/api/song/{id}/bookmark", JwtMiddleware.Handler(&BookmarkHandler{DB: db})).Methods("POST")
+	r.Handle("/api/song/{id}/removeBookmark", JwtMiddleware.Handler(&RemoveBookmarkHandler{DB: db})).Methods("POST")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		fmt.Println(err)
