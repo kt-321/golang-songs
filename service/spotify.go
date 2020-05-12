@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"time"
 
 	"golang-songs/model"
 )
@@ -28,7 +29,9 @@ func GetTracks(token string, title string) (*model.Response, error) {
 	//ヘッダに」アクセストークン入れている
 	req.Header.Set("Authorization", "Bearer "+token)
 
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout: 15 * time.Second,
+	}
 
 	resp, err := client.Do(req)
 	if err != nil {

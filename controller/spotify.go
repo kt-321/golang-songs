@@ -14,8 +14,6 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var config oauth2.Config
-
 // レスポンスにエラーを突っ込んで、返却するメソッド
 func errorInResponse(w http.ResponseWriter, status int, error model.Error) {
 	w.WriteHeader(status)
@@ -36,7 +34,7 @@ func GetRedirectURL(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	config = oauth2.Config{
+	config := oauth2.Config{
 		ClientID:     os.Getenv("client_id"),
 		ClientSecret: os.Getenv("client_secret"),
 		Endpoint: oauth2.Endpoint{
@@ -52,24 +50,13 @@ func GetRedirectURL(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	if _, err := json.Marshal(url); err != nil {
+	// Encodeを用いたJson変換
+	encoder := json.NewEncoder(w)
+	//自動エスケープを無効に
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(url); err != nil {
 		var error model.Error
 		error.Message = "JSONへの変換に失敗しました。"
-		errorInResponse(w, http.StatusUnauthorized, error)
-		return
-	}
-
-	v, err := JSONSafeMarshal(url, true)
-	if err != nil {
-		var error model.Error
-		error.Message = "JSONへの変換に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
-	}
-
-	if _, err := w.Write(v); err != nil {
-		var error model.Error
-		error.Message = "URLの取得に失敗しました。"
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
@@ -93,7 +80,7 @@ func GetToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	config = oauth2.Config{
+	config := oauth2.Config{
 		ClientID:     os.Getenv("client_id"),
 		ClientSecret: os.Getenv("client_secret"),
 		Endpoint: oauth2.Endpoint{

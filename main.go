@@ -410,7 +410,13 @@ type GetSongHandler struct {
 
 func (f *GetSongHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
+	id, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "idの取得に失敗しました"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
 
 	var song model.Song
 
@@ -473,7 +479,13 @@ type UpdateSongHandler struct {
 
 func (f *UpdateSongHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
+	id, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "idの取得に失敗しました"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
 
 	dec := json.NewDecoder(r.Body)
 	var d model.Song
@@ -508,7 +520,13 @@ type DeleteSongHandler struct {
 
 func (f *DeleteSongHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
+	id, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "idの取得に失敗しました"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
 
 	var song model.Song
 
