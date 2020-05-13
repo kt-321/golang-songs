@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"golang-songs/controller"
 	"golang-songs/model"
 	"log"
 	"net/http"
@@ -22,35 +23,15 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-//MySQLへの接続
-func gormConnect() (*gorm.DB, error) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println(".envファイルの読み込み失敗")
-	}
-
-	mysqlConfig := os.Getenv("mysqlConfig")
-	db, err := gorm.Open("mysql", mysqlConfig)
-	if err != nil {
-		return nil, err
-	}
-	return db, nil
-}
-
 // レスポンスにエラーを突っ込んで、返却するメソッド
 func errorInResponse(w http.ResponseWriter, status int, error model.Error) {
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(error)
-	return
-}
-
-type Form struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
-}
-
-type DB struct {
-	DB *gorm.DB
+	if err := json.NewEncoder(w).Encode(error); err != nil {
+		var error model.Error
+		error.Message = "リクエストボディのデコードに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 }
 
 type SignUpHandler struct {
@@ -61,8 +42,13 @@ func (f *SignUpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 
 	dec := json.NewDecoder(r.Body)
-	var d Form
-	dec.Decode(&d)
+	var d model.Form
+	if err := dec.Decode(&d); err != nil {
+		var error model.Error
+		error.Message = "リクエストボディのデコードに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 
 	email := d.Email
 	password := d.Password
@@ -133,8 +119,13 @@ func (f *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var jwt model.JWT
 
 	dec := json.NewDecoder(r.Body)
-	var d Form
-	dec.Decode(&d)
+	var d model.Form
+	if err := dec.Decode(&d); err != nil {
+		var error model.Error
+		error.Message = "リクエストボディのデコードに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 
 	email := d.Email
 	password := d.Password
@@ -322,14 +313,6 @@ func (f *UpdateUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//email := d.Email
-	//name := d.Name
-	//age := d.Age
-	//gender := d.Gender
-	//favoriteMusicAge := d.FavoriteMusicAge
-	//favoriteArtist := d.FavoriteArtist
-	//comment := d.Comment
-
 	var user model.User
 
 	if err := f.DB.Model(&user).Where("id = ?", id).Update(model.User{Email: d.Email, Name: d.Name, Age: d.Age, Gender: d.Gender, FavoriteMusicAge: d.FavoriteMusicAge, FavoriteArtist: d.FavoriteArtist, Comment: d.Comment}).Error; err != nil {
@@ -366,6 +349,195 @@ func createToken(user model.User) (string, error) {
 	return tokenString, nil
 }
 
+type CreateSongHandler struct {
+	DB *gorm.DB
+}
+
+func (f *CreateSongHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	dec := json.NewDecoder(r.Body)
+	var d model.Song
+
+	if err := dec.Decode(&d); err != nil {
+		var error model.Error
+		error.Message = "リクエストボディのデコードに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	header_hoge := r.Header.Get("Authorization")
+	bearerToken := strings.Split(header_hoge, " ")
+	authToken := bearerToken[1]
+
+	parsedToken, err := Parse(authToken)
+	if err != nil {
+		var error model.Error
+		error.Message = "認証コードのパースに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	userEmail := parsedToken.Email
+
+	var user model.User
+
+	if err := f.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	if err := f.DB.Create(&model.Song{
+		Title:          d.Title,
+		Artist:         d.Artist,
+		MusicAge:       d.MusicAge,
+		Image:          d.Image,
+		Video:          d.Video,
+		Album:          d.Album,
+		Description:    d.Description,
+		SpotifyTrackId: d.SpotifyTrackId,
+		UserID:         user.ID}).Error; err != nil {
+		var error model.Error
+		error.Message = "曲の追加に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+}
+
+type GetSongHandler struct {
+	DB *gorm.DB
+}
+
+func (f *GetSongHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "idの取得に失敗しました"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
+
+	var song model.Song
+
+	if err := f.DB.Where("id = ?", id).Find(&song).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当する曲が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	v, err := json.Marshal(song)
+	if err != nil {
+		var error model.Error
+		error.Message = "曲の取得に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	if _, err := w.Write(v); err != nil {
+		var error model.Error
+		error.Message = "曲の取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+}
+
+type AllSongsHandler struct {
+	DB *gorm.DB
+}
+
+func (f *AllSongsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	allSongs := []model.Song{}
+
+	if err := f.DB.Find(&allSongs).Error; gorm.IsRecordNotFoundError(err) {
+		var error model.Error
+		error.Message = "曲が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	v, err := json.Marshal(allSongs)
+	if err != nil {
+		var error model.Error
+		error.Message = "曲一覧の取得に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	if _, err := w.Write(v); err != nil {
+		var error model.Error
+		error.Message = "曲一覧の取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+}
+
+type UpdateSongHandler struct {
+	DB *gorm.DB
+}
+
+func (f *UpdateSongHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "idの取得に失敗しました"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
+
+	dec := json.NewDecoder(r.Body)
+	var d model.Song
+	if err := dec.Decode(&d); err != nil {
+		var error model.Error
+		error.Message = "リクエストボディのデコードに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	var song model.Song
+
+	if err := f.DB.Model(&song).Where("id = ?", id).Update(model.Song{
+		Title:          d.Title,
+		Artist:         d.Artist,
+		MusicAge:       d.MusicAge,
+		Image:          d.Image,
+		Video:          d.Video,
+		Album:          d.Album,
+		Description:    d.Description,
+		SpotifyTrackId: d.SpotifyTrackId}).Error; err != nil {
+		var error model.Error
+		error.Message = "曲の更新に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+}
+
+type DeleteSongHandler struct {
+	DB *gorm.DB
+}
+
+func (f *DeleteSongHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "idの取得に失敗しました"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
+
+	var song model.Song
+
+	if err := f.DB.Where("id = ?", id).Delete(&song).Error; err != nil {
+		var error model.Error
+		error.Message = "曲の削除に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -389,6 +561,16 @@ func main() {
 	r.Handle("/api/user", JwtMiddleware.Handler(&UserHandler{DB: db})).Methods("GET")
 	r.Handle("/api/users", JwtMiddleware.Handler(&AllUsersHandler{DB: db})).Methods("GET")
 	r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(&UpdateUserHandler{DB: db})).Methods("PUT")
+
+	r.Handle("/api/song", JwtMiddleware.Handler(&CreateSongHandler{DB: db})).Methods("POST")
+	r.Handle("/api/song/{id}", JwtMiddleware.Handler(&GetSongHandler{DB: db})).Methods("GET")
+	r.Handle("/api/songs", JwtMiddleware.Handler(&AllSongsHandler{DB: db})).Methods("GET")
+	r.Handle("/api/song/{id}", JwtMiddleware.Handler(&UpdateSongHandler{DB: db})).Methods("PUT")
+	r.Handle("/api/song/{id}", JwtMiddleware.Handler(&DeleteSongHandler{DB: db})).Methods("DELETE")
+
+	r.HandleFunc("/api/getRedirectUrl", controller.GetRedirectURL).Methods("GET")
+	r.HandleFunc("/api/getToken", controller.GetToken).Methods("POST")
+	r.HandleFunc("/api/tracks", controller.GetTracks).Methods("POST")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		log.Println(err)
