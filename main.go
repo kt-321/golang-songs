@@ -604,6 +604,7 @@ func main() {
 	r.Handle("/api/signup", &SignUpHandler{DB: db}).Methods("POST")
 	r.Handle("/api/login", &LoginHandler{DB: db}).Methods("POST")
 	r.Handle("/api/user", JwtMiddleware.Handler(&UserHandler{DB: db})).Methods("GET")
+	r.Handle("/api/user/{id}", JwtMiddleware.Handler(&GetUserHandler{DB: db})).Methods("GET")
 	r.Handle("/api/users", JwtMiddleware.Handler(&AllUsersHandler{DB: db})).Methods("GET")
 	r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(&UpdateUserHandler{DB: db})).Methods("PUT")
 
