@@ -259,6 +259,45 @@ func (f *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type GetUserHandler struct {
+	DB *gorm.DB
+}
+
+//指定されたユーザーの情報を返す
+func (f *GetUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "ユーザーのidを取得できません。"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
+
+	var user model.User
+
+	if err := f.DB.Where("id = ?", id).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+	v, err := json.Marshal(user)
+	if err != nil {
+		var error model.Error
+		error.Message = "JSONへの変換に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	if _, err := w.Write(v); err != nil {
+		var error model.Error
+		error.Message = "ユーザー情報の取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+}
+
 type AllUsersHandler struct {
 	DB *gorm.DB
 }
@@ -538,6 +577,12 @@ func (f *DeleteSongHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//ELBのヘルスチェック用のハンドラ
+func healthzHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprint(w, "ok")
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -559,6 +604,7 @@ func main() {
 	r.Handle("/api/signup", &SignUpHandler{DB: db}).Methods("POST")
 	r.Handle("/api/login", &LoginHandler{DB: db}).Methods("POST")
 	r.Handle("/api/user", JwtMiddleware.Handler(&UserHandler{DB: db})).Methods("GET")
+	r.Handle("/api/user/{id}", JwtMiddleware.Handler(&GetUserHandler{DB: db})).Methods("GET")
 	r.Handle("/api/users", JwtMiddleware.Handler(&AllUsersHandler{DB: db})).Methods("GET")
 	r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(&UpdateUserHandler{DB: db})).Methods("PUT")
 
@@ -571,6 +617,8 @@ func main() {
 	r.HandleFunc("/api/getRedirectUrl", controller.GetRedirectURL).Methods("GET")
 	r.HandleFunc("/api/getToken", controller.GetToken).Methods("POST")
 	r.HandleFunc("/api/tracks", controller.GetTracks).Methods("POST")
+
+	r.HandleFunc("/", healthzHandler).Methods("GET")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		log.Println(err)
