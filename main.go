@@ -7,6 +7,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+
 	"github.com/joho/godotenv"
 
 	"github.com/gorilla/mux"
@@ -847,15 +851,6 @@ func (f *RemoveBookmarkHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	//if err := f.DB.Create(&model.Bookmark{
-	//	UserID: user.ID,
-	//	SongID: song.ID}).Error; err != nil {
-	//	var error model.Error
-	//	error.Message = "曲のお気に入り解除に失敗しました"
-	//	errorInResponse(w, http.StatusInternalServerError, error)
-	//	return
-	//}
-
 	f.DB.Preload("Bookmarkings").Find(&user)
 	f.DB.Model(&user).Association("Bookmarkings").Delete(&song)
 
@@ -873,6 +868,72 @@ func (f *RemoveBookmarkHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	log.Println("bookmarkings:", bookmarkings)
 }
 
+type UploadSongImageHandler struct {
+	DB *gorm.DB
+}
+
+func (f *UploadSongImageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	dec := json.NewDecoder(r.Body)
+	var d model.Song
+	dec.Decode(&d)
+
+	var song model.Song
+
+	if err := f.DB.Where("id = ?", id).Find(&song).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当する曲が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	header_hoge := r.Header.Get("Authorization")
+	bearerToken := strings.Split(header_hoge, " ")
+	authToken := bearerToken[1]
+
+	parsedToken, _ := Parse(authToken)
+	userEmail := parsedToken.Email
+
+	var user model.User
+
+	if err := f.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	//sess, err := session.NewSession(&aws.Config{
+	sess, _ := session.NewSession(&aws.Config{
+		Region: aws.String("ap-northeast-1")},
+	)
+	// ファイルを開く
+	targetFilePath := "./music_life.jpg"
+	file, err := os.Open(targetFilePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	//bucketName := "xxx-bucket"
+	bucketName := "your-songs-laravel"
+	objectKey := "AKIAZNEYIQFBYJLFB4EK"
+
+	// Uploaderを作成し、ローカルファイルをアップロード
+	uploader := s3manager.NewUploader(sess)
+	_, err = uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(bucketName),
+		Key:    aws.String(objectKey),
+		Body:   file,
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println("done")
+}
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -888,6 +949,40 @@ func main() {
 
 	db.DB().SetMaxIdleConns(10)
 	defer db.Close()
+
+	//S3に接続するためにのsessionを作成
+	//sess := session.Must(session.NewSessionWithOptions(session.Options{
+	//	Profile: "di",
+	//	//SharedConfigState: session.SharedConfigEnable,
+	//}))
+
+	////sess, err := session.NewSession(&aws.Config{
+	//sess, _ := session.NewSession(&aws.Config{
+	//	Region: aws.String("ap-northeast-1")},
+	//)
+	//// ファイルを開く
+	//targetFilePath := "./music_life.jpg"
+	//file, err := os.Open(targetFilePath)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//defer file.Close()
+	//
+	////bucketName := "xxx-bucket"
+	//bucketName := "your-songs-laravel"
+	//objectKey := "AKIAZNEYIQFBYJLFB4EK"
+	//
+	//// Uploaderを作成し、ローカルファイルをアップロード
+	//uploader := s3manager.NewUploader(sess)
+	//_, err = uploader.Upload(&s3manager.UploadInput{
+	//	Bucket: aws.String(bucketName),
+	//	Key:    aws.String(objectKey),
+	//	Body:   file,
+	//})
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//log.Println("done")
 
 	r := mux.NewRouter()
 
@@ -914,6 +1009,8 @@ func main() {
 
 	r.Handle("/api/song/{id}/bookmark", JwtMiddleware.Handler(&BookmarkHandler{DB: db})).Methods("POST")
 	r.Handle("/api/song/{id}/removeBookmark", JwtMiddleware.Handler(&RemoveBookmarkHandler{DB: db})).Methods("POST")
+
+	r.Handle("/api/song/{id}/upload", JwtMiddleware.Handler(&UploadSongImageHandler{DB: db})).Methods("POST")
 
 	if err := http.ListenAndServe(":8081", r); err != nil {
 		fmt.Println(err)
