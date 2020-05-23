@@ -181,7 +181,6 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
 	}
-
 	//log.Println(userData)
 
 	w.WriteHeader(http.StatusOK)
