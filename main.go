@@ -577,6 +577,138 @@ func (f *DeleteSongHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type BookmarkHandler struct {
+	DB *gorm.DB
+}
+
+func (f *BookmarkHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "idの取得に失敗しました"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
+
+	dec := json.NewDecoder(r.Body)
+	var d model.Song
+	if err := dec.Decode(&d); err != nil {
+		var error model.Error
+		error.Message = "リクエストボディのデコードに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	var song model.Song
+	if err := f.DB.Where("id = ?", id).Find(&song).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当する曲が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	header_hoge := r.Header.Get("Authorization")
+	bearerToken := strings.Split(header_hoge, " ")
+	authToken := bearerToken[1]
+
+	parsedToken, _ := Parse(authToken)
+	userEmail := parsedToken.Email
+
+	var user model.User
+	if err := f.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	if err := f.DB.Create(&model.Bookmark{
+		UserID: user.ID,
+		SongID: song.ID}).Error; err != nil {
+		var error model.Error
+		error.Message = "曲のお気に入り登録に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	f.DB.Preload("Bookmarkings").Find(&user)
+	f.DB.Model(&user).Association("Bookmarkings").Append(&song)
+
+	//nの値は増えてる
+	n := f.DB.Model(&user).Association("Bookmarkings").Count() //動作
+	log.Println("n:", n)
+
+	log.Println("user:", user)
+
+	log.Println("==============")
+	bookmarkings := []model.Song{}
+	f.DB.Model(&user).Related(&bookmarkings, "Bookmarikings")
+
+	log.Println("user:", user)
+	log.Println("bookmarkings:", bookmarkings)
+}
+
+type RemoveBookmarkHandler struct {
+	DB *gorm.DB
+}
+
+func (f *RemoveBookmarkHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	dec := json.NewDecoder(r.Body)
+	var d model.Song
+	dec.Decode(&d)
+
+	var song model.Song
+
+	if err := f.DB.Where("id = ?", id).Find(&song).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当する曲が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	header_hoge := r.Header.Get("Authorization")
+	bearerToken := strings.Split(header_hoge, " ")
+	authToken := bearerToken[1]
+
+	parsedToken, err := Parse(authToken)
+	if err != nil {
+		var error model.Error
+		error.Message = "認証コードのパースに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+	userEmail := parsedToken.Email
+
+	var user model.User
+
+	if err := f.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	f.DB.Preload("Bookmarkings").Find(&user)
+	f.DB.Model(&user).Association("Bookmarkings").Delete(&song)
+
+	//nの値は増えてる
+	n := f.DB.Model(&user).Association("Bookmarkings").Count() //動作
+	log.Println("n:", n)
+
+	log.Println("user:", user)
+
+	log.Println("==============")
+	bookmarkings := []model.Song{}
+	f.DB.Model(&user).Related(&bookmarkings, "Bookmarikings")
+
+	log.Println("user:", user)
+	log.Println("bookmarkings:", bookmarkings)
+}
+
 //ELBのヘルスチェック用のハンドラ
 func healthzHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
