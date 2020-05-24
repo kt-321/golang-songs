@@ -267,7 +267,7 @@ func (f *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if f.DB.Model(&user).Related(&followings, "Followings").RecordNotFound() {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "レコードが見つかりません。"
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
@@ -307,7 +307,7 @@ func (f *GetUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 
 	if err := f.DB.Where("id = ?", id).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
@@ -337,7 +337,7 @@ func (f *GetUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if f.DB.Model(&user).Related(&followings, "Followings").RecordNotFound() {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "レコードが見つかりません。"
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
@@ -655,7 +655,7 @@ func (f *FollowUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var targetUser model.User
 
 	if err := f.DB.Where("id = ?", id).Find(&targetUser).Error; gorm.IsRecordNotFoundError(err) {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "該当するユーザーが見つかりません。"
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
@@ -692,7 +692,7 @@ func (f *FollowUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var requestUser model.User
 
 	if err := f.DB.Where("email = ?", userEmail).Find(&requestUser).Error; gorm.IsRecordNotFoundError(err) {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
@@ -714,7 +714,7 @@ func (f *FollowUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := f.DB.Model(&requestUser).Association("Followings").Append(&targetUser).Error; err != nil {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "参照の追加に失敗しました。"
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
@@ -738,7 +738,7 @@ func (f *UnfollowUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	var targetUser model.User
 
 	if err := f.DB.Where("id = ?", id).Find(&targetUser).Error; gorm.IsRecordNotFoundError(err) {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "該当するユーザーフォローが見つかりません。"
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
@@ -775,7 +775,7 @@ func (f *UnfollowUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	var requestUser model.User
 
 	if err := f.DB.Where("email = ?", userEmail).Find(&requestUser).Error; gorm.IsRecordNotFoundError(err) {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
@@ -788,7 +788,7 @@ func (f *UnfollowUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	if err := f.DB.Model(&requestUser).Association("Followings").Delete(&targetUser).Error; err != nil {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "参照の削除に失敗しました。"
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
