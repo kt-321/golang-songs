@@ -644,11 +644,13 @@ type FollowUserHandler struct {
 
 func (f *FollowUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
-
-	dec := json.NewDecoder(r.Body)
-	var d model.Song
-	dec.Decode(&d)
+	id, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "ユーザーのidを取得できません。"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
 
 	var targetUser model.User
 
