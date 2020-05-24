@@ -708,7 +708,7 @@ func (f *FollowUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if err := f.DB.Where("id = ?", id).Find(&targetUser).Error; gorm.IsRecordNotFoundError(err) {
 		error := model.Error{}
-		error.Message = "該当する曲が見つかりません。"
+		error.Message = "該当するユーザーが見つかりません。"
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
@@ -1059,9 +1059,9 @@ func main() {
 	r.HandleFunc("/api/user/{id}/update", UpdateUserHandler).Methods("PUT")
 
 	r.HandleFunc("/api/oauth", controller.OAuth).Methods("POST")
-	r.HandleFunc("/api/getToken", controller.GetToken).Methods("POST")
+	r.HandleFunc("/api/get-token", controller.GetToken).Methods("POST")
 	r.HandleFunc("/api/tracks", controller.GetTracks).Methods("POST")
-	r.HandleFunc("/api/getRedirectUrl", controller.GetRedirectURL).Methods("GET")
+	r.HandleFunc("/api/get-redirect-url", controller.GetRedirectURL).Methods("GET")
 
 	r.Handle("/api/song", JwtMiddleware.Handler(CreateSongHandler)).Methods("POST")
 	r.Handle("/api/song/{id}", JwtMiddleware.Handler(GetSongHandler)).Methods("GET")
@@ -1073,7 +1073,7 @@ func main() {
 	r.Handle("/api/user/{id}/unfollow", JwtMiddleware.Handler(&UnfollowUserHandler{DB: db})).Methods("POST")
 
 	r.Handle("/api/song/{id}/bookmark", JwtMiddleware.Handler(&BookmarkHandler{DB: db})).Methods("POST")
-	r.Handle("/api/song/{id}/removeBookmark", JwtMiddleware.Handler(&RemoveBookmarkHandler{DB: db})).Methods("POST")
+	r.Handle("/api/song/{id}/remove-bookmark", JwtMiddleware.Handler(&RemoveBookmarkHandler{DB: db})).Methods("POST")
 
 	r.Handle("/api/song/{id}/upload", JwtMiddleware.Handler(&UploadSongImageHandler{DB: db})).Methods("POST")
 
