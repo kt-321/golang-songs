@@ -76,6 +76,11 @@ type Response struct {
 	Tracks Tracks `json:"tracks"`
 }
 
+type Form struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 type Tracks struct {
 	Tracks struct {
 		Href  string `json:"href"`
