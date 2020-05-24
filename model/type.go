@@ -16,6 +16,7 @@ type User struct {
 	FavoriteArtist   string     `json:"favoriteArtist"`
 	Comment          string     `json:"comment"`
 	Password         string     `json:"-"`
+	Bookmarkings     []*Song    `json:"bookmarkings" gorm:"many2many:bookmarks;"`
 }
 
 type Song struct {
@@ -32,6 +33,15 @@ type Song struct {
 	Description    string     `json:"description"`
 	SpotifyTrackId string     `json:"spotifyTrackId"`
 	UserID         uint       `json:"userId"`
+}
+
+type Bookmark struct {
+	ID        uint       `json:"id"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+	DeletedAt *time.Time `json:"deletedAt"`
+	UserID    uint       `json:"userId"`
+	SongID    uint       `json:"songId"`
 }
 
 type JWT struct {
