@@ -17,6 +17,7 @@ type User struct {
 	Comment          string     `json:"comment"`
 	Password         string     `json:"-"`
 	Bookmarkings     []*Song    `json:"bookmarkings" gorm:"many2many:bookmarks;"`
+	Followings       []*User    `json:"followings" gorm:"many2many:user_follows;association_jointable_foreignkey:follow_id"`
 }
 
 type Song struct {
@@ -42,6 +43,15 @@ type Bookmark struct {
 	DeletedAt *time.Time `json:"deletedAt"`
 	UserID    uint       `json:"userId"`
 	SongID    uint       `json:"songId"`
+}
+
+type UserFollow struct {
+	ID        uint       `json:"id"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+	DeletedAt *time.Time `json:"deletedAt"`
+	UserID    uint       `json:"userId"`
+	FollowID  uint       `json:"followId"`
 }
 
 type JWT struct {
