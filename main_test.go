@@ -10,10 +10,10 @@ import (
 	"os"
 	"testing"
 
+	"github.com/gorilla/mux"
+
 	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
-
-	"github.com/gorilla/mux"
 )
 
 //func TestSignUpHandler(t *testing.T) {
@@ -36,7 +36,7 @@ func TestSignUpHandler_ServeHTTP(t *testing.T) {
 	url := "http://localhost:8081/api/signup"
 
 	// テスト用の JSON ボディ作成
-	b, err := json.Marshal(Form{Email: "t@t", Password: "tttttt"})
+	b, err := json.Marshal(Form{Email: "tes@tes", Password: "testes"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -185,15 +185,26 @@ func TestLoginHandler_ServeHTTP(t *testing.T) {
 	//}
 }
 
-func TestGetUserHandler(t *testing.T) {
-	//url := "http://localhost:8081/api/user/1"
+func TestGetUserHandler_ServeHTTP(t *testing.T) {
+	//func TestGetUserHandler(t *testing.T) {
 	//url := "http://localhost:8081/api/user/2"
-	//url := "http://localhost:8081/api/user/{id:2}"
-	//number := 2
-	//url := "http://localhost:8081/api/user/" + strconv.Itoa(number)
-	//url := "/api/user/2"
 
-	//postrequest作成
+	//レシーバ付きの場合
+	err := godotenv.Load()
+	if err != nil {
+		log.Println(".envファイルの読み込み失敗")
+	}
+
+	mysqlConfig := os.Getenv("mysqlConfig")
+
+	db, err := gorm.Open("mysql", mysqlConfig)
+	if err != nil {
+		log.Println(err)
+	}
+
+	db.DB().SetMaxIdleConns(10)
+	defer db.Close()
+
 	//req, err := http.NewRequest("GET", url, nil)
 	//req := httptest.NewRequest("GET", url, nil)
 	req := httptest.NewRequest("GET", "http://localhost:8081/api/user/2", nil)
@@ -260,8 +271,14 @@ func TestGetUserHandler(t *testing.T) {
 	// テスト用のレスポンス作成
 	res := httptest.NewRecorder()
 
+	//レシーバ付きの場合
+	//f := &GetUserHandler{DB: db}
+	//f.ServeHTTP(res, req)
+
+	//レシーバ無しの場合
 	router := mux.NewRouter()
-	router.HandleFunc("/api/user/{id}", GetUserHandler)
+	//router.HandleFunc("/api/user/{id}", GetUserHandler)
+	router.Handle("/api/user/{id}", &GetUserHandler{DB: db})
 	router.ServeHTTP(res, req)
 
 	// ハンドラーの実行
@@ -279,7 +296,8 @@ func TestGetUserHandler(t *testing.T) {
 	}
 
 	// レスポンスのボディが期待通りか確認
-	expected := `{"id":2,"createdAt":"2020-05-23T21:02:20+09:00","updatedAt":"2020-05-23T21:02:20+09:00","deletedAt":null,"name":"","email":"u@u","age":0,"gender":0,"imageUrl":"","favoriteMusicAge":0,"favoriteArtist":"","comment":"","followings":null,"bookmarkings":null}`
+	//expected := `{"id":2,"createdAt":"2020-05-23T21:02:20+09:00","updatedAt":"2020-05-23T21:02:20+09:00","deletedAt":null,"name":"","email":"u@u","age":0,"gender":0,"imageUrl":"","favoriteMusicAge":0,"favoriteArtist":"","comment":"","followings":null,"bookmarkings":null}`
+	expected := `{"id":2,"createdAt":"2020-05-23T21:02:20+09:00","updatedAt":"2020-05-23T21:02:20+09:00","deletedAt":null,"name":"","email":"u@u","age":0,"gender":0,"imageUrl":"","favoriteMusicAge":0,"favoriteArtist":"","comment":"","followings":[],"bookmarkings":[]}`
 	if res.Body.String() != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			res.Body.String(), expected)
