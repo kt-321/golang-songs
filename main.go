@@ -259,6 +259,20 @@ func (f *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var followings []model.User
+	if err := f.DB.Preload("Followings").Find(&user).Error; err != nil {
+		var error model.Error
+		error.Message = "該当する参照が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+	if f.DB.Model(&user).Related(&followings, "Followings").RecordNotFound() {
+		var error model.Error
+		error.Message = "レコードが見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
 	v, err := json.Marshal(user)
 	if err != nil {
 		var error model.Error
@@ -293,7 +307,7 @@ func (f *GetUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 
 	if err := f.DB.Where("id = ?", id).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
-		error := model.Error{}
+		var error model.Error
 		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
@@ -310,6 +324,20 @@ func (f *GetUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if f.DB.Model(&user).Related(&bookmarkings, "Bookmarikings").RecordNotFound() {
 		error := model.Error{}
+		error.Message = "レコードが見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	var followings []model.User
+	if err := f.DB.Preload("Followings").Find(&user).Error; err != nil {
+		var error model.Error
+		error.Message = "該当する参照が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+	if f.DB.Model(&user).Related(&followings, "Followings").RecordNotFound() {
+		var error model.Error
 		error.Message = "レコードが見つかりません。"
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
@@ -610,6 +638,163 @@ func (f *DeleteSongHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type FollowUserHandler struct {
+	DB *gorm.DB
+}
+
+func (f *FollowUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "ユーザーのidを取得できません。"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
+
+	var targetUser model.User
+
+	if err := f.DB.Where("id = ?", id).Find(&targetUser).Error; gorm.IsRecordNotFoundError(err) {
+		var error model.Error
+		error.Message = "該当するユーザーが見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	headerAuthorization := r.Header.Get("Authorization")
+	if len(headerAuthorization) == 0 {
+		var error model.Error
+		error.Message = "認証トークンの取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	bearerToken := strings.Split(headerAuthorization, " ")
+	if len(bearerToken) < 2 {
+		var error model.Error
+		error.Message = "bearerトークンの取得に失敗しました。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	authToken := bearerToken[1]
+
+	parsedToken, err := Parse(authToken)
+	if err != nil {
+		var error model.Error
+		error.Message = "認証コードのパースに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	userEmail := parsedToken.Email
+
+	var requestUser model.User
+
+	if err := f.DB.Where("email = ?", userEmail).Find(&requestUser).Error; gorm.IsRecordNotFoundError(err) {
+		var error model.Error
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	if err := f.DB.Create(&model.UserFollow{
+		UserID:   requestUser.ID,
+		FollowID: targetUser.ID}).Error; err != nil {
+		var error model.Error
+		error.Message = "ユーザーフォローの追加に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	if err := f.DB.Preload("Followings").Find(&requestUser).Error; err != nil {
+		var error model.Error
+		error.Message = "該当する参照が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+	if err := f.DB.Model(&requestUser).Association("Followings").Append(&targetUser).Error; err != nil {
+		var error model.Error
+		error.Message = "参照の追加に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+}
+
+type UnfollowUserHandler struct {
+	DB *gorm.DB
+}
+
+func (f *UnfollowUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "ユーザーのidを取得できません。"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
+
+	var targetUser model.User
+
+	if err := f.DB.Where("id = ?", id).Find(&targetUser).Error; gorm.IsRecordNotFoundError(err) {
+		var error model.Error
+		error.Message = "該当するユーザーフォローが見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	headerAuthorization := r.Header.Get("Authorization")
+	if len(headerAuthorization) == 0 {
+		var error model.Error
+		error.Message = "認証トークンの取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	bearerToken := strings.Split(headerAuthorization, " ")
+	if len(bearerToken) < 2 {
+		var error model.Error
+		error.Message = "bearerトークンの取得に失敗しました。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	authToken := bearerToken[1]
+
+	parsedToken, err := Parse(authToken)
+	if err != nil {
+		var error model.Error
+		error.Message = "認証コードのパースに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	userEmail := parsedToken.Email
+
+	var requestUser model.User
+
+	if err := f.DB.Where("email = ?", userEmail).Find(&requestUser).Error; gorm.IsRecordNotFoundError(err) {
+		var error model.Error
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	if err := f.DB.Preload("Followings").Find(&requestUser).Error; err != nil {
+		var error model.Error
+		error.Message = "該当する参照が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+	if err := f.DB.Model(&requestUser).Association("Followings").Delete(&targetUser).Error; err != nil {
+		var error model.Error
+		error.Message = "参照の削除に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+}
+
 type BookmarkHandler struct {
 	DB *gorm.DB
 }
@@ -809,6 +994,9 @@ func main() {
 
 	r.Handle("/api/song/{id}/bookmark", JwtMiddleware.Handler(&BookmarkHandler{DB: db})).Methods("POST")
 	r.Handle("/api/song/{id}/remove-bookmark", JwtMiddleware.Handler(&RemoveBookmarkHandler{DB: db})).Methods("POST")
+
+	r.Handle("/api/user/{id}/follow", JwtMiddleware.Handler(&FollowUserHandler{DB: db})).Methods("POST")
+	r.Handle("/api/user/{id}/unfollow", JwtMiddleware.Handler(&UnfollowUserHandler{DB: db})).Methods("POST")
 
 	r.HandleFunc("/", healthzHandler).Methods("GET")
 
