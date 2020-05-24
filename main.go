@@ -705,9 +705,12 @@ func (f *FollowUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	f.DB.Preload("Followings").Find(&requestUser)
-	f.DB.Model(&requestUser).Association("Followings").Append(&targetUser)
-
+	if err := f.DB.Preload("Followings").Find(&requestUser).Error; err != nil {
+		var error model.Error
+		error.Message = "該当する参照が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 	if err := f.DB.Model(&requestUser).Association("Followings").Append(&targetUser).Error; err != nil {
 		error := model.Error{}
 		error.Message = "参照の追加に失敗しました。"
