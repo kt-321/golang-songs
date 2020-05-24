@@ -7,16 +7,36 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
+
+	"github.com/jinzhu/gorm"
+	"github.com/joho/godotenv"
 
 	"github.com/gorilla/mux"
 )
 
-func TestSignUpHandler(t *testing.T) {
+//func TestSignUpHandler(t *testing.T) {
+func TestSignUpHandler_ServeHTTP(t *testing.T) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println(".envファイルの読み込み失敗")
+	}
+
+	mysqlConfig := os.Getenv("mysqlConfig")
+
+	db, err := gorm.Open("mysql", mysqlConfig)
+	if err != nil {
+		log.Println(err)
+	}
+
+	db.DB().SetMaxIdleConns(10)
+	defer db.Close()
+
 	url := "http://localhost:8081/api/signup"
 
 	// テスト用の JSON ボディ作成
-	b, err := json.Marshal(Form{Email: "i@i", Password: "iiiiii"})
+	b, err := json.Marshal(Form{Email: "t@t", Password: "tttttt"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,17 +44,19 @@ func TestSignUpHandler(t *testing.T) {
 	// テスト用のリクエスト作成
 	req := httptest.NewRequest("POST", url, bytes.NewBuffer(b))
 
-	////headerをセット
-	//req.Header.Set("Content-Type", "application/json")
-	////httpクライアント
-	//client := &http.Client{}
-
 	// テスト用のレスポンス作成
 	res := httptest.NewRecorder()
+
 	// ハンドラーの実行
 	//SignUpHandler(res, req)
-	handler := http.HandlerFunc(SignUpHandler)
-	handler.ServeHTTP(res, req)
+
+	//レシーバ付きの場合
+	f := &SignUpHandler{DB: db}
+	f.ServeHTTP(res, req)
+
+	//レシーバ付きでない場合
+	//handler := http.HandlerFunc(SignUpHandler)
+	//handler.ServeHTTP(res, req)
 
 	// レスポンスのステータスコードのテスト
 	if res.Code != http.StatusOK {
@@ -76,11 +98,28 @@ func TestSignUpHandler(t *testing.T) {
 	//}
 }
 
-func TestLoginHandler(t *testing.T) {
+//func TestLoginHandler(t *testing.T) {
+func TestLoginHandler_ServeHTTP(t *testing.T) {
+	//レシーバ付きの場合
+	err := godotenv.Load()
+	if err != nil {
+		log.Println(".envファイルの読み込み失敗")
+	}
+
+	mysqlConfig := os.Getenv("mysqlConfig")
+
+	db, err := gorm.Open("mysql", mysqlConfig)
+	if err != nil {
+		log.Println(err)
+	}
+
+	db.DB().SetMaxIdleConns(10)
+	defer db.Close()
+
 	url := "http://localhost:8081/api/login"
 
 	// テスト用の JSON ボディ作成
-	b, err := json.Marshal(Form{Email: "a@a", Password: "aaaaaa"})
+	b, err := json.Marshal(Form{Email: "t@t", Password: "tttttt"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,8 +136,14 @@ func TestLoginHandler(t *testing.T) {
 	res := httptest.NewRecorder()
 	// ハンドラーの実行
 	//LoginHandler(res, req)
-	handler := http.HandlerFunc(LoginHandler)
-	handler.ServeHTTP(res, req)
+
+	//レシーバ付きの場合
+	f := &LoginHandler{DB: db}
+	f.ServeHTTP(res, req)
+
+	//レシーバ無しの場合
+	//handler := http.HandlerFunc(LoginHandler)
+	//handler.ServeHTTP(res, req)
 
 	// レスポンスのステータスコードのテスト
 	if res.Code != http.StatusOK {
