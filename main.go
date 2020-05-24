@@ -243,7 +243,7 @@ func (f *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bookmarkings := []model.Song{}
+	var bookmarkings []model.Song
 
 	if err := f.DB.Preload("Bookmarkings").Find(&user).Error; err != nil {
 		var error model.Error
@@ -299,7 +299,7 @@ func (f *GetUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bookmarkings := []model.Song{}
+	var bookmarkings []model.Song
 
 	if err := f.DB.Preload("Bookmarkings").Find(&user).Error; err != nil {
 		var error model.Error
@@ -803,12 +803,12 @@ func main() {
 	r.Handle("/api/song/{id}", JwtMiddleware.Handler(&UpdateSongHandler{DB: db})).Methods("PUT")
 	r.Handle("/api/song/{id}", JwtMiddleware.Handler(&DeleteSongHandler{DB: db})).Methods("DELETE")
 
-	r.HandleFunc("/api/getRedirectUrl", controller.GetRedirectURL).Methods("GET")
-	r.HandleFunc("/api/getToken", controller.GetToken).Methods("POST")
+	r.HandleFunc("/api/get-redirect-url", controller.GetRedirectURL).Methods("GET")
+	r.HandleFunc("/api/get-token", controller.GetToken).Methods("POST")
 	r.HandleFunc("/api/tracks", controller.GetTracks).Methods("POST")
 
 	r.Handle("/api/song/{id}/bookmark", JwtMiddleware.Handler(&BookmarkHandler{DB: db})).Methods("POST")
-	r.Handle("/api/song/{id}/removeBookmark", JwtMiddleware.Handler(&RemoveBookmarkHandler{DB: db})).Methods("POST")
+	r.Handle("/api/song/{id}/remove-bookmark", JwtMiddleware.Handler(&RemoveBookmarkHandler{DB: db})).Methods("POST")
 
 	r.HandleFunc("/", healthzHandler).Methods("GET")
 
