@@ -702,7 +702,7 @@ func (f *FollowUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		UserID:   requestUser.ID,
 		FollowID: targetUser.ID}).Error; err != nil {
 		var error model.Error
-		error.Message = "曲の追加に失敗しました"
+		error.Message = "ユーザーフォローの追加に失敗しました"
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
@@ -739,7 +739,7 @@ func (f *UnfollowUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 	if err := f.DB.Where("id = ?", id).Find(&targetUser).Error; gorm.IsRecordNotFoundError(err) {
 		error := model.Error{}
-		error.Message = "該当する曲が見つかりません。"
+		error.Message = "該当するユーザーフォローが見つかりません。"
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
@@ -778,15 +778,6 @@ func (f *UnfollowUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		error := model.Error{}
 		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusUnauthorized, error)
-		return
-	}
-
-	if err := f.DB.Create(&model.UserFollow{
-		UserID:   requestUser.ID,
-		FollowID: targetUser.ID}).Error; err != nil {
-		var error model.Error
-		error.Message = "曲の追加に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
 
