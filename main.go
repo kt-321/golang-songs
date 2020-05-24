@@ -243,6 +243,22 @@ func (f *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var bookmarkings []model.Song
+
+	if err := f.DB.Preload("Bookmarkings").Find(&user).Error; err != nil {
+		var error model.Error
+		error.Message = "該当する参照が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	if f.DB.Model(&user).Related(&bookmarkings, "Bookmarikings").RecordNotFound() {
+		error := model.Error{}
+		error.Message = "レコードが見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
 	v, err := json.Marshal(user)
 	if err != nil {
 		var error model.Error
@@ -282,6 +298,23 @@ func (f *GetUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
 	}
+
+	var bookmarkings []model.Song
+
+	if err := f.DB.Preload("Bookmarkings").Find(&user).Error; err != nil {
+		var error model.Error
+		error.Message = "該当する参照が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	if f.DB.Model(&user).Related(&bookmarkings, "Bookmarikings").RecordNotFound() {
+		error := model.Error{}
+		error.Message = "レコードが見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
 	v, err := json.Marshal(user)
 	if err != nil {
 		var error model.Error
@@ -577,6 +610,162 @@ func (f *DeleteSongHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type BookmarkHandler struct {
+	DB *gorm.DB
+}
+
+func (f *BookmarkHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "idの取得に失敗しました"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
+
+	var song model.Song
+	if err := f.DB.Where("id = ?", id).Find(&song).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当する曲が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	headerAuthorization := r.Header.Get("Authorization")
+	if len(headerAuthorization) == 0 {
+		var error model.Error
+		error.Message = "認証トークンの取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	bearerToken := strings.Split(headerAuthorization, " ")
+	if len(bearerToken) < 2 {
+		var error model.Error
+		error.Message = "bearerトークンの取得に失敗しました。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	authToken := bearerToken[1]
+
+	parsedToken, err := Parse(authToken)
+	if err != nil {
+		var error model.Error
+		error.Message = "認証コードのパースに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	userEmail := parsedToken.Email
+
+	var user model.User
+	if err := f.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		var error model.Error
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	if err := f.DB.Create(&model.Bookmark{
+		UserID: user.ID,
+		SongID: song.ID}).Error; err != nil {
+		var error model.Error
+		error.Message = "曲のお気に入り登録に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	if err := f.DB.Preload("Bookmarkings").Find(&user).Error; err != nil {
+		var error model.Error
+		error.Message = "該当する参照が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	if err := f.DB.Model(&user).Association("Bookmarkings").Append(&song).Error; err != nil {
+		error := model.Error{}
+		error.Message = "参照の追加に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+}
+
+type RemoveBookmarkHandler struct {
+	DB *gorm.DB
+}
+
+func (f *RemoveBookmarkHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "idの取得に失敗しました"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
+
+	var song model.Song
+
+	if err := f.DB.Where("id = ?", id).Find(&song).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当する曲が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	headerAuthorization := r.Header.Get("Authorization")
+	if len(headerAuthorization) == 0 {
+		var error model.Error
+		error.Message = "認証トークンの取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	bearerToken := strings.Split(headerAuthorization, " ")
+	if len(bearerToken) < 2 {
+		var error model.Error
+		error.Message = "bearerトークンの取得に失敗しました。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	authToken := bearerToken[1]
+
+	parsedToken, err := Parse(authToken)
+	if err != nil {
+		var error model.Error
+		error.Message = "認証コードのパースに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	userEmail := parsedToken.Email
+
+	var user model.User
+	if err := f.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	if err := f.DB.Preload("Bookmarkings").Find(&user).Error; err != nil {
+		var error model.Error
+		error.Message = "該当する参照が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	if err := f.DB.Model(&user).Association("Bookmarkings").Delete(&song).Error; err != nil {
+		error := model.Error{}
+		error.Message = "参照の削除に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+}
+
 //ELBのヘルスチェック用のハンドラ
 func healthzHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
@@ -614,9 +803,12 @@ func main() {
 	r.Handle("/api/song/{id}", JwtMiddleware.Handler(&UpdateSongHandler{DB: db})).Methods("PUT")
 	r.Handle("/api/song/{id}", JwtMiddleware.Handler(&DeleteSongHandler{DB: db})).Methods("DELETE")
 
-	r.HandleFunc("/api/getRedirectUrl", controller.GetRedirectURL).Methods("GET")
-	r.HandleFunc("/api/getToken", controller.GetToken).Methods("POST")
+	r.HandleFunc("/api/get-redirect-url", controller.GetRedirectURL).Methods("GET")
+	r.HandleFunc("/api/get-token", controller.GetToken).Methods("POST")
 	r.HandleFunc("/api/tracks", controller.GetTracks).Methods("POST")
+
+	r.Handle("/api/song/{id}/bookmark", JwtMiddleware.Handler(&BookmarkHandler{DB: db})).Methods("POST")
+	r.Handle("/api/song/{id}/remove-bookmark", JwtMiddleware.Handler(&RemoveBookmarkHandler{DB: db})).Methods("POST")
 
 	r.HandleFunc("/", healthzHandler).Methods("GET")
 
