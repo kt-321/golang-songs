@@ -309,3 +309,104 @@ func TestGetUserHandler_ServeHTTP(t *testing.T) {
 	//	t.Error("response error")
 	//}
 }
+
+func TestUserHandler_ServeHTTP(t *testing.T) {
+	//url := "http://localhost:8081/api/user/2"
+
+	//レシーバ付きの場合
+	err := godotenv.Load()
+	if err != nil {
+		log.Println(".envファイルの読み込み失敗")
+	}
+
+	mysqlConfig := os.Getenv("mysqlConfig")
+
+	db, err := gorm.Open("mysql", mysqlConfig)
+	if err != nil {
+		log.Println(err)
+	}
+
+	db.DB().SetMaxIdleConns(10)
+	defer db.Close()
+
+	req := httptest.NewRequest("GET", "http://localhost:8081/api/user", nil)
+
+	//headerをセット
+	req.Header.Set("Content-Type", "application/json")
+
+	var user model.User
+	user.Email = "a@a"
+	user.Password = "aaaaaa"
+	//トークン作成
+	token, err := createToken(user)
+	if err != nil {
+		//error := model.Error{}
+		//error.Message = "トークンの作成に失敗しました"
+		//errorInResponse(w, http.StatusUnauthorized, error)
+		//return
+		log.Println("err:", err)
+	}
+	log.Printf("tokenintest:%s", token)
+
+	jointToken := "Bearer" + " " + token
+	log.Printf("jointToken:%s", jointToken)
+
+	req.Header.Set("Authorization", jointToken)
+
+	//エラー検証
+	//if err != nil {
+	//	t.Error(err)
+	//	return
+	//}
+
+	////ステータスコード確認
+	//if resp.StatusCode != 200 {
+	//	t.Error(resp.StatusCode)
+	//	return
+	//}
+	//
+	////レスポンスBODY取得
+	//body, _ := ioutil.ReadAll(resp.Body)
+
+	//return
+
+	////headerをセット
+	//req.Header.Set("Content-Type", "application/json")
+	////httpクライアント
+	//client := &http.Client{}
+
+	// テスト用のレスポンス作成
+	res := httptest.NewRecorder()
+
+	//レシーバ付きの場合
+	//f := &UserHandler{DB: db}
+	//f.ServeHTTP(res, req)
+
+	// ハンドラーの実行
+	//GetUserHandler(res, req)
+
+	//client := new(http.Client)
+	//res, err := client.Do(req)
+
+	log.Printf("req: %v", req)
+	log.Printf("res: %v", res)
+
+	// レスポンスのステータスコードのテスト
+	if res.Code != http.StatusOK {
+		t.Errorf("invalid code: %d", res.Code)
+	}
+
+	// レスポンスのボディが期待通りか確認
+	//expected := `{"id":2,"createdAt":"2020-05-23T21:02:20+09:00","updatedAt":"2020-05-23T21:02:20+09:00","deletedAt":null,"name":"","email":"u@u","age":0,"gender":0,"imageUrl":"","favoriteMusicAge":0,"favoriteArtist":"","comment":"","followings":null,"bookmarkings":null}`
+	expected := `{"id":2,"createdAt":"2020-05-23T21:02:20+09:00","updatedAt":"2020-05-23T21:02:20+09:00","deletedAt":null,"name":"","email":"u@u","age":0,"gender":0,"imageUrl":"","favoriteMusicAge":0,"favoriteArtist":"","comment":"","followings":[],"bookmarkings":[]}`
+	if res.Body.String() != expected {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			res.Body.String(), expected)
+	}
+
+	//actual := string(res)
+	//expected := `{"id":1, "createdAt": "2020-05-23T19:17:21+09:00", "updatedAt": "2020-05-23T19:21:04+09:00", "deletedAt": null, "name": "a", "email": "a@a", "age": 20, "gender": 1, "imageUrl": "", favoriteMusicAge": 1980, "favoriteArtist":"椎名林檎", "comment": テストテスト", "followings": [], "bookmarkings": []}`
+	//if actual != expected {
+	//	t.Error("response error")
+	//}
+}
