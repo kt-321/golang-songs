@@ -359,49 +359,138 @@ func (f *LoginHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	w.Write(v2)
 //}
 
-func UserHandler(w http.ResponseWriter, r *http.Request) {
-	header_hoge := r.Header.Get("Authorization")
-	bearerToken := strings.Split(header_hoge, " ")
-	authToken := bearerToken[1]
+//func UserHandler(w http.ResponseWriter, r *http.Request) {
+//	header_hoge := r.Header.Get("Authorization")
+//	bearerToken := strings.Split(header_hoge, " ")
+//	authToken := bearerToken[1]
+//
+//	parsedToken, err := Parse(authToken)
+//	userEmail := parsedToken.Email
+//
+//	db, _ := gormConnect()
+//	defer db.Close()
+//
+//	var user model.User
+//	if err := db.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+//		error := model.Error{}
+//		error.Message = "該当するユーザーが見つかりません。"
+//		errorInResponse(w, http.StatusUnauthorized, error)
+//		return
+//	}
+//
+//	followings := []model.User{}
+//	db.Preload("Followings").Find(&user)
+//	db.Model(&user).Related(&followings, "Followings")
+//
+//	bookmarkings := []model.Song{}
+//	db.Preload("Bookmarkings").Find(&user)
+//	db.Model(&user).Related(&bookmarkings, "Bookmarkings")
+//
+//	log.Println("user:", user)
+//
+//	//if _, err := json.Marshal(row); err != nil {
+//	//	error := model.Error{}
+//	//	error.Message = "該当するアカウントが見つかりません。"
+//	//	errorInResponse(w, http.StatusUnauthorized, error)
+//	//	return
+//	//}
+//	//
+//
+//	v, err := json.Marshal(user)
+//	if err != nil {
+//		fmt.Println(err)
+//	}
+//	log.Println(v)
+//	w.Write(v)
+//}
 
-	parsedToken, err := Parse(authToken)
-	userEmail := parsedToken.Email
+type UserHandler struct {
+	DB *gorm.DB
+}
 
-	db, _ := gormConnect()
-	defer db.Close()
+//リクエストユーザーの情報を返す
+func (f *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	headerAuthorization := r.Header.Get("Authorization")
+	if len(headerAuthorization) == 0 {
+		var error model.Error
+		error.Message = "認証トークンの取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 
-	var user model.User
-	if err := db.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
-		error := model.Error{}
-		error.Message = "該当するユーザーが見つかりません。"
+	bearerToken := strings.Split(headerAuthorization, " ")
+	if len(bearerToken) < 2 {
+		var error model.Error
+		error.Message = "bearerトークンの取得に失敗しました。"
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
 	}
 
-	followings := []model.User{}
-	db.Preload("Followings").Find(&user)
-	db.Model(&user).Related(&followings, "Followings")
+	authToken := bearerToken[1]
 
-	bookmarkings := []model.Song{}
-	db.Preload("Bookmarkings").Find(&user)
-	db.Model(&user).Related(&bookmarkings, "Bookmarkings")
+	parsedToken, err := Parse(authToken)
+	if err != nil {
+		var error model.Error
+		error.Message = "認証コードのパースに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 
-	log.Println("user:", user)
+	userEmail := parsedToken.Email
 
-	//if _, err := json.Marshal(row); err != nil {
-	//	error := model.Error{}
-	//	error.Message = "該当するアカウントが見つかりません。"
-	//	errorInResponse(w, http.StatusUnauthorized, error)
-	//	return
-	//}
-	//
+	var user model.User
+
+	if err := f.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		error := model.Error{}
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
+		return
+	}
+
+	var bookmarkings []model.Song
+
+	if err := f.DB.Preload("Bookmarkings").Find(&user).Error; err != nil {
+		var error model.Error
+		error.Message = "該当する参照が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	if f.DB.Model(&user).Related(&bookmarkings, "Bookmarikings").RecordNotFound() {
+		error := model.Error{}
+		error.Message = "レコードが見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	var followings []model.User
+	if err := f.DB.Preload("Followings").Find(&user).Error; err != nil {
+		var error model.Error
+		error.Message = "該当する参照が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+	if f.DB.Model(&user).Related(&followings, "Followings").RecordNotFound() {
+		var error model.Error
+		error.Message = "レコードが見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 
 	v, err := json.Marshal(user)
 	if err != nil {
-		fmt.Println(err)
+		var error model.Error
+		error.Message = "JSONへの変換に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
 	}
-	log.Println(v)
-	w.Write(v)
+
+	if _, err := w.Write(v); err != nil {
+		var error model.Error
+		error.Message = "ユーザー情報の取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 }
 
 //JWT
@@ -1290,7 +1379,8 @@ func main() {
 	//r.HandleFunc("/api/login", LoginHandler).Methods("POST")
 	r.Handle("/api/signup", &SignUpHandler{DB: db}).Methods("POST")
 	r.Handle("/api/login", &LoginHandler{DB: db}).Methods("POST")
-	r.HandleFunc("/api/user", UserHandler).Methods("GET")
+	//r.HandleFunc("/api/user", UserHandler).Methods("GET")
+	r.Handle("/api/user", JwtMiddleware.Handler(&UserHandler{DB: db})).Methods("GET")
 	//r.HandleFunc("/api/user/{id}", GetUserHandler).Methods("GET")
 	r.Handle("/api/user/{id}", &GetUserHandler{DB: db}).Methods("GET")
 	//r.Handle("/api/user/{id}", JwtMiddleware.Handler(&GetUserHandler{DB: db})).Methods("GET")
