@@ -904,55 +904,110 @@ func (f *UpdateUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	db.Model(&user).Where("id = ?", id).Update(model.User{Email: email, Name: name, Age: age, Gender: gender, FavoriteMusicAge: favoriteMusicAge, FavoriteArtist: favoriteArtist, Comment: comment})
 //}
 
-var CreateSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+type CreateSongHandler struct {
+	DB *gorm.DB
+}
+
+func (f *CreateSongHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
 	var d model.Song
-	dec.Decode(&d)
+
+	if err := dec.Decode(&d); err != nil {
+		var error model.Error
+		error.Message = "リクエストボディのデコードに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 
 	header_hoge := r.Header.Get("Authorization")
 	bearerToken := strings.Split(header_hoge, " ")
 	authToken := bearerToken[1]
 
-	parsedToken, _ := Parse(authToken)
-	userEmail := parsedToken.Email
+	parsedToken, err := Parse(authToken)
+	if err != nil {
+		var error model.Error
+		error.Message = "認証コードのパースに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 
-	db, _ := gormConnect()
-	defer db.Close()
+	userEmail := parsedToken.Email
 
 	var user model.User
 
-	if err := db.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+	if err := f.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
 		error := model.Error{}
 		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusUnauthorized, error)
 		return
 	}
 
-	title := d.Title
-	artist := d.Artist
-	musicAge := d.MusicAge
-	image := d.Image
-	video := d.Video
-	album := d.Album
-	description := d.Description
-	spotifyTrackId := d.SpotifyTrackId
-
-	if err := db.Create(&model.Song{
-		Title:          title,
-		Artist:         artist,
-		MusicAge:       musicAge,
-		Image:          image,
-		Video:          video,
-		Album:          album,
-		Description:    description,
-		SpotifyTrackId: spotifyTrackId,
+	if err := f.DB.Create(&model.Song{
+		Title:          d.Title,
+		Artist:         d.Artist,
+		MusicAge:       d.MusicAge,
+		Image:          d.Image,
+		Video:          d.Video,
+		Album:          d.Album,
+		Description:    d.Description,
+		SpotifyTrackId: d.SpotifyTrackId,
 		UserID:         user.ID}).Error; err != nil {
 		var error model.Error
 		error.Message = "曲の追加に失敗しました"
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-})
+}
+
+//var CreateSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//	dec := json.NewDecoder(r.Body)
+//	var d model.Song
+//	dec.Decode(&d)
+//
+//	header_hoge := r.Header.Get("Authorization")
+//	bearerToken := strings.Split(header_hoge, " ")
+//	authToken := bearerToken[1]
+//
+//	parsedToken, _ := Parse(authToken)
+//	userEmail := parsedToken.Email
+//
+//	db, _ := gormConnect()
+//	defer db.Close()
+//
+//	var user model.User
+//
+//	if err := db.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+//		error := model.Error{}
+//		error.Message = "該当するアカウントが見つかりません。"
+//		errorInResponse(w, http.StatusUnauthorized, error)
+//		return
+//	}
+//
+//	title := d.Title
+//	artist := d.Artist
+//	musicAge := d.MusicAge
+//	image := d.Image
+//	video := d.Video
+//	album := d.Album
+//	description := d.Description
+//	spotifyTrackId := d.SpotifyTrackId
+//
+//	if err := db.Create(&model.Song{
+//		Title:          title,
+//		Artist:         artist,
+//		MusicAge:       musicAge,
+//		Image:          image,
+//		Video:          video,
+//		Album:          album,
+//		Description:    description,
+//		SpotifyTrackId: spotifyTrackId,
+//		UserID:         user.ID}).Error; err != nil {
+//		var error model.Error
+//		error.Message = "曲の追加に失敗しました"
+//		errorInResponse(w, http.StatusInternalServerError, error)
+//		return
+//	}
+//})
 
 var GetSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -1458,7 +1513,8 @@ func main() {
 	r.HandleFunc("/api/tracks", controller.GetTracks).Methods("POST")
 	r.HandleFunc("/api/get-redirect-url", controller.GetRedirectURL).Methods("GET")
 
-	r.Handle("/api/song", JwtMiddleware.Handler(CreateSongHandler)).Methods("POST")
+	//r.Handle("/api/song", JwtMiddleware.Handler(CreateSongHandler)).Methods("POST")
+	r.Handle("/api/song", JwtMiddleware.Handler(&CreateSongHandler{DB: db})).Methods("POST")
 	r.Handle("/api/song/{id}", JwtMiddleware.Handler(GetSongHandler)).Methods("GET")
 	r.Handle("/api/songs", JwtMiddleware.Handler(AllSongsHandler)).Methods("GET")
 	r.Handle("/api/song/{id}", JwtMiddleware.Handler(UpdateSongHandler)).Methods("PUT")

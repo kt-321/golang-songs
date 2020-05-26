@@ -503,3 +503,43 @@ func UpdateUserHandler_ServeHTTP(t *testing.T) {
 	}
 
 }
+
+func CreateSongHandler_ServeHTTP(t *testing.T) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Println(".envファイルの読み込み失敗")
+	}
+
+	mysqlConfig := os.Getenv("mysqlConfig")
+
+	db, err := gorm.Open("mysql", mysqlConfig)
+	if err != nil {
+		log.Println(err)
+	}
+
+	db.DB().SetMaxIdleConns(10)
+	defer db.Close()
+
+	url := "http://localhost:8081/api/song"
+
+	// テスト用の JSON ボディ作成
+	b, err := json.Marshal(model.Song{Title: "TestSong", Artist: "TestArtist", MusicAge: 1980, Image: "https://i.scdn.co/image/ab67616d0000b2734cf60d953da37a4a5b59a8da", Video: "Gfut5UYbkZ8", Album: "TestAlbum", Description: "これはTest投稿です。", SpotifyTrackId: "0HxH6RDEQ624fNaoYXsS7j"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// テスト用のリクエスト作成
+	req := httptest.NewRequest("POST", url, bytes.NewBuffer(b))
+
+	// テスト用のレスポンス作成
+	res := httptest.NewRecorder()
+
+	//レシーバ付きの場合
+	f := &CreateSongHandler{DB: db}
+	f.ServeHTTP(res, req)
+
+	// レスポンスのステータスコードのテスト
+	if res.Code != http.StatusOK {
+		t.Errorf("invalid code: %d", res.Code)
+	}
+}
