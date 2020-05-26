@@ -765,31 +765,62 @@ func (f *GetUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	}
 //}
 
-func AllUsersHandler(w http.ResponseWriter, r *http.Request) {
-	db, _ := gormConnect()
-	defer db.Close()
+type AllUsersHandler struct {
+	DB *gorm.DB
+}
+
+//全てのユーザーを返す
+func (f *AllUsersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
 	allUsers := []model.User{}
 
-	if err := db.Find(&allUsers).Error; gorm.IsRecordNotFoundError(err) {
+	if err := f.DB.Find(&allUsers).Error; gorm.IsRecordNotFoundError(err) {
 		var error model.Error
 		error.Message = "該当するアカウントが見つかりません。"
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
 
-	followings := []model.User{}
-	db.Preload("Followings").Find(&allUsers)
-	db.Model(&allUsers).Related(&followings, "Followings")
-
-	log.Println("allUsers:", allUsers)
-
-	v, _ := json.Marshal(allUsers)
-
-	log.Println("v:", v)
-	log.Println("allUsers:", allUsers)
-
-	w.Write(v)
+	v, err := json.Marshal(allUsers)
+	if err != nil {
+		var error model.Error
+		error.Message = "ユーザー一覧の取得に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+	if _, err := w.Write(v); err != nil {
+		var error model.Error
+		error.Message = "ユーザー一覧の取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 }
+
+//func AllUsersHandler(w http.ResponseWriter, r *http.Request) {
+//	db, _ := gormConnect()
+//	defer db.Close()
+//	allUsers := []model.User{}
+//
+//	if err := db.Find(&allUsers).Error; gorm.IsRecordNotFoundError(err) {
+//		var error model.Error
+//		error.Message = "該当するアカウントが見つかりません。"
+//		errorInResponse(w, http.StatusInternalServerError, error)
+//		return
+//	}
+//
+//	followings := []model.User{}
+//	db.Preload("Followings").Find(&allUsers)
+//	db.Model(&allUsers).Related(&followings, "Followings")
+//
+//	log.Println("allUsers:", allUsers)
+//
+//	v, _ := json.Marshal(allUsers)
+//
+//	log.Println("v:", v)
+//	log.Println("allUsers:", allUsers)
+//
+//	w.Write(v)
+//}
 
 //func (f *AllUsersHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //
@@ -817,28 +848,61 @@ func AllUsersHandler(w http.ResponseWriter, r *http.Request) {
 //	}
 //}
 
-func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+type UpdateUserHandler struct {
+	DB *gorm.DB
+}
+
+func (f *UpdateUserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
+	id, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "ユーザーのidを取得できません。"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
 
 	dec := json.NewDecoder(r.Body)
 	var d model.User
-	dec.Decode(&d)
+	if err := dec.Decode(&d); err != nil {
+		var error model.Error
+		error.Message = "リクエストボディのデコードに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 
-	email := d.Email
-	name := d.Name
-	age := d.Age
-	gender := d.Gender
-	favoriteMusicAge := d.FavoriteMusicAge
-	favoriteArtist := d.FavoriteArtist
-	comment := d.Comment
-
-	db, _ := gormConnect()
-	defer db.Close()
 	var user model.User
 
-	db.Model(&user).Where("id = ?", id).Update(model.User{Email: email, Name: name, Age: age, Gender: gender, FavoriteMusicAge: favoriteMusicAge, FavoriteArtist: favoriteArtist, Comment: comment})
+	if err := f.DB.Model(&user).Where("id = ?", id).Update(model.User{Email: d.Email, Name: d.Name, Age: d.Age, Gender: d.Gender, FavoriteMusicAge: d.FavoriteMusicAge, FavoriteArtist: d.FavoriteArtist, Comment: d.Comment}).Error; err != nil {
+		var error model.Error
+		error.Message = "ユーザー情報の更新に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 }
+
+//func UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+//	vars := mux.Vars(r)
+//	id := vars["id"]
+//
+//	dec := json.NewDecoder(r.Body)
+//	var d model.User
+//	dec.Decode(&d)
+//
+//	email := d.Email
+//	name := d.Name
+//	age := d.Age
+//	gender := d.Gender
+//	favoriteMusicAge := d.FavoriteMusicAge
+//	favoriteArtist := d.FavoriteArtist
+//	comment := d.Comment
+//
+//	db, _ := gormConnect()
+//	defer db.Close()
+//	var user model.User
+//
+//	db.Model(&user).Where("id = ?", id).Update(model.User{Email: email, Name: name, Age: age, Gender: gender, FavoriteMusicAge: favoriteMusicAge, FavoriteArtist: favoriteArtist, Comment: comment})
+//}
 
 var CreateSongHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
@@ -1384,8 +1448,10 @@ func main() {
 	//r.HandleFunc("/api/user/{id}", GetUserHandler).Methods("GET")
 	r.Handle("/api/user/{id}", &GetUserHandler{DB: db}).Methods("GET")
 	//r.Handle("/api/user/{id}", JwtMiddleware.Handler(&GetUserHandler{DB: db})).Methods("GET")
-	r.HandleFunc("/api/users", AllUsersHandler).Methods("GET")
-	r.HandleFunc("/api/user/{id}/update", UpdateUserHandler).Methods("PUT")
+	//r.HandleFunc("/api/users", AllUsersHandler).Methods("GET")
+	r.Handle("/api/users", JwtMiddleware.Handler(&AllUsersHandler{DB: db})).Methods("GET")
+	//r.HandleFunc("/api/user/{id}/update", UpdateUserHandler).Methods("PUT")
+	r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(&UpdateUserHandler{DB: db})).Methods("PUT")
 
 	r.HandleFunc("/api/oauth", controller.OAuth).Methods("POST")
 	r.HandleFunc("/api/get-token", controller.GetToken).Methods("POST")
