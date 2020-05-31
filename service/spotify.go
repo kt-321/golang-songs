@@ -26,7 +26,7 @@ func GetTracks(token string, title string) (*model.Response, error) {
 
 	req.URL.RawQuery = values.Encode()
 
-	//ヘッダに」アクセストークン入れている
+	//ヘッダにアクセストークン入れている
 	req.Header.Set("Authorization", "Bearer "+token)
 
 	client := &http.Client{
