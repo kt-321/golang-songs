@@ -40,8 +40,7 @@ func GetRedirectURL(w http.ResponseWriter, r *http.Request) {
 			AuthURL:  "https://accounts.spotify.com/authorize",
 			TokenURL: "https://accounts.spotify.com/api/token",
 		},
-
-		RedirectURL: "http://localhost:3000/spotify/songs",
+		RedirectURL: os.Getenv("redirect_url"),
 		Scopes:      []string{},
 	}
 
@@ -85,7 +84,7 @@ func GetToken(w http.ResponseWriter, r *http.Request) {
 		Endpoint: oauth2.Endpoint{
 			TokenURL: "https://accounts.spotify.com/api/token",
 		},
-		RedirectURL: "http://localhost:3000/spotify/songs",
+		RedirectURL: os.Getenv("redirect_url"),
 		Scopes:      []string{},
 	}
 
