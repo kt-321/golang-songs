@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"golang-songs/controller"
 	"golang-songs/model"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -14,13 +15,14 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
+	"github.com/joho/godotenv"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/davecgh/go-spew/spew"
 	jwt "github.com/dgrijalva/jwt-go"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
+	"gopkg.in/yaml.v2"
 )
 
 // レスポンスにエラーを突っ込んで、返却するメソッド
@@ -963,9 +965,19 @@ func main() {
 		log.Println(".envファイルの読み込み失敗")
 	}
 
-	mysqlConfig := os.Getenv("mysqlConfig")
+	yml, err := ioutil.ReadFile("conf/db.yml")
+	if err != nil {
+		log.Println("conf/db.ymlの読み込み失敗")
+	}
 
-	db, err := gorm.Open("mysql", mysqlConfig)
+	t := make(map[interface{}]interface{})
+
+	_ = yaml.Unmarshal([]byte(yml), &t)
+
+	//環境を取得
+	conn := t[os.Getenv("GOJIENV")].(map[interface{}]interface{})
+
+	db, err := gorm.Open("mysql", conn["user"].(string)+conn["password"].(string)+"@"+conn["rds"].(string)+"/"+conn["db"].(string)+"?charset=utf8&parseTime=True")
 	if err != nil {
 		log.Println(err)
 	}

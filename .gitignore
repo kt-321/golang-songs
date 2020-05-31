@@ -1,1 +1,3 @@
 .env
+dbconfig.yml
+conf/db.yml

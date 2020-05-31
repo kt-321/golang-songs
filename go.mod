@@ -16,4 +16,5 @@ require (
 	golang.org/x/crypto v0.0.0-20200423211502-4bdfaf469ed5
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/tools v0.0.0-20200428211428-0c9eba77bc32 // indirect
+	gopkg.in/yaml.v2 v2.3.0
 )
