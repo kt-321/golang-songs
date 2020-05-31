@@ -8,14 +8,14 @@ type SongRepository struct {
 	SQLHandler SQLHandler
 }
 
-func (pr *SongRepository) FindAll() (posts domain.Posts, err error) {
+func (pr *SongRepository) FindAll() (songs domain.Songs, err error) {
 	const query = `
 	SELECT
 		id,
 		user_id,
 		body
 	FROM
-		posts
+		songs
 	`
 
 	rows, err := pr.SQLHandler.Query(query)
@@ -30,15 +30,19 @@ func (pr *SongRepository) FindAll() (posts domain.Posts, err error) {
 		//var id int
 		var id uint
 		//var userID int
+		var title string
+		var artist string
+		var musicAge int
+		var image string
+		var video string
+		var album string
+		var description string
+		var spotifyTrackId string
 		var userID uint
-		var body string
-		if err = rows.Scan(&id, &userID, &body); err != nil {
+		if err = rows.Scan(&id, &title, &artist, &musicAge, &image, &video, &album, &description, &spotifyTrackId, &userID); err != nil {
 			return
 		}
 		song := domain.Song{
-			//ID:     id,
-			//UserID: userID,
-			//Body:   body,
 			ID:             id,
 			Title:          title,
 			Artist:         artist,
@@ -66,7 +70,7 @@ func (pr *SongRepository) FindAll() (posts domain.Posts, err error) {
 		//	errorInResponse(w, http.StatusInternalServerError, error)
 		//	return
 		//}
-		posts = append(songs, song)
+		songs = append(songs, song)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -77,7 +81,7 @@ func (pr *SongRepository) FindAll() (posts domain.Posts, err error) {
 }
 
 // Save is saves the given entity.
-func (pr *SongRepository) Save(p domain.Post) (id int64, err error) {
+func (pr *SongRepository) Save(p domain.Song) (id int64, err error) {
 	// NOTE: this is a transaction example.
 	tx, err := pr.SQLHandler.Begin()
 	if err != nil {
@@ -86,12 +90,12 @@ func (pr *SongRepository) Save(p domain.Post) (id int64, err error) {
 
 	const query = `
 		INSERT INTO
-			posts(user_id, body)
+			songs(user_id, body)
 		VALUES
 			(?, ?)
 	`
 
-	result, err := tx.Exec(query, p.UserID, p.Body)
+	result, err := tx.Exec(query, p.Title, p.Artist, p.MusicAge, p.Image, p.Video, p.Album, p.Description, p.SpotifyTrackId, p.UserID)
 	if err != nil {
 		_ = tx.Rollback()
 		return
@@ -110,16 +114,16 @@ func (pr *SongRepository) Save(p domain.Post) (id int64, err error) {
 }
 
 // DeleteByID is deletes the entity identified by the given id.
-func (pr *SongRepository) DeleteByID(postID int) (err error) {
+func (pr *SongRepository) DeleteByID(songID int) (err error) {
 	const query = `
 		DELETE
 		FROM
-			posts
+			songs
 		WHERE
 			id = ?
 	`
 
-	_, err = pr.SQLHandler.Exec(query, postID)
+	_, err = pr.SQLHandler.Exec(query, songID)
 	if err != nil {
 		return
 	}

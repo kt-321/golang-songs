@@ -1,5 +1,10 @@
 package interfaces
 
+import (
+	"golang-songs/domain"
+	"time"
+)
+
 // A UserRepository belong to the inteface layer
 type UserRepository struct {
 	SQLHandler SQLHandler
@@ -10,7 +15,17 @@ func (ur *UserRepository) FindAll() (users domain.Users, err error) {
 	const query = `
 		SELECT
 			id,
-			name
+			createdAt,
+			updatedAt,
+			deletedAt
+			name,
+			email,
+			age,
+			gender,
+			imageUrl,
+			favoriteMusicAge,
+			favoriteArtist,
+			comment
 		FROM
 			users
 	`
@@ -23,14 +38,38 @@ func (ur *UserRepository) FindAll() (users domain.Users, err error) {
 	}
 
 	for rows.Next() {
-		var id int
+		var id uint
+		var createdAt time.Time
+		var updatedAt time.Time
+		var deletedAt *time.Time
 		var name string
-		if err = rows.Scan(&id, &name); err != nil {
+		var email string
+		var age int
+		var gender int
+		var imageUrl string
+		var favoriteMusicAge int
+		var favoriteArtist string
+		var comment string
+
+		if err = rows.Scan(&id, &createdAt, &updatedAt, &deletedAt, &name, &email, &age, &gender, &imageUrl, &favoriteMusicAge, &favoriteArtist, &comment); err != nil {
 			return
 		}
 		user := domain.User{
-			ID:   id,
-			Name: name,
+			ID:               id,
+			CreatedAt:        createdAt,
+			UpdatedAt:        updatedAt,
+			DeletedAt:        deletedAt,
+			Name:             name,
+			Email:            email,
+			Age:              age,
+			Gender:           gender,
+			ImageUrl:         imageUrl,
+			FavoriteMusicAge: favoriteMusicAge,
+			FavoriteArtist:   favoriteArtist,
+			Comment:          comment,
+			//Password:         password,
+			//Bookmarkings:     bookmarkings,
+			//Followings:       followings,
 		}
 		users = append(users, user)
 	}
@@ -47,7 +86,17 @@ func (ur *UserRepository) FindByID(userID int) (user domain.User, err error) {
 	const query = `
 		SELECT
 			id,
-			name
+			createdAt,
+			updatedAt,
+			deletedAt
+			name,
+			email,
+			age,
+			gender,
+			imageUrl,
+			favoriteMusicAge,
+			favoriteArtist,
+			comment
 		FROM
 			users
 		WHERE
@@ -61,14 +110,34 @@ func (ur *UserRepository) FindByID(userID int) (user domain.User, err error) {
 		return
 	}
 
-	var id int
+	var id uint
+	var createdAt time.Time
+	var updatedAt time.Time
+	var deletedAt *time.Time
 	var name string
+	var email string
+	var age int
+	var gender int
+	var imageUrl string
+	var favoriteMusicAge int
+	var favoriteArtist string
+	var comment string
+
 	row.Next()
-	if err = row.Scan(&id, &name); err != nil {
+	if err = row.Scan(&id, &createdAt, &updatedAt, &deletedAt, &name, &email, &age, &gender, &imageUrl, &favoriteMusicAge, &favoriteArtist, &comment); err != nil {
 		return
 	}
 	user.ID = id
+	user.CreatedAt = createdAt
+	user.UpdatedAt = updatedAt
+	user.DeletedAt = deletedAt
 	user.Name = name
-
+	user.Email = email
+	user.Age = age
+	user.Gender = gender
+	user.ImageUrl = imageUrl
+	user.FavoriteMusicAge = favoriteMusicAge
+	user.FavoriteArtist = favoriteArtist
+	user.Comment = comment
 	return
 }

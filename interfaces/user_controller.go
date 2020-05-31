@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"encoding/json"
+	"golang-songs/usecases"
 	"net/http"
 	"strconv"
 )
@@ -28,16 +29,35 @@ func NewUserController(sqlHandler SQLHandler, logger usecases.Logger) *UserContr
 func (uc *UserController) Index(w http.ResponseWriter, r *http.Request) {
 	uc.Logger.LogAccess("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
 
-	users, err := uc.UserInteractor.Index()
-	if err != nil {
-		uc.Logger.LogError("%s", err)
+	//users, err := uc.UserInteractor.Index()
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(500)
-		json.NewEncoder(w).Encode(err)
+	allUsers, err := uc.UserInteractor.Index()
+
+	//以下は元のコード
+	v, err := json.Marshal(allUsers)
+	if err != nil {
+		//var error model.Error
+		//error.Message = "ユーザー一覧の取得に失敗しました"
+		//errorInResponse(w, http.StatusInternalServerError, error)
+		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(users)
+	if _, err := w.Write(v); err != nil {
+		//var error model.Error
+		//error.Message = "ユーザー一覧の取得に失敗しました。"
+		//errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	//↓以下は、とって来たコード
+	//if err != nil {
+	//	uc.Logger.LogError("%s", err)
+	//
+	//	w.Header().Set("Content-Type", "application/json")
+	//	w.WriteHeader(500)
+	//	json.NewEncoder(w).Encode(err)
+	//}
+	//w.Header().Set("Content-Type", "application/json")
+	//json.NewEncoder(w).Encode(users)
 }
 
 // Show return response which contain the specified resource of a user.

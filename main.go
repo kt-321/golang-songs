@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"golang-songs/controller"
+	"golang-songs/infrastructure"
 	"golang-songs/model"
 	"log"
 	"net/http"
@@ -882,6 +883,17 @@ type RemoveBookmarkHandler struct {
 }
 
 func (f *RemoveBookmarkHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	logger := infrastructure.NewLogger()
+
+	infrastructure.Load(logger)
+
+	sqlHandler, err := infrastructure.NewSQLHandler()
+	if err != nil {
+		logger.LogError("%s", err)
+	}
+
+	infrastructure.Dispatch(logger, sqlHandler)
+
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 	if !ok {
@@ -958,6 +970,18 @@ func healthzHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	//logger := infrastructure.NewLogger()
+	//
+	//infrastructure.Load(logger)
+	//
+	//sqlHandler, err := infrastructure.NewSQLHandler()
+	//if err != nil {
+	//	logger.LogError("%s", err)
+	//}
+	//
+	//infrastructure.Dispatch(logger, sqlHandler)
+	//
+	//godotenv.Load()
 	err := godotenv.Load()
 	if err != nil {
 		log.Println(".envファイルの読み込み失敗")
