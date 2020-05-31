@@ -1000,7 +1000,7 @@ func main() {
 
 	r.HandleFunc("/", healthzHandler).Methods("GET")
 
-	if err := http.ListenAndServe(":8081", r); err != nil {
+	if err := http.ListenAndServe(":"+os.Getenv("SERVER_PORT"), r); err != nil {
 		log.Println(err)
 	}
 }
