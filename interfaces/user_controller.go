@@ -2,34 +2,39 @@ package interfaces
 
 import (
 	"encoding/json"
+	"golang-songs/model"
 	"golang-songs/usecases"
 	"net/http"
-	"strconv"
+
+	"github.com/gorilla/mux"
+
+	//"strconv"
+
+	"github.com/jinzhu/gorm"
 )
 
 // A UserController belong to the interface layer.
 type UserController struct {
 	UserInteractor usecases.UserInteractor
-	Logger         usecases.Logger
+	//Logger         usecases.Logger
 }
 
 // NewUserController returns the resource of users.
-func NewUserController(sqlHandler SQLHandler, logger usecases.Logger) *UserController {
+//func NewUserController(sqlHandler SQLHandler, logger usecases.Logger) *UserController {
+func NewUserController(DB *gorm.DB) *UserController {
 	return &UserController{
 		UserInteractor: usecases.UserInteractor{
 			UserRepository: &UserRepository{
-				SQLHandler: sqlHandler,
+				DB: DB,
 			},
 		},
-		Logger: logger,
+		//Logger: logger,
 	}
 }
 
 // Index return response which contain a listing of the resource of users.
 func (uc *UserController) Index(w http.ResponseWriter, r *http.Request) {
-	uc.Logger.LogAccess("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
-
-	//users, err := uc.UserInteractor.Index()
+	//uc.Logger.LogAccess("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
 
 	allUsers, err := uc.UserInteractor.Index()
 
@@ -62,18 +67,45 @@ func (uc *UserController) Index(w http.ResponseWriter, r *http.Request) {
 
 // Show return response which contain the specified resource of a user.
 func (uc *UserController) Show(w http.ResponseWriter, r *http.Request) {
-	uc.Logger.LogAccess("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+	//uc.Logger.LogAccess("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
+	vars := mux.Vars(r)
+	//id, ok := vars["id"]
+	userID, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "ユーザーのidを取得できません。"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
 
-	userID, _ := strconv.Atoi(r.URL.Query().Get("id"))
+	var user model.User
+
+	//userID, _ := strconv.Atoi(r.URL.Query().Get("id"))
 
 	user, err := uc.UserInteractor.Show(userID)
-	if err != nil {
-		uc.Logger.LogError("%s", err)
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(500)
-		json.NewEncoder(w).Encode(err)
+	v, err := json.Marshal(user)
+	if err != nil {
+		var error model.Error
+		error.Message = "JSONへの変換に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(user)
+
+	if _, err := w.Write(v); err != nil {
+		var error model.Error
+		error.Message = "ユーザー情報の取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+	//
+	//if err != nil {
+	//	uc.Logger.LogError("%s", err)
+	//
+	//	w.Header().Set("Content-Type", "application/json")
+	//	w.WriteHeader(500)
+	//	json.NewEncoder(w).Encode(err)
+	//}
+	//w.Header().Set("Content-Type", "application/json")
+	//json.NewEncoder(w).Encode(user)
 }

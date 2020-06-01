@@ -2,6 +2,10 @@ package interfaces
 
 import (
 	"encoding/json"
+
+	"github.com/jinzhu/gorm"
+
+	//"golang-songs/domain"
 	"golang-songs/domain"
 	"golang-songs/usecases"
 	"net/http"
@@ -13,14 +17,15 @@ type SongController struct {
 	Logger         usecases.Logger
 }
 
-func NewSongController(sqlHandler SQLHandler, logger usecases.Logger) *SongController {
+//func NewSongController(sqlHandler SQLHandler, logger usecases.Logger) *SongController {
+func NewSongController(DB *gorm.DB) *SongController {
 	return &SongController{
 		SongInteractor: usecases.SongInteractor{
 			SongRepository: &SongRepository{
-				SQLHandler: sqlHandler,
+				DB: DB,
 			},
 		},
-		Logger: logger,
+		//Logger: logger,
 	}
 }
 

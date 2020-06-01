@@ -2,10 +2,13 @@ package interfaces
 
 import (
 	"golang-songs/domain"
+
+	"github.com/jinzhu/gorm"
 )
 
 type SongRepository struct {
-	SQLHandler SQLHandler
+	//SQLHandler SQLHandler
+	DB *gorm.DB
 }
 
 func (pr *SongRepository) FindAll() (songs domain.Songs, err error) {

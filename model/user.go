@@ -1,11 +1,8 @@
-package domain
+package model
 
 import "time"
 
-// A Users belong to the domain layer.
-type Users []User
-
-// A User belong to the domain layer.
+//type Users []User
 
 type User struct {
 	ID               uint       `json:"id"`

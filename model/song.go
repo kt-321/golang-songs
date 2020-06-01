@@ -1,16 +1,8 @@
-package domain
+package model
 
 import "time"
 
-// A Songs belong to the domain layer.
-type Songs []Song
-
-// A Post belong to the domain layer.
-//type Song struct {
-//	ID     int    `json:"id"`
-//	UserID int    `json:"user_id"`
-//	Body   string `json:"body"`
-//}
+//type Songs []Song
 
 type Song struct {
 	ID             uint       `json:"id"`

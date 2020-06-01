@@ -1,143 +1,76 @@
 package interfaces
 
 import (
-	"golang-songs/domain"
-	"time"
+	"golang-songs/model"
+	"net/http"
+
+	//"time"
+
+	"github.com/jinzhu/gorm"
 )
 
 // A UserRepository belong to the inteface layer
 type UserRepository struct {
-	SQLHandler SQLHandler
+	//SQLHandler SQLHandler
+	DB *gorm.DB
 }
 
 // FindAll is returns the number of entities.
-func (ur *UserRepository) FindAll() (users domain.Users, err error) {
-	const query = `
-		SELECT
-			id,
-			createdAt,
-			updatedAt,
-			deletedAt
-			name,
-			email,
-			age,
-			gender,
-			imageUrl,
-			favoriteMusicAge,
-			favoriteArtist,
-			comment
-		FROM
-			users
-	`
-	rows, err := ur.SQLHandler.Query(query)
-
-	defer rows.Close()
-
-	if err != nil {
+//名前付き戻り値は良くない
+//func (ur *UserRepository) FindAll() (users domain.Users, err error) {
+func (ur *UserRepository) FindAll() (w http.ResponseWriter, r *http.Request) {
+	var users []model.User
+	if err := ur.DB.Find(&users).Error; gorm.IsRecordNotFoundError(err) {
+		//if err := f.DB.Find(&allUsers).Error; gorm.IsRecordNotFoundError(err) {
+		var error model.Error
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-
-	for rows.Next() {
-		var id uint
-		var createdAt time.Time
-		var updatedAt time.Time
-		var deletedAt *time.Time
-		var name string
-		var email string
-		var age int
-		var gender int
-		var imageUrl string
-		var favoriteMusicAge int
-		var favoriteArtist string
-		var comment string
-
-		if err = rows.Scan(&id, &createdAt, &updatedAt, &deletedAt, &name, &email, &age, &gender, &imageUrl, &favoriteMusicAge, &favoriteArtist, &comment); err != nil {
-			return
-		}
-		user := domain.User{
-			ID:               id,
-			CreatedAt:        createdAt,
-			UpdatedAt:        updatedAt,
-			DeletedAt:        deletedAt,
-			Name:             name,
-			Email:            email,
-			Age:              age,
-			Gender:           gender,
-			ImageUrl:         imageUrl,
-			FavoriteMusicAge: favoriteMusicAge,
-			FavoriteArtist:   favoriteArtist,
-			Comment:          comment,
-			//Password:         password,
-			//Bookmarkings:     bookmarkings,
-			//Followings:       followings,
-		}
-		users = append(users, user)
-	}
-
-	if err = rows.Err(); err != nil {
-		return
-	}
-
 	return
+
 }
 
 // FindByID is returns the entity identified by the given id.
-func (ur *UserRepository) FindByID(userID int) (user domain.User, err error) {
-	const query = `
-		SELECT
-			id,
-			createdAt,
-			updatedAt,
-			deletedAt
-			name,
-			email,
-			age,
-			gender,
-			imageUrl,
-			favoriteMusicAge,
-			favoriteArtist,
-			comment
-		FROM
-			users
-		WHERE
-			id = ?
-	`
-	row, err := ur.SQLHandler.Query(query, userID)
+//func (ur *UserRepository) FindByID(userID int) (user domain.User, err error) {
+func (ur *UserRepository) FindByID(userID int) (w http.ResponseWriter, r *http.Request) {
+	var user model.User
 
-	defer row.Close()
-
-	if err != nil {
+	if err := ur.DB.Where("id = ?", userID).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		var error model.Error
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusUnauthorized, error)
 		return
 	}
 
-	var id uint
-	var createdAt time.Time
-	var updatedAt time.Time
-	var deletedAt *time.Time
-	var name string
-	var email string
-	var age int
-	var gender int
-	var imageUrl string
-	var favoriteMusicAge int
-	var favoriteArtist string
-	var comment string
+	var bookmarkings []model.Song
 
-	row.Next()
-	if err = row.Scan(&id, &createdAt, &updatedAt, &deletedAt, &name, &email, &age, &gender, &imageUrl, &favoriteMusicAge, &favoriteArtist, &comment); err != nil {
+	if err := ur.DB.Preload("Bookmarkings").Find(&user).Error; err != nil {
+		var error model.Error
+		error.Message = "該当する参照が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-	user.ID = id
-	user.CreatedAt = createdAt
-	user.UpdatedAt = updatedAt
-	user.DeletedAt = deletedAt
-	user.Name = name
-	user.Email = email
-	user.Age = age
-	user.Gender = gender
-	user.ImageUrl = imageUrl
-	user.FavoriteMusicAge = favoriteMusicAge
-	user.FavoriteArtist = favoriteArtist
-	user.Comment = comment
+
+	if ur.DB.Model(&user).Related(&bookmarkings, "Bookmarikings").RecordNotFound() {
+		error := model.Error{}
+		error.Message = "レコードが見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	var followings []model.User
+	if err := ur.DB.Preload("Followings").Find(&user).Error; err != nil {
+		var error model.Error
+		error.Message = "該当する参照が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+	if ur.DB.Model(&user).Related(&followings, "Followings").RecordNotFound() {
+		var error model.Error
+		error.Message = "レコードが見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 	return
 }

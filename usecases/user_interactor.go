@@ -1,6 +1,9 @@
 package usecases
 
-import "golang-songs/domain"
+import (
+	//"golang-songs/domain"
+	"golang-songs/model"
+)
 
 // A UserInteractor belong to the usecases layer.
 type UserInteractor struct {
@@ -8,7 +11,9 @@ type UserInteractor struct {
 }
 
 // Index is display a listing of the resource.
-func (ui *UserInteractor) Index() (users domain.Users, err error) {
+//func (ui *UserInteractor) Index() (users domain.Users, err error) {
+func (ui *UserInteractor) Index() {
+	users := []model.User{}
 	users, err = ui.UserRepository.FindAll()
 
 	return
