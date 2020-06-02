@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-//type Songs []Song
+type Songs []Song
 
 type Song struct {
 	ID             uint       `json:"id"`

@@ -1,6 +1,8 @@
 package usecases
 
-import "golang-songs/domain"
+import (
+	"golang-songs/model"
+)
 
 // A PostInteractor belong to the usecases layer.
 type SongInteractor struct {
@@ -8,22 +10,32 @@ type SongInteractor struct {
 }
 
 // Index is display a listing of the resource.
-func (pi *SongInteractor) Index() (songs domain.Songs, err error) {
-	songs, err = pi.SongRepository.FindAll()
+func (si *SongInteractor) Index() (*model.Songs, error) {
+	//func (si *SongInteractor) Index() {
+	//songs, err = si.SongRepository.FindAll()
+	songs, err := si.SongRepository.FindAll()
 
 	return
 }
 
 // Store is store a newly created resource in storage.
-func (pi *SongInteractor) Store(p domain.Song) (id int64, err error) {
-	id, err = pi.SongRepository.Save(p)
+//func (si *SongInteractor) Store(p model.Song) (id int64, err error) {
+func (si *SongInteractor) Store(p model.Song) (int64, error) {
+	id, err = si.SongRepository.Save(p)
+
+	return
+}
+
+//func (pi *SongInteractor) Update(songID int) (err error) {
+func (si *SongInteractor) Update(songID int) error {
+	err = si.SongRepository.UpdateByID(songID)
 
 	return
 }
 
 // Destroy is remove the specified resource from storage.
-func (pi *SongInteractor) Destroy(songID int) (err error) {
-	err = pi.SongRepository.DeleteByID(songID)
+func (si *SongInteractor) Destroy(songID int) (err error) {
+	err = si.SongRepository.DeleteByID(songID)
 
 	return
 }

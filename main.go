@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"golang-songs/controller"
 	"golang-songs/infrastructure"
 	"golang-songs/model"
 	"log"
@@ -953,23 +952,14 @@ func (f *RemoveBookmarkHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 }
 
 //ELBのヘルスチェック用のハンドラ
-func healthzHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, "ok")
-}
+//func healthzHandler(w http.ResponseWriter, r *http.Request) {
+//	w.WriteHeader(http.StatusOK)
+//	fmt.Fprint(w, "ok")
+//}
 
 func main() {
-	//logger := infrastructure.NewLogger()
-	//
-	//infrastructure.Load(logger)
-	//
-	//sqlHandler, err := infrastructure.NewSQLHandler()
-	//if err != nil {
-	//	logger.LogError("%s", err)
-	//}
-	//
 	//infrastructure.Dispatch(logger, sqlHandler)
-	infrastructure.Dispatch()
+	//infrastructure.Dispatch()
 	err := godotenv.Load()
 	if err != nil {
 		log.Println(".envファイルの読み込み失敗")
@@ -982,39 +972,41 @@ func main() {
 		log.Println(err)
 	}
 
+	infrastructure.Dispatch(db)
+
 	db.DB().SetMaxIdleConns(10)
 	defer db.Close()
 
-	r := mux.NewRouter()
-
-	r.Handle("/api/signup", &SignUpHandler{DB: db}).Methods("POST")
-	r.Handle("/api/login", &LoginHandler{DB: db}).Methods("POST")
-	r.Handle("/api/user", JwtMiddleware.Handler(&UserHandler{DB: db})).Methods("GET")
-	r.Handle("/api/user/{id}", JwtMiddleware.Handler(&GetUserHandler{DB: db})).Methods("GET")
-	r.Handle("/api/users", JwtMiddleware.Handler(&AllUsersHandler{DB: db})).Methods("GET")
-	r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(&UpdateUserHandler{DB: db})).Methods("PUT")
-
-	r.Handle("/api/song", JwtMiddleware.Handler(&CreateSongHandler{DB: db})).Methods("POST")
-	r.Handle("/api/song/{id}", JwtMiddleware.Handler(&GetSongHandler{DB: db})).Methods("GET")
-	r.Handle("/api/songs", JwtMiddleware.Handler(&AllSongsHandler{DB: db})).Methods("GET")
-	r.Handle("/api/song/{id}", JwtMiddleware.Handler(&UpdateSongHandler{DB: db})).Methods("PUT")
-	r.Handle("/api/song/{id}", JwtMiddleware.Handler(&DeleteSongHandler{DB: db})).Methods("DELETE")
-
-	r.HandleFunc("/api/get-redirect-url", controller.GetRedirectURL).Methods("GET")
-	r.HandleFunc("/api/get-token", controller.GetToken).Methods("POST")
-	r.HandleFunc("/api/tracks", controller.GetTracks).Methods("POST")
-
-	r.Handle("/api/song/{id}/bookmark", JwtMiddleware.Handler(&BookmarkHandler{DB: db})).Methods("POST")
-	r.Handle("/api/song/{id}/remove-bookmark", JwtMiddleware.Handler(&RemoveBookmarkHandler{DB: db})).Methods("POST")
-
-	r.Handle("/api/user/{id}/follow", JwtMiddleware.Handler(&FollowUserHandler{DB: db})).Methods("POST")
-	r.Handle("/api/user/{id}/unfollow", JwtMiddleware.Handler(&UnfollowUserHandler{DB: db})).Methods("POST")
-
-	r.HandleFunc("/", healthzHandler).Methods("GET")
-
-	if err := http.ListenAndServe(":8081", r); err != nil {
-		log.Println(err)
-	}
+	//r := mux.NewRouter()
+	//
+	//r.Handle("/api/signup", &SignUpHandler{DB: db}).Methods("POST")
+	//r.Handle("/api/login", &LoginHandler{DB: db}).Methods("POST")
+	//r.Handle("/api/user", JwtMiddleware.Handler(&UserHandler{DB: db})).Methods("GET")
+	//r.Handle("/api/user/{id}", JwtMiddleware.Handler(&GetUserHandler{DB: db})).Methods("GET")
+	//r.Handle("/api/users", JwtMiddleware.Handler(&AllUsersHandler{DB: db})).Methods("GET")
+	//r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(&UpdateUserHandler{DB: db})).Methods("PUT")
+	//
+	//r.Handle("/api/song", JwtMiddleware.Handler(&CreateSongHandler{DB: db})).Methods("POST")
+	//r.Handle("/api/song/{id}", JwtMiddleware.Handler(&GetSongHandler{DB: db})).Methods("GET")
+	//r.Handle("/api/songs", JwtMiddleware.Handler(&AllSongsHandler{DB: db})).Methods("GET")
+	//r.Handle("/api/song/{id}", JwtMiddleware.Handler(&UpdateSongHandler{DB: db})).Methods("PUT")
+	//r.Handle("/api/song/{id}", JwtMiddleware.Handler(&DeleteSongHandler{DB: db})).Methods("DELETE")
+	//
+	//r.HandleFunc("/api/get-redirect-url", controller.GetRedirectURL).Methods("GET")
+	//r.HandleFunc("/api/get-token", controller.GetToken).Methods("POST")
+	//r.HandleFunc("/api/tracks", controller.GetTracks).Methods("POST")
+	//
+	//r.Handle("/api/song/{id}/bookmark", JwtMiddleware.Handler(&BookmarkHandler{DB: db})).Methods("POST")
+	//r.Handle("/api/song/{id}/remove-bookmark", JwtMiddleware.Handler(&RemoveBookmarkHandler{DB: db})).Methods("POST")
+	//
+	//r.Handle("/api/user/{id}/follow", JwtMiddleware.Handler(&FollowUserHandler{DB: db})).Methods("POST")
+	//r.Handle("/api/user/{id}/unfollow", JwtMiddleware.Handler(&UnfollowUserHandler{DB: db})).Methods("POST")
+	//
+	//r.HandleFunc("/", healthzHandler).Methods("GET")
+	//
+	//if err := http.ListenAndServe(":8081", r); err != nil {
+	//	log.Println(err)
+	//}
 }
 
 // JwtMiddleware check token

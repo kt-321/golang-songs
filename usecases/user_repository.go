@@ -8,4 +8,7 @@ type UserRepository interface {
 	FindAll()
 	FindByID(int)
 	//FindByID(int) (domain.User, error)
+	UpdateByID(int)
+	SingUp()
+	Login()
 }

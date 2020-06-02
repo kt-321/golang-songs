@@ -34,8 +34,6 @@ func NewUserController(DB *gorm.DB) *UserController {
 
 // Index return response which contain a listing of the resource of users.
 func (uc *UserController) Index(w http.ResponseWriter, r *http.Request) {
-	//uc.Logger.LogAccess("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
-
 	allUsers, err := uc.UserInteractor.Index()
 
 	//以下は元のコード
@@ -53,23 +51,11 @@ func (uc *UserController) Index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//↓以下は、とって来たコード
-	//if err != nil {
-	//	uc.Logger.LogError("%s", err)
-	//
-	//	w.Header().Set("Content-Type", "application/json")
-	//	w.WriteHeader(500)
-	//	json.NewEncoder(w).Encode(err)
-	//}
-	//w.Header().Set("Content-Type", "application/json")
-	//json.NewEncoder(w).Encode(users)
 }
 
 // Show return response which contain the specified resource of a user.
 func (uc *UserController) Show(w http.ResponseWriter, r *http.Request) {
-	//uc.Logger.LogAccess("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
 	vars := mux.Vars(r)
-	//id, ok := vars["id"]
 	userID, ok := vars["id"]
 	if !ok {
 		var error model.Error
@@ -79,8 +65,6 @@ func (uc *UserController) Show(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var user model.User
-
-	//userID, _ := strconv.Atoi(r.URL.Query().Get("id"))
 
 	user, err := uc.UserInteractor.Show(userID)
 
@@ -98,14 +82,44 @@ func (uc *UserController) Show(w http.ResponseWriter, r *http.Request) {
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-	//
-	//if err != nil {
-	//	uc.Logger.LogError("%s", err)
-	//
-	//	w.Header().Set("Content-Type", "application/json")
-	//	w.WriteHeader(500)
-	//	json.NewEncoder(w).Encode(err)
-	//}
-	//w.Header().Set("Content-Type", "application/json")
-	//json.NewEncoder(w).Encode(user)
+}
+
+// Show return response which contain the specified resource of a user.
+func (uc *UserController) Update(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userID, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "ユーザーのidを取得できません。"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
+
+	dec := json.NewDecoder(r.Body)
+	var d model.Song
+	if err := dec.Decode(&d); err != nil {
+		var error model.Error
+		error.Message = "リクエストボディのデコードに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	var user model.User
+
+	user, err := uc.UserInteractor.Update(userID)
+
+	v, err := json.Marshal(user)
+	if err != nil {
+		var error model.Error
+		error.Message = "JSONへの変換に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	if _, err := w.Write(v); err != nil {
+		var error model.Error
+		error.Message = "ユーザー情報の取得に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 }
