@@ -27,11 +27,7 @@ func (ur *UserRepository) GetUser(userEmail string) (*model.User, error) {
 	var bookmarkings []model.Song
 
 	if err := ur.DB.Preload("Bookmarkings").Find(&user).Error; err != nil {
-		//var error model.Error
-		//error.Message = "該当する参照が見つかりません。"
-		//errorInResponse(w, http.StatusInternalServerError, error)
 		return nil, err
-		//return
 	}
 
 	if err := ur.DB.Model(&user).Related(&bookmarkings, "Bookmarikings").Error; err != nil {
@@ -40,10 +36,6 @@ func (ur *UserRepository) GetUser(userEmail string) (*model.User, error) {
 
 	var followings []model.User
 	if err := ur.DB.Preload("Followings").Find(&user).Error; err != nil {
-		//var error model.Error
-		//error.Message = "該当する参照が見つかりません。"
-		//errorInResponse(w, http.StatusInternalServerError, error)
-		//return
 		return nil, err
 	}
 	if err := ur.DB.Model(&user).Related(&followings, "Followings").Error; err != nil {
@@ -63,11 +55,7 @@ func (ur *UserRepository) FindByID(userID int) (*model.User, error) {
 	var bookmarkings []model.Song
 
 	if err := ur.DB.Preload("Bookmarkings").Find(&user).Error; err != nil {
-		//var error model.Error
-		//error.Message = "該当する参照が見つかりません。"
-		//errorInResponse(w, http.StatusInternalServerError, error)
 		return nil, err
-		//return
 	}
 
 	if err := ur.DB.Model(&user).Related(&bookmarkings, "Bookmarikings").Error; err != nil {
@@ -76,10 +64,6 @@ func (ur *UserRepository) FindByID(userID int) (*model.User, error) {
 
 	var followings []model.User
 	if err := ur.DB.Preload("Followings").Find(&user).Error; err != nil {
-		//var error model.Error
-		//error.Message = "該当する参照が見つかりません。"
-		//errorInResponse(w, http.StatusInternalServerError, error)
-		//return
 		return nil, err
 	}
 	if err := ur.DB.Model(&user).Related(&followings, "Followings").Error; err != nil {
