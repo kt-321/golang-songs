@@ -1,17 +1,21 @@
-package service
+package interfaces
 
 import (
 	"encoding/json"
+	"golang-songs/model"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
 
-	"golang-songs/model"
+	"github.com/jinzhu/gorm"
 )
 
-func GetTracks(token string, title string) (*model.Response, error) {
+type SpotifyRepository struct {
+	DB *gorm.DB
+}
 
+func (spr *SpotifyRepository) GetTracks(token string, title string) (*model.Response, error) {
 	values := url.Values{}
 
 	values.Add("type", "track")
