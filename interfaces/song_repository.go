@@ -10,8 +10,8 @@ type SongRepository struct {
 	DB *gorm.DB
 }
 
-func (sr *SongRepository) FindAll() (*model.Songs, error) {
-	var songs model.Songs
+func (sr *SongRepository) FindAll() (*[]model.Song, error) {
+	var songs []model.Song
 
 	if err := sr.DB.Find(&songs).Error; gorm.IsRecordNotFoundError(err) {
 		return nil, err

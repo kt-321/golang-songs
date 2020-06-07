@@ -6,7 +6,7 @@ import (
 )
 
 type SongRepository interface {
-	FindAll() (*model.Songs, error)
+	FindAll() (*[]model.Song, error)
 	FindByID(int) (*model.Song, error)
 	Save(string, model.Song) error
 	UpdateByID(string, int, model.Song) error

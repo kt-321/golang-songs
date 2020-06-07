@@ -8,7 +8,7 @@ type SongInteractor struct {
 	SongRepository SongRepository
 }
 
-func (si *SongInteractor) Index() (*model.Songs, error) {
+func (si *SongInteractor) Index() (*[]model.Song, error) {
 	songs, err := si.SongRepository.FindAll()
 
 	return songs, err
