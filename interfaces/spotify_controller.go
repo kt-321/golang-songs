@@ -45,7 +45,6 @@ func (spc *SpotifyController) GetRedirectURLHandler(w http.ResponseWriter, r *ht
 			AuthURL:  "https://accounts.spotify.com/authorize",
 			TokenURL: "https://accounts.spotify.com/api/token",
 		},
-
 		RedirectURL: os.Getenv("redirect_url"),
 		Scopes:      []string{},
 	}
