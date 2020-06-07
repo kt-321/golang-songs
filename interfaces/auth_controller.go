@@ -73,7 +73,6 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 
 	user.Email = email
 	user.Password = string(hash)
-	password = string(hash)
 
 	d.Password = string(hash)
 

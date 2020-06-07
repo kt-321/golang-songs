@@ -175,5 +175,4 @@ func (uc *UserController) UpdateUserHandler(w http.ResponseWriter, r *http.Reque
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-	return
 }
