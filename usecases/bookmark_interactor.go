@@ -5,13 +5,9 @@ type BookmarkInteractor struct {
 }
 
 func (bi *BookmarkInteractor) Bookmark(userEmail string, songID int) error {
-	err := bi.BookmarkRepository.Bookmark(userEmail, songID)
-
-	return err
+	return bi.BookmarkRepository.Bookmark(userEmail, songID)
 }
 
 func (bi *BookmarkInteractor) RemoveBookmark(userEmail string, songID int) error {
-	err := bi.BookmarkRepository.RemoveBookmark(userEmail, songID)
-
-	return err
+	return bi.BookmarkRepository.RemoveBookmark(userEmail, songID)
 }

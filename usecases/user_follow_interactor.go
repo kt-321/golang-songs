@@ -5,13 +5,9 @@ type UserFollowInteractor struct {
 }
 
 func (ufi *UserFollowInteractor) Follow(requestUserEmail string, tagertUserID int) error {
-	err := ufi.UserFollowRepository.Follow(requestUserEmail, tagertUserID)
-
-	return err
+	return ufi.UserFollowRepository.Follow(requestUserEmail, tagertUserID)
 }
 
 func (ufi *UserFollowInteractor) Unfollow(requestUserEmail string, tagertUserID int) error {
-	err := ufi.UserFollowRepository.Unfollow(requestUserEmail, tagertUserID)
-
-	return err
+	return ufi.UserFollowRepository.Unfollow(requestUserEmail, tagertUserID)
 }

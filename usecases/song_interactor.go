@@ -9,31 +9,21 @@ type SongInteractor struct {
 }
 
 func (si *SongInteractor) Index() (*[]model.Song, error) {
-	songs, err := si.SongRepository.FindAll()
-
-	return songs, err
+	return si.SongRepository.FindAll()
 }
 
 func (si *SongInteractor) Show(songID int) (*model.Song, error) {
-	song, err := si.SongRepository.FindByID(songID)
-
-	return song, err
+	return si.SongRepository.FindByID(songID)
 }
 
 func (si *SongInteractor) Store(userEmail string, p model.Song) error {
-	err := si.SongRepository.Save(userEmail, p)
-
-	return err
+	return si.SongRepository.Save(userEmail, p)
 }
 
 func (si *SongInteractor) Update(userEmail string, songID int, p model.Song) error {
-	err := si.SongRepository.UpdateByID(userEmail, songID, p)
-
-	return err
+	return si.SongRepository.UpdateByID(userEmail, songID, p)
 }
 
 func (si *SongInteractor) Destroy(songID int) error {
-	err := si.SongRepository.DeleteByID(songID)
-
-	return err
+	return si.SongRepository.DeleteByID(songID)
 }

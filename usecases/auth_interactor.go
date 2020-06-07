@@ -7,13 +7,9 @@ type AuthInteractor struct {
 }
 
 func (ai *AuthInteractor) SignUp(p model.Form) error {
-	err := ai.AuthRepository.SignUp(p)
-
-	return err
+	return ai.AuthRepository.SignUp(p)
 }
 
 func (ai *AuthInteractor) Login(p model.Form) (*model.User, error) {
-	user, err := ai.AuthRepository.Login(p)
-
-	return user, err
+	return ai.AuthRepository.Login(p)
 }

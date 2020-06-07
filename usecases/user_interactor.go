@@ -9,24 +9,17 @@ type UserInteractor struct {
 }
 
 func (ui *UserInteractor) Index() (*model.Users, error) {
-	users, err := ui.UserRepository.FindAll()
-	return users, err
+	return ui.UserRepository.FindAll()
 }
 
 func (ui *UserInteractor) User(userEmail string) (*model.User, error) {
-	user, err := ui.UserRepository.GetUser(userEmail)
-
-	return user, err
+	return ui.UserRepository.GetUser(userEmail)
 }
 
 func (ui *UserInteractor) Show(userID int) (*model.User, error) {
-	user, err := ui.UserRepository.FindByID(userID)
-
-	return user, err
+	return ui.UserRepository.FindByID(userID)
 }
 
 func (ui *UserInteractor) Update(userID int, p model.User) error {
-	err := ui.UserRepository.Update(userID, p)
-
-	return err
+	return ui.UserRepository.Update(userID, p)
 }

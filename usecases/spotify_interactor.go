@@ -7,7 +7,5 @@ type SpotifyInteractor struct {
 }
 
 func (spi *SpotifyInteractor) GetTracks(token string, title string) (*model.Response, error) {
-	tracks, err := spi.SpotifyRepository.GetTracks(token, title)
-
-	return tracks, err
+	return spi.SpotifyRepository.GetTracks(token, title)
 }
