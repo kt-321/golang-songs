@@ -2,114 +2,98 @@ package interfaces
 
 import (
 	"golang-songs/model"
-	"net/http"
-
-	//"time"
 
 	"github.com/jinzhu/gorm"
 )
 
-// A UserRepository belong to the inteface layer
 type UserRepository struct {
 	DB *gorm.DB
 }
 
-// FindAll is returns the number of entities.
-//名前付き戻り値は良くない
-//func (ur *UserRepository) FindAll() (users domain.Users, err error) {
 func (ur *UserRepository) FindAll() (*model.Users, error) {
-	//var users []model.User
 	var users model.Users
 	if err := ur.DB.Find(&users).Error; gorm.IsRecordNotFoundError(err) {
-		var error model.Error
-		error.Message = "該当するアカウントが見つかりません。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
+		return nil, err
 	}
-	return users, err
+	return &users, nil
 }
 
-// FindByID is returns the entity identified by the given id.
+func (ur *UserRepository) GetUser(userEmail string) (*model.User, error) {
+	var user model.User
+	if err := ur.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+		return nil, err
+	}
+
+	var bookmarkings []model.Song
+
+	if err := ur.DB.Preload("Bookmarkings").Find(&user).Error; err != nil {
+		//var error model.Error
+		//error.Message = "該当する参照が見つかりません。"
+		//errorInResponse(w, http.StatusInternalServerError, error)
+		return nil, err
+		//return
+	}
+
+	if err := ur.DB.Model(&user).Related(&bookmarkings, "Bookmarikings").Error; err != nil {
+		return nil, err
+	}
+
+	var followings []model.User
+	if err := ur.DB.Preload("Followings").Find(&user).Error; err != nil {
+		//var error model.Error
+		//error.Message = "該当する参照が見つかりません。"
+		//errorInResponse(w, http.StatusInternalServerError, error)
+		//return
+		return nil, err
+	}
+	if err := ur.DB.Model(&user).Related(&followings, "Followings").Error; err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func (ur *UserRepository) FindByID(userID int) (*model.User, error) {
 	var user model.User
 
 	if err := ur.DB.Where("id = ?", userID).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
-		var error model.Error
-		error.Message = "該当するアカウントが見つかりません。"
-		errorInResponse(w, http.StatusUnauthorized, error)
-		return
+		return nil, err
 	}
 
 	var bookmarkings []model.Song
 
 	if err := ur.DB.Preload("Bookmarkings").Find(&user).Error; err != nil {
-		var error model.Error
-		error.Message = "該当する参照が見つかりません。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
+		//var error model.Error
+		//error.Message = "該当する参照が見つかりません。"
+		//errorInResponse(w, http.StatusInternalServerError, error)
+		return nil, err
+		//return
 	}
 
-	if ur.DB.Model(&user).Related(&bookmarkings, "Bookmarikings").RecordNotFound() {
-		error := model.Error{}
-		error.Message = "レコードが見つかりません。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
+	if err := ur.DB.Model(&user).Related(&bookmarkings, "Bookmarikings").Error; err != nil {
+		return nil, err
 	}
 
 	var followings []model.User
 	if err := ur.DB.Preload("Followings").Find(&user).Error; err != nil {
-		var error model.Error
-		error.Message = "該当する参照が見つかりません。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
+		//var error model.Error
+		//error.Message = "該当する参照が見つかりません。"
+		//errorInResponse(w, http.StatusInternalServerError, error)
+		//return
+		return nil, err
 	}
-	if ur.DB.Model(&user).Related(&followings, "Followings").RecordNotFound() {
-		var error model.Error
-		error.Message = "レコードが見つかりません。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
+	if err := ur.DB.Model(&user).Related(&followings, "Followings").Error; err != nil {
+		return nil, err
 	}
-	return user, err
+
+	return &user, nil
 }
 
-func (ur *UserRepository) Update(userID int) (*model.User, error) {
+func (ur *UserRepository) Update(userID int, p model.User) error {
 	var user model.User
 
-	if err := ur.DB.Where("id = ?", userID).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
-		var error model.Error
-		error.Message = "該当するアカウントが見つかりません。"
-		errorInResponse(w, http.StatusUnauthorized, error)
-		return
+	if err := ur.DB.Model(&user).Where("id = ?", userID).Update(model.User{Email: p.Email, Name: p.Name, Age: p.Age, Gender: p.Gender, FavoriteMusicAge: p.FavoriteMusicAge, FavoriteArtist: p.FavoriteArtist, Comment: p.Comment}).Error; err != nil {
+		return err
 	}
-
-	var bookmarkings []model.Song
-
-	if err := ur.DB.Preload("Bookmarkings").Find(&user).Error; err != nil {
-		var error model.Error
-		error.Message = "該当する参照が見つかりません。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
-	}
-
-	if ur.DB.Model(&user).Related(&bookmarkings, "Bookmarikings").RecordNotFound() {
-		error := model.Error{}
-		error.Message = "レコードが見つかりません。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
-	}
-
-	var followings []model.User
-	if err := ur.DB.Preload("Followings").Find(&user).Error; err != nil {
-		var error model.Error
-		error.Message = "該当する参照が見つかりません。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
-	}
-	if ur.DB.Model(&user).Related(&followings, "Followings").RecordNotFound() {
-		var error model.Error
-		error.Message = "レコードが見つかりません。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
-	}
-	return user, err
+	return nil
 }

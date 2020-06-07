@@ -1,14 +1,10 @@
 package usecases
 
-//import "golang-songs/domain"
+import "golang-songs/model"
 
-// A UserRepository belong to the usecases layer.
 type UserRepository interface {
-	//FindAll() (domain.Users, error)
-	FindAll()
-	FindByID(int)
-	//FindByID(int) (domain.User, error)
-	UpdateByID(int)
-	SingUp()
-	Login()
+	FindAll() (*model.Users, error)
+	GetUser(string) (*model.User, error)
+	FindByID(int) (*model.User, error)
+	Update(int, model.User) error
 }

@@ -7,10 +7,15 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
-func GetTracks(token string, title string) (*model.Response, error) {
+type SpotifyRepository struct {
+	DB *gorm.DB
+}
 
+func (spr *SpotifyRepository) GetTracks(token string, title string) (*model.Response, error) {
 	values := url.Values{}
 
 	values.Add("type", "track")
@@ -25,7 +30,7 @@ func GetTracks(token string, title string) (*model.Response, error) {
 
 	req.URL.RawQuery = values.Encode()
 
-	//ヘッダに」アクセストークン入れている
+	//ヘッダにアクセストークン入れている
 	req.Header.Set("Authorization", "Bearer "+token)
 
 	client := &http.Client{

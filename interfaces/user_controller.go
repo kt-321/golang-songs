@@ -5,6 +5,8 @@ import (
 	"golang-songs/model"
 	"golang-songs/usecases"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 
@@ -13,14 +15,10 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-// A UserController belong to the interface layer.
 type UserController struct {
 	UserInteractor usecases.UserInteractor
-	//Logger         usecases.Logger
 }
 
-// NewUserController returns the resource of users.
-//func NewUserController(sqlHandler SQLHandler, logger usecases.Logger) *UserController {
 func NewUserController(DB *gorm.DB) *UserController {
 	return &UserController{
 		UserInteractor: usecases.UserInteractor{
@@ -28,20 +26,23 @@ func NewUserController(DB *gorm.DB) *UserController {
 				DB: DB,
 			},
 		},
-		//Logger: logger,
 	}
 }
 
-// Index return response which contain a listing of the resource of users.
-func (uc *UserController) Index(w http.ResponseWriter, r *http.Request) {
+func (uc *UserController) AllUsersHandler(w http.ResponseWriter, r *http.Request) {
 	allUsers, err := uc.UserInteractor.Index()
+	if err != nil {
+		var error model.Error
+		error.Message = "曲が見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 
-	//以下は元のコード
 	v, err := json.Marshal(allUsers)
 	if err != nil {
-		//var error model.Error
-		//error.Message = "ユーザー一覧の取得に失敗しました"
-		//errorInResponse(w, http.StatusInternalServerError, error)
+		var error model.Error
+		error.Message = "ユーザー一覧の取得に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
 	if _, err := w.Write(v); err != nil {
@@ -53,20 +54,30 @@ func (uc *UserController) Index(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// Show return response which contain the specified resource of a user.
-func (uc *UserController) Show(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	userID, ok := vars["id"]
-	if !ok {
+func (uc *UserController) UserHandler(w http.ResponseWriter, r *http.Request) {
+	header_hoge := r.Header.Get("Authorization")
+	bearerToken := strings.Split(header_hoge, " ")
+	authToken := bearerToken[1]
+
+	parsedToken, err := Parse(authToken)
+	if err != nil {
 		var error model.Error
-		error.Message = "ユーザーのidを取得できません。"
-		errorInResponse(w, http.StatusBadRequest, error)
+		error.Message = "認証コードのパースに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
 
-	var user model.User
+	userEmail := parsedToken.Email
 
-	user, err := uc.UserInteractor.Show(userID)
+	var user *model.User
+
+	user, err = uc.UserInteractor.User(userEmail)
+	if err != nil {
+		var error model.Error
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 
 	v, err := json.Marshal(user)
 	if err != nil {
@@ -84,10 +95,9 @@ func (uc *UserController) Show(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Show return response which contain the specified resource of a user.
-func (uc *UserController) Update(w http.ResponseWriter, r *http.Request) {
+func (uc *UserController) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	userID, ok := vars["id"]
+	id, ok := vars["id"]
 	if !ok {
 		var error model.Error
 		error.Message = "ユーザーのidを取得できません。"
@@ -95,18 +105,23 @@ func (uc *UserController) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dec := json.NewDecoder(r.Body)
-	var d model.Song
-	if err := dec.Decode(&d); err != nil {
+	userID, err := strconv.Atoi(id)
+	if err != nil {
 		var error model.Error
-		error.Message = "リクエストボディのデコードに失敗しました。"
+		error.Message = "idのint型への型変換に失敗しました。"
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
 
-	var user model.User
+	var user *model.User
 
-	user, err := uc.UserInteractor.Update(userID)
+	user, err = uc.UserInteractor.Show(userID)
+	if err != nil {
+		var error model.Error
+		error.Message = "該当するアカウントが見つかりません。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
 
 	v, err := json.Marshal(user)
 	if err != nil {
@@ -122,4 +137,39 @@ func (uc *UserController) Update(w http.ResponseWriter, r *http.Request) {
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
+}
+
+func (uc *UserController) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		var error model.Error
+		error.Message = "ユーザーのidを取得できません。"
+		errorInResponse(w, http.StatusBadRequest, error)
+		return
+	}
+	userID, err := strconv.Atoi(id)
+	if err != nil {
+		var error model.Error
+		error.Message = "idのint型への型変換に失敗しました"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	dec := json.NewDecoder(r.Body)
+	var d model.User
+	if err := dec.Decode(&d); err != nil {
+		var error model.Error
+		error.Message = "リクエストボディのデコードに失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+
+	if err := uc.UserInteractor.Update(userID, d); err != nil {
+		var error model.Error
+		error.Message = "曲の更新に失敗しました。"
+		errorInResponse(w, http.StatusInternalServerError, error)
+		return
+	}
+	return
 }

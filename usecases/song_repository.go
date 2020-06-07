@@ -5,14 +5,10 @@ import (
 	"golang-songs/model"
 )
 
-// A PostRepository belong to the usecases layer.
 type SongRepository interface {
-	//FindAll() (model.Songs, error)
-	FindAll(string) (*model.Songs, error)
-	FindByID(string, int)
-	Save(string, model.Song) (int64, error)
-	//UpdateByID(int) error
+	FindAll() (*model.Songs, error)
+	FindByID(int) (*model.Song, error)
+	Save(string, model.Song) error
 	UpdateByID(string, int, model.Song) error
-	//DeleteByID(int) error
-	DeleteByID(string, int) error
+	DeleteByID(int) error
 }

@@ -2,72 +2,44 @@ package interfaces
 
 import (
 	"golang-songs/model"
-	"net/http"
 
 	"github.com/jinzhu/gorm"
 )
 
 type SongRepository struct {
-	//SQLHandler SQLHandler
 	DB *gorm.DB
 }
 
-//func (sr *SongRepository) FindAll() (songs *model.Songs, err error) {
-func (sr *SongRepository) FindAll(userEmail string) (*model.Songs, error) {
-	//var user model.User
-	////userEmailを引数で渡されるべきか
-	//if err := sr.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
-	//	error := model.Error{}
-	//	error.Message = "該当するアカウントが見つかりません。"
-	//	errorInResponse(w, http.StatusUnauthorized, error)
-	//	return
-	//}
-
-	songs := []model.Song{}
+func (sr *SongRepository) FindAll() (*model.Songs, error) {
+	var songs model.Songs
 
 	if err := sr.DB.Find(&songs).Error; gorm.IsRecordNotFoundError(err) {
-		var error model.Error
-		error.Message = "該当するアカウントが見つかりません。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
+		return nil, err
 	}
-	return songs, err
+	return &songs, nil
 }
 
-// FindByID is returns the entity identified by the given id.
-func (sr *SongRepository) FindByID(userEmail string, songID int) (*model.Song, error) {
-	var user model.User
-	//userEmailを引数で渡されるべきか
-	if err := sr.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
-		error := model.Error{}
-		error.Message = "該当するアカウントが見つかりません。"
-		errorInResponse(w, http.StatusUnauthorized, error)
-		return
-	}
-
+func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 	var song model.Song
 
 	if err := sr.DB.Where("id = ?", songID).Find(&song).Error; gorm.IsRecordNotFoundError(err) {
-		var error model.Error
-		error.Message = "該当するアカウントが見つかりません。"
-		errorInResponse(w, http.StatusUnauthorized, error)
-		return
+		//var error model.Error
+		//error.Message = "該当するアカウントが見つかりません。"
+		//errorInResponse(w, http.StatusUnauthorized, error)
+		return nil, err
 	}
 
-	return song, err
+	return &song, nil
 }
 
-// Save is saves the given entity.
-//func (sr *SongRepository) Save(p model.Song) (id int64, err error) {
-func (sr *SongRepository) Save(userEmail string, p model.Song) (int64, error) {
+func (sr *SongRepository) Save(userEmail string, p model.Song) error {
 
 	var user model.User
-	//userEmailを引数で渡されるべきか
 	if err := sr.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
-		error := model.Error{}
-		error.Message = "該当するアカウントが見つかりません。"
-		errorInResponse(w, http.StatusUnauthorized, error)
-		return
+		//error := model.Error{}
+		//error.Message = "該当するアカウントが見つかりません。"
+		//errorInResponse(w, http.StatusUnauthorized, error)
+		return err
 	}
 
 	if err := sr.DB.Create(&model.Song{
@@ -80,38 +52,22 @@ func (sr *SongRepository) Save(userEmail string, p model.Song) (int64, error) {
 		Description:    p.Description,
 		SpotifyTrackId: p.SpotifyTrackId,
 		UserID:         user.ID}).Error; err != nil {
-		var error model.Error
-		error.Message = "曲の追加に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
+		//var error model.Error
+		//error.Message = "曲の追加に失敗しました"
+		//errorInResponse(w, http.StatusInternalServerError, error)
+		return err
 	}
-	//result, err := tx.Exec(query, p.Title, p.Artist, p.MusicAge, p.Image, p.Video, p.Album, p.Description, p.SpotifyTrackId, p.UserID)
-	//if err != nil {
-	//	_ = tx.Rollback()
-	//	return
-	//}
-	//
-	//if err = tx.Commit(); err != nil {
-	//	return
-	//}
-	//
-	//id, err = result.LastInsertId()
-	//if err != nil {
-	//	return id, nil
-	//}
 
-	return id, nil
+	return nil
 }
 
-// DeleteByID is deletes the entity identified by the given id.
-func (sr *SongRepository) UpdateByID(userEmail string, songID int, p model.Song) (err error) {
+func (sr *SongRepository) UpdateByID(userEmail string, songID int, p model.Song) error {
 	var user model.User
-	//userEmailを引数で渡されるべきか
 	if err := sr.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
-		error := model.Error{}
-		error.Message = "該当するアカウントが見つかりません。"
-		errorInResponse(w, http.StatusUnauthorized, error)
-		return
+		//error := model.Error{}
+		//error.Message = "該当するアカウントが見つかりません。"
+		//errorInResponse(w, http.StatusUnauthorized, error)
+		return err
 	}
 
 	var song model.Song
@@ -125,34 +81,24 @@ func (sr *SongRepository) UpdateByID(userEmail string, songID int, p model.Song)
 		Album:          p.Album,
 		Description:    p.Description,
 		SpotifyTrackId: p.SpotifyTrackId}).Error; err != nil {
-		var error model.Error
-		error.Message = "曲の更新に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
+		//var error model.Error
+		//error.Message = "曲の更新に失敗しました"
+		//errorInResponse(w, http.StatusInternalServerError, error)
+		return err
 	}
 
-	return
+	return nil
 }
 
-// DeleteByID is deletes the entity identified by the given id.
-//func (sr *SongRepository) DeleteByID(songID int) (err error) {
-func (sr *SongRepository) DeleteByID(userEmail string, songID int) (err error) {
-	var user model.User
-	//userEmailを引数で渡されるべきか
-	if err := sr.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
-		error := model.Error{}
-		error.Message = "該当するアカウントが見つかりません。"
-		errorInResponse(w, http.StatusUnauthorized, error)
-		return
-	}
+func (sr *SongRepository) DeleteByID(songID int) error {
 	var song model.Song
 
 	if err := sr.DB.Where("id = ?", songID).Delete(&song).Error; err != nil {
-		var error model.Error
-		error.Message = "曲の削除に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
+		//var error model.Error
+		//error.Message = "曲の削除に失敗しました"
+		//errorInResponse(w, http.StatusInternalServerError, error)
+		return err
 	}
 
-	return
+	return nil
 }
