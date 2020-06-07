@@ -1,30 +1,36 @@
-package controller
+package interfaces
 
 import (
 	"context"
 	"encoding/json"
 	"golang-songs/model"
+	"golang-songs/usecases"
 	"net/http"
-	"os"
-
-	"golang-songs/service"
 
 	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
+
+	"os"
+
+	"github.com/jinzhu/gorm"
 )
 
-// レスポンスにエラーを突っ込んで、返却するメソッド
-func errorInResponse(w http.ResponseWriter, status int, error model.Error) {
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(error); err != nil {
-		var error model.Error
-		error.Message = "リクエストボディのデコードに失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
+type SpotifyController struct {
+	SpotifyInteractor usecases.SpotifyInteractor
+}
+
+func NewSpotifyController(DB *gorm.DB) *SpotifyController {
+	return &SpotifyController{
+		SpotifyInteractor: usecases.SpotifyInteractor{
+			SpotifyRepository: &SpotifyRepository{
+				DB: DB,
+			},
+		},
 	}
 }
 
-func GetRedirectURL(w http.ResponseWriter, r *http.Request) {
+//SpotifyAPIのリダイレクトURLを返す
+func (spc *SpotifyController) GetRedirectURLHandler(w http.ResponseWriter, r *http.Request) {
 	err := godotenv.Load()
 	if err != nil {
 		var error model.Error
@@ -60,7 +66,8 @@ func GetRedirectURL(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetToken(w http.ResponseWriter, r *http.Request) {
+//SpotifyAPIのトークンを取得して返す
+func (spc *SpotifyController) GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
 	var d model.Code
 	if err := dec.Decode(&d); err != nil {
@@ -89,6 +96,7 @@ func GetToken(w http.ResponseWriter, r *http.Request) {
 	}
 
 	token, err := config.Exchange(context.TODO(), d.Code)
+
 	if err != nil {
 		var error model.Error
 		error.Message = "トークンの取得に失敗しました"
@@ -114,8 +122,10 @@ func GetToken(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetTracks(w http.ResponseWriter, r *http.Request) {
+//SpotifyAPIにより曲を検索して取得する
+func (spc *SpotifyController) GetTracksHandler(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
+
 	var d model.SearchTitle
 	if err := dec.Decode(&d); err != nil {
 		var error model.Error
@@ -132,7 +142,7 @@ func GetTracks(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//トラック（曲）検索
-	tracks, err := service.GetTracks(d.Token, d.Title)
+	tracks, err := spc.SpotifyInteractor.GetTracks(d.Token, d.Title)
 	if err != nil {
 		var error model.Error
 		error.Message = "トラックの取得に失敗しました"
