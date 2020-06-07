@@ -30,6 +30,7 @@ func NewAuthController(DB *gorm.DB) *AuthController {
 	}
 }
 
+//ユーザー登録
 func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 	dec := json.NewDecoder(r.Body)
@@ -103,6 +104,7 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
+//ログイン
 func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var user model.User
 

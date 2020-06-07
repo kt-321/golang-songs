@@ -25,6 +25,7 @@ func NewBookmarkController(DB *gorm.DB) *BookmarkController {
 	}
 }
 
+//曲をお気に入りに登録
 func (bc *BookmarkController) BookmarkHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
@@ -78,6 +79,7 @@ func (bc *BookmarkController) BookmarkHandler(w http.ResponseWriter, r *http.Req
 	}
 }
 
+//曲をお気に入り登録から解除
 func (bc *BookmarkController) RemoveBookmarkHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]

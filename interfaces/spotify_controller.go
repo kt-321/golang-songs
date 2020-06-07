@@ -29,6 +29,7 @@ func NewSpotifyController(DB *gorm.DB) *SpotifyController {
 	}
 }
 
+//SpotifyAPIのリダイレクトURLを返す
 func (spc *SpotifyController) GetRedirectURLHandler(w http.ResponseWriter, r *http.Request) {
 	err := godotenv.Load()
 	if err != nil {
@@ -65,6 +66,7 @@ func (spc *SpotifyController) GetRedirectURLHandler(w http.ResponseWriter, r *ht
 	}
 }
 
+//SpotifyAPIのトークンを取得して返す
 func (spc *SpotifyController) GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
 	var d model.Code
@@ -120,6 +122,7 @@ func (spc *SpotifyController) GetTokenHandler(w http.ResponseWriter, r *http.Req
 	}
 }
 
+//SpotifyAPIにより曲を検索して取得する
 func (spc *SpotifyController) GetTracksHandler(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
 

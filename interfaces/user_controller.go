@@ -29,6 +29,7 @@ func NewUserController(DB *gorm.DB) *UserController {
 	}
 }
 
+//全てのユーザーを返す
 func (uc *UserController) AllUsersHandler(w http.ResponseWriter, r *http.Request) {
 	allUsers, err := uc.UserInteractor.Index()
 	if err != nil {
@@ -54,6 +55,7 @@ func (uc *UserController) AllUsersHandler(w http.ResponseWriter, r *http.Request
 
 }
 
+//リクエストユーザーの情報を返す
 func (uc *UserController) UserHandler(w http.ResponseWriter, r *http.Request) {
 	header_hoge := r.Header.Get("Authorization")
 	bearerToken := strings.Split(header_hoge, " ")
@@ -95,6 +97,7 @@ func (uc *UserController) UserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+//idで指定したユーザーの情報を返す
 func (uc *UserController) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
@@ -139,6 +142,7 @@ func (uc *UserController) GetUserHandler(w http.ResponseWriter, r *http.Request)
 	}
 }
 
+//idで指定したユーザーの情報を更新する
 func (uc *UserController) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]

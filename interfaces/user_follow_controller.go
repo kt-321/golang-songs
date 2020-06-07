@@ -25,6 +25,7 @@ func NewUserFollowController(DB *gorm.DB) *UserFollowController {
 	}
 }
 
+//idで指定したユーザーをフォローする
 func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
@@ -79,6 +80,7 @@ func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *htt
 	}
 }
 
+//idで指定したユーザーのフォローを解除する
 func (ufc *UserFollowController) UnfollowUserHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]

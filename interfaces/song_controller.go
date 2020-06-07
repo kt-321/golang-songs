@@ -3,12 +3,8 @@ package interfaces
 import (
 	"encoding/json"
 	"golang-songs/model"
-	"os"
 	"strconv"
 	"strings"
-
-	"github.com/dgrijalva/jwt-go"
-	"github.com/pkg/errors"
 
 	"github.com/gorilla/mux"
 
@@ -32,6 +28,7 @@ func NewSongController(DB *gorm.DB) *SongController {
 	}
 }
 
+//全ての曲を返す
 func (sc *SongController) AllSongsHandler(w http.ResponseWriter, r *http.Request) {
 	songs, err := sc.SongInteractor.Index()
 	if err != nil {
@@ -56,6 +53,7 @@ func (sc *SongController) AllSongsHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
+//idで指定した曲を返す
 func (sc *SongController) GetSongHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
@@ -100,6 +98,7 @@ func (sc *SongController) GetSongHandler(w http.ResponseWriter, r *http.Request)
 	}
 }
 
+//曲をお気に入り登録
 func (sc *SongController) CreateSongHandler(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
 	var d model.Song
@@ -133,6 +132,7 @@ func (sc *SongController) CreateSongHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
+//idで指定した曲の情報を更新
 func (sc *SongController) UpdateSongHandler(w http.ResponseWriter, r *http.Request) {
 	dec := json.NewDecoder(r.Body)
 	var d model.Song
@@ -182,6 +182,7 @@ func (sc *SongController) UpdateSongHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
+//idで指定した曲を削除
 func (sc *SongController) DeleteSongHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
@@ -205,32 +206,4 @@ func (sc *SongController) DeleteSongHandler(w http.ResponseWriter, r *http.Reque
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-}
-
-// Parse は jwt トークンから元になった認証情報を取り出す。
-func Parse(signedString string) (*model.Auth, error) {
-	secret := os.Getenv("SIGNINGKEY")
-
-	token, err := jwt.Parse(signedString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return "", errors.Errorf("unexpected signing method: %v", token.Header)
-		}
-		return []byte(secret), nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return nil, errors.Errorf("not found claims in %s", signedString)
-	}
-
-	email, ok := claims["email"].(string)
-	if !ok {
-		return nil, errors.Errorf("not found %s in %s", email, signedString)
-	}
-
-	return &model.Auth{Email: email}, nil
 }
