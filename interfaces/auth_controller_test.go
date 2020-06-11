@@ -11,7 +11,6 @@ import (
 	"time"
 )
 
-//type FakeAuthRepository struct{}
 type FakeAuthRepository struct{}
 
 func (far *FakeAuthRepository) SignUp(form model.Form) error {
@@ -52,9 +51,6 @@ func TestSignUpHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	//headerをセット
-	req.Header.Set("Content-Type", "application/json")
-
 	// テスト用のレスポンス作成
 	res := httptest.NewRecorder()
 	f := &AuthController{AuthInteractor: usecases.AuthInteractor{
@@ -62,45 +58,40 @@ func TestSignUpHandler(t *testing.T) {
 	}}
 	f.SignUpHandler(res, req)
 
-	//actual := SignUp(model.Form{Email: "test@test", Password: "testtest"})
-
 	// レスポンスのステータスコードのテスト
 	if res.Code != http.StatusOK {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 }
 
-func TestLoginHandler(t *testing.T) {
-	// テスト用の JSON ボディ作成
-	b, err := json.Marshal(model.Form{Email: "u@u", Password: "uuuuuu"})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// テスト用のリクエスト作成
-	req := httptest.NewRequest("POST", "/api/login", bytes.NewBuffer(b))
-
-	//headerをセット
-	req.Header.Set("Content-Type", "application/json")
-
-	// テスト用のレスポンス作成
-	res := httptest.NewRecorder()
-
-	//f := &AuthController{AuthInteractor: usecases.AuthInteractor{
-	//	AuthRepository: &FakeAuthRepository{},
-	//}}
-	f := &AuthController{AuthInteractor: usecases.AuthInteractor{
-		AuthRepository: &FakeAuthRepository{},
-	}}
-	f.LoginHandler(res, req)
-
-	// レスポンスのステータスコードのテスト
-	if res.Code != http.StatusOK {
-		t.Errorf("invalid code: %d", res.Code)
-	}
-	expected := `{"id":1,"createdAt":"2020-06-01T09:00:00+09:00","updatedAt":"2020-06-01T09:00:00+09:00","deletedAt":null,"name":"","email":"u@u","age":0,"gender":0,"imageUrl":"","favoriteMusicAge":0,"favoriteArtist":"","comment":"","followings":[],"bookmarkings":[]}`
-	if res.Body.String() != expected {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			res.Body.String(), expected)
-	}
-}
+//func TestLoginHandler(t *testing.T) {
+//	// テスト用の JSON ボディ作成
+//	b, err := json.Marshal(model.Form{Email: "u@u", Password: "uuuuuu"})
+//	if err != nil {
+//		t.Fatal(err)
+//	}
+//
+//	// テスト用のリクエスト作成
+//	req := httptest.NewRequest("POST", "/api/login", bytes.NewBuffer(b))
+//
+//	//headerをセット
+//	req.Header.Set("Content-Type", "application/json")
+//
+//	// テスト用のレスポンス作成
+//	res := httptest.NewRecorder()
+//
+//	f := &AuthController{AuthInteractor: usecases.AuthInteractor{
+//		AuthRepository: &FakeAuthRepository{},
+//	}}
+//	f.LoginHandler(res, req)
+//
+//	// レスポンスのステータスコードのテスト
+//	if res.Code != http.StatusOK {
+//		t.Errorf("invalid code: %d", res.Code)
+//	}
+//	expected := `{"id":1,"createdAt":"2020-06-01T09:00:00+09:00","updatedAt":"2020-06-01T09:00:00+09:00","deletedAt":null,"name":"","email":"u@u","age":0,"gender":0,"imageUrl":"","favoriteMusicAge":0,"favoriteArtist":"","comment":"","followings":[],"bookmarkings":[]}`
+//	if res.Body.String() != expected {
+//		t.Errorf("handler returned unexpected body: got %v want %v",
+//			res.Body.String(), expected)
+//	}
+//}
