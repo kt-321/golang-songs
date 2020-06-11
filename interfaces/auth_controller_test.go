@@ -11,8 +11,8 @@ import (
 	"time"
 )
 
-type FakeAuthRepository struct {
-}
+//type FakeAuthRepository struct{}
+type FakeAuthRepository struct{}
 
 func (far *FakeAuthRepository) SignUp(form model.Form) error {
 	return nil
@@ -42,15 +42,18 @@ func (far *FakeAuthRepository) Login(form model.Form) (*model.User, error) {
 
 func TestSignUpHandler(t *testing.T) {
 	// テスト用の JSON ボディ作成
-	b, err := json.Marshal(model.Form{Email: "test@test", Password: "testes"})
+	b, err := json.Marshal(model.Form{Email: "test@test", Password: "testtest"})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	req, err := http.NewRequest("GET", "/api/signup", bytes.NewBuffer(b))
+	req, err := http.NewRequest("POST", "/api/signup", bytes.NewBuffer(b))
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	//headerをセット
+	req.Header.Set("Content-Type", "application/json")
 
 	// テスト用のレスポンス作成
 	res := httptest.NewRecorder()
@@ -58,6 +61,8 @@ func TestSignUpHandler(t *testing.T) {
 		AuthRepository: &FakeAuthRepository{},
 	}}
 	f.SignUpHandler(res, req)
+
+	//actual := SignUp(model.Form{Email: "test@test", Password: "testtest"})
 
 	// レスポンスのステータスコードのテスト
 	if res.Code != http.StatusOK {
@@ -75,9 +80,15 @@ func TestLoginHandler(t *testing.T) {
 	// テスト用のリクエスト作成
 	req := httptest.NewRequest("POST", "/api/login", bytes.NewBuffer(b))
 
+	//headerをセット
+	req.Header.Set("Content-Type", "application/json")
+
 	// テスト用のレスポンス作成
 	res := httptest.NewRecorder()
 
+	//f := &AuthController{AuthInteractor: usecases.AuthInteractor{
+	//	AuthRepository: &FakeAuthRepository{},
+	//}}
 	f := &AuthController{AuthInteractor: usecases.AuthInteractor{
 		AuthRepository: &FakeAuthRepository{},
 	}}
