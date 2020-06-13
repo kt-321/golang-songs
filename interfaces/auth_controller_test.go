@@ -102,6 +102,9 @@ func TestLoginHandler(t *testing.T) {
 
 	//JSONに変換し、string型に変換
 	v, err := json.Marshal(jwt)
+	if err != nil {
+		log.Println(err)
+	}
 	expected := string(v)
 
 	//レスポンスボディをString型に変換した値が期待した値と一致するか
