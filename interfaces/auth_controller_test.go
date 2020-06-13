@@ -28,9 +28,7 @@ func (far *FakeAuthRepository) Login(form model.Form) (*model.User, error) {
 		return nil, err
 	}
 
-	var user model.User
-	user.Email = email
-	user.Password = string(hash)
+	user := model.User{Email: email, Password: string(hash)}
 
 	return &user, nil
 }
@@ -91,10 +89,7 @@ func TestLoginHandler(t *testing.T) {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 
-	var user model.User
-
-	user.Email = email
-	user.Password = password
+	user := model.User{Email: email, Password: password}
 
 	//トークン作成
 	token, err := createToken(user)
