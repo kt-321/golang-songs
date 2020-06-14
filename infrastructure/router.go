@@ -15,9 +15,9 @@ import (
 )
 
 func Dispatch(DB *gorm.DB) {
+	authController := interfaces.NewAuthController(DB)
 	userController := interfaces.NewUserController(DB)
 	songController := interfaces.NewSongController(DB)
-	authController := interfaces.NewAuthController(DB)
 	bookmarkController := interfaces.NewBookmarkController(DB)
 	userFollowController := interfaces.NewUserFollowController(DB)
 	spotifyController := interfaces.NewSpotifyController(DB)

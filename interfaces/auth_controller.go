@@ -167,7 +167,7 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	jwt.Token = token
 
-	v2, err := json.Marshal(jwt)
+	v, err := json.Marshal(jwt)
 	if err != nil {
 		var error model.Error
 		error.Message = "JSONへの変換に失敗しました"
@@ -175,7 +175,7 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := w.Write(v2); err != nil {
+	if _, err := w.Write(v); err != nil {
 		var error model.Error
 		error.Message = "JWTトークンの取得に失敗しました。"
 		errorInResponse(w, http.StatusInternalServerError, error)
