@@ -10,8 +10,8 @@ type UserRepository struct {
 	DB *gorm.DB
 }
 
-func (ur *UserRepository) FindAll() (*model.Users, error) {
-	var users model.Users
+func (ur *UserRepository) FindAll() (*[]model.User, error) {
+	var users []model.User
 	if err := ur.DB.Find(&users).Error; gorm.IsRecordNotFoundError(err) {
 		return nil, err
 	}

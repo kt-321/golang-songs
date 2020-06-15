@@ -16,7 +16,8 @@ import (
 
 func Dispatch(DB *gorm.DB) {
 	authController := interfaces.NewAuthController(DB)
-	userController := interfaces.NewUserController(DB)
+	UserController := interfaces.NewUserController(DB)
+	//userController := interfaces.NewUserController(DB)
 	songController := interfaces.NewSongController(DB)
 	bookmarkController := interfaces.NewBookmarkController(DB)
 	userFollowController := interfaces.NewUserFollowController(DB)
@@ -27,10 +28,14 @@ func Dispatch(DB *gorm.DB) {
 	r.HandleFunc("/api/signup", authController.SignUpHandler).Methods("POST")
 	r.HandleFunc("/api/login", authController.LoginHandler).Methods("POST")
 
-	r.Handle("/api/user", JwtMiddleware.Handler(http.HandlerFunc(userController.UserHandler))).Methods("GET")
-	r.Handle("/api/users", JwtMiddleware.Handler(http.HandlerFunc(userController.AllUsersHandler))).Methods("GET")
-	r.Handle("/api/user/{id}", JwtMiddleware.Handler(http.HandlerFunc(userController.GetUserHandler))).Methods("GET")
-	r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(http.HandlerFunc(userController.UpdateUserHandler))).Methods("PUT")
+	r.Handle("/api/user", JwtMiddleware.Handler(http.HandlerFunc(UserController.UserHandler))).Methods("GET")
+	r.Handle("/api/users", JwtMiddleware.Handler(http.HandlerFunc(UserController.AllUsersHandler))).Methods("GET")
+	r.Handle("/api/user/{id}", JwtMiddleware.Handler(http.HandlerFunc(UserController.GetUserHandler))).Methods("GET")
+	r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(http.HandlerFunc(UserController.UpdateUserHandler))).Methods("PUT")
+	//r.Handle("/api/user", JwtMiddleware.Handler(http.HandlerFunc(userController.UserHandler))).Methods("GET")
+	//r.Handle("/api/users", JwtMiddleware.Handler(http.HandlerFunc(userController.AllUsersHandler))).Methods("GET")
+	//r.Handle("/api/user/{id}", JwtMiddleware.Handler(http.HandlerFunc(userController.GetUserHandler))).Methods("GET")
+	//r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(http.HandlerFunc(userController.UpdateUserHandler))).Methods("PUT")
 
 	r.Handle("/api/songs", JwtMiddleware.Handler(http.HandlerFunc(songController.AllSongsHandler))).Methods("GET")
 	r.Handle("/api/song/{id}", JwtMiddleware.Handler(http.HandlerFunc(songController.GetSongHandler))).Methods("GET")
