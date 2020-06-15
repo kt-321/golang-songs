@@ -94,6 +94,7 @@ func (fur *FakeUserRepository) Update(userID int, p model.User) error {
 	return nil
 }
 
+//idで指定したユーザーの情報を返すハンドラのテスト
 func TestGetUserHandler(t *testing.T) {
 	req := httptest.NewRequest("GET", "/api/user/1", nil)
 
@@ -139,6 +140,7 @@ func TestGetUserHandler(t *testing.T) {
 
 }
 
+//リクエストユーザーの情報を返すハンドラのテスト
 func TestUserHandler(t *testing.T) {
 	req := httptest.NewRequest("GET", "/api/user", nil)
 
@@ -179,6 +181,7 @@ func TestUserHandler(t *testing.T) {
 	}
 }
 
+//全てのユーザーの情報を返すハンドラのテスト
 func TestAllUsersHandler(t *testing.T) {
 	req := httptest.NewRequest("GET", "/api/users", nil)
 
@@ -219,6 +222,7 @@ func TestAllUsersHandler(t *testing.T) {
 	}
 }
 
+//idで指定したユーザーの情報を更新するハンドラのテスト
 func TestUpdateUserHandler(t *testing.T) {
 	// テスト用の JSON ボディ作成
 	b, err := json.Marshal(model.User{Email: "hoge@test.co.jp", Name: "hogehoge", Age: 0, Gender: 0, FavoriteMusicAge: 0, FavoriteArtist: "椎名林檎", Comment: "テストユーザーです。"})
