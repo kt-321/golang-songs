@@ -132,11 +132,63 @@ func TestGetUserHandler(t *testing.T) {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 
+	//log.Printf("res: %v", res)
+	//log.Printf("res.Body: %v, %t", res.Body, res.Body)
+
+	var p model.User
+	//json.Marshal(res.Body, &p)
+	//b, err := json.Marshal(res.Body)
+	//if err != nil {
+	//	log.Println(err)
+	//}
+	//if err := json.Unmarshal(test1, &p); err != nil{
+	// fmt.Println(err)
+	//}
+	//fmt.Println(test1.Name)
+	//if err := json.Unmarshal(b, &p); err != nil {
+	//	log.Println(err)
+	//}
+
+	//if err := json.Unmarshal(res, &p); err != nil {
+	//	log.Println(err)
+	//}
+	//err := json.Unmarshal([]byte(res.Body), p)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+
+	//log.Printf("b: %v", b)
+	log.Printf("p: %v", p)
+
+	//var p model.User
+	//if err := json.Unmarshal(res.Body, &p); err != nil {
+	//	fmt.Println(err)
+	//}
+	//log.Println(p)
+
 	expected := `{"id":1,"createdAt":"2020-06-01T09:00:00+09:00","updatedAt":"2020-06-01T09:00:00+09:00","deletedAt":null,"name":"","email":"test@test.co.jp","age":0,"gender":0,"imageUrl":"","favoriteMusicAge":0,"favoriteArtist":"","comment":"","bookmarkings":null,"followings":null}`
-	if res.Body.String() != expected {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			res.Body.String(), expected)
+	var u model.User
+	var u2 model.User
+	if err := json.Unmarshal([]byte(expected), u); err != nil {
+		log.Println(err)
 	}
+	log.Println("u:", u)
+
+	//if err := json.Unmarshal([]byte(res.Body.String()), u2); err != nil {
+	if err := json.Unmarshal([]byte(res.Body.String()), u2); err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("u2:", u2)
+
+	//if res.Body.String() != expected {
+	//	t.Errorf("handler returned unexpected body: got %v want %v",
+	//		res.Body.String(), expected)
+	//}
+	//if res.Body != u {
+	//	t.Errorf("handler returned unexpected body: got %v want %v",
+	//		res.Body.String(), expected)
+	//}
 
 }
 
