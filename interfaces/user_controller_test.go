@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 	"time"
 
@@ -76,9 +77,9 @@ func (fur *FakeUserRepository) FindByID(userID int) (*model.User, error) {
 		ID:               1,
 		CreatedAt:        time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
 		UpdatedAt:        time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
-		Password:         "testtest",
+		Password:         "aaaaaa",
 		Name:             "",
-		Email:            "test@test.co.jp",
+		Email:            "a@test.co.jp",
 		Age:              0,
 		Gender:           0,
 		ImageUrl:         "",
@@ -132,63 +133,32 @@ func TestGetUserHandler(t *testing.T) {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 
-	//log.Printf("res: %v", res)
-	//log.Printf("res.Body: %v, %t", res.Body, res.Body)
-
+	//レスポンスボディをUnmarshal
 	var p model.User
-	//json.Marshal(res.Body, &p)
-	//b, err := json.Marshal(res.Body)
-	//if err != nil {
-	//	log.Println(err)
-	//}
-	//if err := json.Unmarshal(test1, &p); err != nil{
-	// fmt.Println(err)
-	//}
-	//fmt.Println(test1.Name)
-	//if err := json.Unmarshal(b, &p); err != nil {
-	//	log.Println(err)
-	//}
-
-	//if err := json.Unmarshal(res, &p); err != nil {
-	//	log.Println(err)
-	//}
-	//err := json.Unmarshal([]byte(res.Body), p)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-
-	//log.Printf("b: %v", b)
-	log.Printf("p: %v", p)
-
-	//var p model.User
-	//if err := json.Unmarshal(res.Body, &p); err != nil {
-	//	fmt.Println(err)
-	//}
-	//log.Println(p)
-
-	expected := `{"id":1,"createdAt":"2020-06-01T09:00:00+09:00","updatedAt":"2020-06-01T09:00:00+09:00","deletedAt":null,"name":"","email":"test@test.co.jp","age":0,"gender":0,"imageUrl":"","favoriteMusicAge":0,"favoriteArtist":"","comment":"","bookmarkings":null,"followings":null}`
-	var u model.User
-	var u2 model.User
-	if err := json.Unmarshal([]byte(expected), u); err != nil {
+	if err := json.Unmarshal([]byte(res.Body.String()), &p); err != nil {
 		log.Println(err)
 	}
-	log.Println("u:", u)
 
-	//if err := json.Unmarshal([]byte(res.Body.String()), u2); err != nil {
-	if err := json.Unmarshal([]byte(res.Body.String()), u2); err != nil {
-		log.Fatal(err)
+	//期待値(アサート用の構造体)
+	expected := model.User{
+		ID:               1,
+		CreatedAt:        time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
+		UpdatedAt:        time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
+		Name:             "",
+		Email:            "a@test.co.jp",
+		Age:              0,
+		Gender:           0,
+		ImageUrl:         "",
+		FavoriteMusicAge: 0,
+		FavoriteArtist:   "",
+		Comment:          "",
 	}
 
-	log.Println("u2:", u2)
-
-	//if res.Body.String() != expected {
-	//	t.Errorf("handler returned unexpected body: got %v want %v",
-	//		res.Body.String(), expected)
-	//}
-	//if res.Body != u {
-	//	t.Errorf("handler returned unexpected body: got %v want %v",
-	//		res.Body.String(), expected)
-	//}
+	// レスポンスのボディが期待通りか確認
+	if !reflect.DeepEqual(p, expected) {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			p, expected)
+	}
 
 }
 
@@ -225,11 +195,31 @@ func TestUserHandler(t *testing.T) {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 
+	//レスポンスボディをUnmarshal
+	var p model.User
+	if err := json.Unmarshal([]byte(res.Body.String()), &p); err != nil {
+		log.Println(err)
+	}
+
+	//期待値(アサート用の構造体)
+	expected := model.User{
+		ID:               1,
+		CreatedAt:        time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
+		UpdatedAt:        time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
+		Name:             "",
+		Email:            "a@test.co.jp",
+		Age:              0,
+		Gender:           0,
+		ImageUrl:         "",
+		FavoriteMusicAge: 0,
+		FavoriteArtist:   "",
+		Comment:          "",
+	}
+
 	// レスポンスのボディが期待通りか確認
-	expected := `{"id":1,"createdAt":"2020-06-01T09:00:00+09:00","updatedAt":"2020-06-01T09:00:00+09:00","deletedAt":null,"name":"","email":"a@test.co.jp","age":0,"gender":0,"imageUrl":"","favoriteMusicAge":0,"favoriteArtist":"","comment":"","bookmarkings":null,"followings":null}`
-	if res.Body.String() != expected {
+	if !reflect.DeepEqual(p, expected) {
 		t.Errorf("handler returned unexpected body: got %v want %v",
-			res.Body.String(), expected)
+			p, expected)
 	}
 }
 
@@ -266,11 +256,47 @@ func TestAllUsersHandler(t *testing.T) {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 
+	//レスポンスボディをUnmarshal
+	var p []model.User
+	if err := json.Unmarshal([]byte(res.Body.String()), &p); err != nil {
+		log.Println(err)
+	}
+
+	user1 := model.User{
+		ID:               1,
+		CreatedAt:        time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
+		UpdatedAt:        time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
+		Name:             "",
+		Email:            "a@test.co.jp",
+		Age:              0,
+		Gender:           0,
+		ImageUrl:         "",
+		FavoriteMusicAge: 0,
+		FavoriteArtist:   "",
+		Comment:          "",
+	}
+
+	user2 := model.User{
+		ID:               2,
+		CreatedAt:        time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
+		UpdatedAt:        time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
+		Name:             "",
+		Email:            "i@test.co.jp",
+		Age:              0,
+		Gender:           0,
+		ImageUrl:         "",
+		FavoriteMusicAge: 0,
+		FavoriteArtist:   "",
+		Comment:          "",
+	}
+
+	//期待値(アサート用の構造体)
+	expected := []model.User{user1, user2}
+
 	// レスポンスのボディが期待通りか確認
-	expected := `[{"id":1,"createdAt":"2020-06-01T09:00:00+09:00","updatedAt":"2020-06-01T09:00:00+09:00","deletedAt":null,"name":"","email":"a@test.co.jp","age":0,"gender":0,"imageUrl":"","favoriteMusicAge":0,"favoriteArtist":"","comment":"","bookmarkings":null,"followings":null},{"id":2,"createdAt":"2020-06-01T09:00:00+09:00","updatedAt":"2020-06-01T09:00:00+09:00","deletedAt":null,"name":"","email":"i@test.co.jp","age":0,"gender":0,"imageUrl":"","favoriteMusicAge":0,"favoriteArtist":"","comment":"","bookmarkings":null,"followings":null}]`
-	if res.Body.String() != expected {
+	if !reflect.DeepEqual(p, expected) {
 		t.Errorf("handler returned unexpected body: got %v want %v",
-			res.Body.String(), expected)
+			p, expected)
 	}
 }
 
