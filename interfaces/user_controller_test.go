@@ -157,8 +157,8 @@ func TestGetUserHandler(t *testing.T) {
 
 	// レスポンスのボディが期待通りか確認
 	if diff := cmp.Diff(p, expected); diff != "" {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			p, expected)
+		t.Errorf("handler returned unexpected body: %v",
+			diff)
 	}
 }
 
@@ -218,8 +218,8 @@ func TestUserHandler(t *testing.T) {
 
 	// レスポンスのボディが期待通りか確認
 	if diff := cmp.Diff(p, expected); diff != "" {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			p, expected)
+		t.Errorf("handler returned unexpected body: %v",
+			diff)
 	}
 }
 
@@ -295,8 +295,8 @@ func TestAllUsersHandler(t *testing.T) {
 
 	// レスポンスのボディが期待通りか確認
 	if diff := cmp.Diff(p, expected); diff != "" {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			p, expected)
+		t.Errorf("handler returned unexpected body: %v",
+			diff)
 	}
 }
 
