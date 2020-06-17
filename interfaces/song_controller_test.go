@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
+
 	"github.com/gorilla/mux"
 )
 
@@ -114,11 +116,50 @@ func TestAllSongsHandler(t *testing.T) {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 
+	//レスポンスボディをDecode
+	var p []model.Song
+	dec := json.NewDecoder(res.Body)
+	if err := dec.Decode(&p); err != nil {
+		log.Println(err)
+	}
+
+	song1 := model.Song{
+		ID:             1,
+		CreatedAt:      time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
+		UpdatedAt:      time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
+		Title:          "title1",
+		Artist:         "artist1",
+		MusicAge:       0,
+		Image:          "",
+		Video:          "",
+		Album:          "",
+		Description:    "",
+		SpotifyTrackId: "",
+		UserID:         1,
+	}
+
+	song2 := model.Song{
+		ID:             2,
+		CreatedAt:      time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
+		UpdatedAt:      time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
+		Title:          "title2",
+		Artist:         "artist2",
+		MusicAge:       0,
+		Image:          "",
+		Video:          "",
+		Album:          "",
+		Description:    "",
+		SpotifyTrackId: "",
+		UserID:         2,
+	}
+
+	//期待値(アサート用の構造体)
+	expected := []model.Song{song1, song2}
+
 	// レスポンスのボディが期待通りか確認
-	expected := `[{"id":1,"createdAt":"2020-06-01T09:00:00+09:00","updatedAt":"2020-06-01T09:00:00+09:00","deletedAt":null,"title":"title1","artist":"artist1","musicAge":0,"image":"","video":"","album":"","description":"","spotifyTrackId":"","userId":1},{"id":2,"createdAt":"2020-06-01T09:00:00+09:00","updatedAt":"2020-06-01T09:00:00+09:00","deletedAt":null,"title":"title2","artist":"artist2","musicAge":0,"image":"","video":"","album":"","description":"","spotifyTrackId":"","userId":2}]`
-	if res.Body.String() != expected {
+	if diff := cmp.Diff(p, expected); diff != "" {
 		t.Errorf("handler returned unexpected body: got %v want %v",
-			res.Body.String(), expected)
+			p, expected)
 	}
 }
 
@@ -162,11 +203,33 @@ func TestGetSongHandler(t *testing.T) {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 
+	//レスポンスボディをDecode
+	var p model.Song
+	dec := json.NewDecoder(res.Body)
+	if err := dec.Decode(&p); err != nil {
+		log.Println(err)
+	}
+
+	//期待値(アサート用の構造体)
+	expected := model.Song{
+		ID:             1,
+		CreatedAt:      time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
+		UpdatedAt:      time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
+		Title:          "title1",
+		Artist:         "artist1",
+		MusicAge:       0,
+		Image:          "",
+		Video:          "",
+		Album:          "",
+		Description:    "",
+		SpotifyTrackId: "",
+		UserID:         1,
+	}
+
 	// レスポンスのボディが期待通りか確認
-	expected := `{"id":1,"createdAt":"2020-06-01T09:00:00+09:00","updatedAt":"2020-06-01T09:00:00+09:00","deletedAt":null,"title":"title1","artist":"artist1","musicAge":0,"image":"","video":"","album":"","description":"","spotifyTrackId":"","userId":1}`
-	if res.Body.String() != expected {
+	if diff := cmp.Diff(p, expected); diff != "" {
 		t.Errorf("handler returned unexpected body: got %v want %v",
-			res.Body.String(), expected)
+			p, expected)
 	}
 }
 
