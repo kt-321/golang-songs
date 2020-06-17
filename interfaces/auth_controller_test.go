@@ -8,8 +8,9 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -110,7 +111,7 @@ func TestLoginHandler(t *testing.T) {
 	expected.Token = token
 
 	// レスポンスのボディが期待通りか確認
-	if !reflect.DeepEqual(p, expected) {
+	if diff := cmp.Diff(p, expected); diff != "" {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			p, expected)
 	}

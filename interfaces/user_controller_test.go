@@ -8,9 +8,10 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 
 	"github.com/gorilla/mux"
 )
@@ -156,11 +157,15 @@ func TestGetUserHandler(t *testing.T) {
 	}
 
 	// レスポンスのボディが期待通りか確認
-	if !reflect.DeepEqual(p, expected) {
+	//if !reflect.DeepEqual(p, expected) {
+	//	t.Errorf("handler returned unexpected body: got %v want %v",
+	//		p, expected)
+	//}
+
+	if diff := cmp.Diff(p, expected); diff != "" {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			p, expected)
 	}
-
 }
 
 //リクエストユーザーの情報を返すハンドラのテスト
@@ -219,7 +224,7 @@ func TestUserHandler(t *testing.T) {
 	}
 
 	// レスポンスのボディが期待通りか確認
-	if !reflect.DeepEqual(p, expected) {
+	if diff := cmp.Diff(p, expected); diff != "" {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			p, expected)
 	}
@@ -297,7 +302,7 @@ func TestAllUsersHandler(t *testing.T) {
 	expected := []model.User{user1, user2}
 
 	// レスポンスのボディが期待通りか確認
-	if !reflect.DeepEqual(p, expected) {
+	if diff := cmp.Diff(p, expected); diff != "" {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			p, expected)
 	}
