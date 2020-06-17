@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"golang.org/x/crypto/bcrypt"
@@ -97,19 +98,20 @@ func TestLoginHandler(t *testing.T) {
 		log.Println(err)
 	}
 
-	var jwt model.JWT
-	jwt.Token = token
-
-	//JSONに変換し、string型に変換
-	v, err := json.Marshal(jwt)
-	if err != nil {
+	//レスポンスボディをDecode
+	var p model.JWT
+	dec := json.NewDecoder(res.Body)
+	if err := dec.Decode(&p); err != nil {
 		log.Println(err)
 	}
-	expected := string(v)
 
-	//レスポンスボディをString型に変換した値が期待した値と一致するか
-	if res.Body.String() != expected {
+	//期待値(アサート用の構造体)
+	var expected model.JWT
+	expected.Token = token
+
+	// レスポンスのボディが期待通りか確認
+	if !reflect.DeepEqual(p, expected) {
 		t.Errorf("handler returned unexpected body: got %v want %v",
-			res.Body.String(), expected)
+			p, expected)
 	}
 }

@@ -133,9 +133,10 @@ func TestGetUserHandler(t *testing.T) {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 
-	//レスポンスボディをUnmarshal
+	//レスポンスボディをDecode
 	var p model.User
-	if err := json.Unmarshal([]byte(res.Body.String()), &p); err != nil {
+	dec := json.NewDecoder(res.Body)
+	if err := dec.Decode(&p); err != nil {
 		log.Println(err)
 	}
 
@@ -195,9 +196,10 @@ func TestUserHandler(t *testing.T) {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 
-	//レスポンスボディをUnmarshal
+	//レスポンスボディをDecode
 	var p model.User
-	if err := json.Unmarshal([]byte(res.Body.String()), &p); err != nil {
+	dec := json.NewDecoder(res.Body)
+	if err := dec.Decode(&p); err != nil {
 		log.Println(err)
 	}
 
@@ -256,9 +258,10 @@ func TestAllUsersHandler(t *testing.T) {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 
-	//レスポンスボディをUnmarshal
+	//レスポンスボディをDecode
 	var p []model.User
-	if err := json.Unmarshal([]byte(res.Body.String()), &p); err != nil {
+	dec := json.NewDecoder(res.Body)
+	if err := dec.Decode(&p); err != nil {
 		log.Println(err)
 	}
 
