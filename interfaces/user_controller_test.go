@@ -136,8 +136,7 @@ func TestGetUserHandler(t *testing.T) {
 
 	//レスポンスボディをDecode
 	var p model.User
-	dec := json.NewDecoder(res.Body)
-	if err := dec.Decode(&p); err != nil {
+	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
 		log.Println(err)
 	}
 
@@ -198,8 +197,7 @@ func TestUserHandler(t *testing.T) {
 
 	//レスポンスボディをDecode
 	var p model.User
-	dec := json.NewDecoder(res.Body)
-	if err := dec.Decode(&p); err != nil {
+	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
 		log.Println(err)
 	}
 
@@ -260,8 +258,7 @@ func TestAllUsersHandler(t *testing.T) {
 
 	//レスポンスボディをDecode
 	var p []model.User
-	dec := json.NewDecoder(res.Body)
-	if err := dec.Decode(&p); err != nil {
+	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
 		log.Println(err)
 	}
 

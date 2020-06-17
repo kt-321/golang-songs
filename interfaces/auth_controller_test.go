@@ -101,8 +101,7 @@ func TestLoginHandler(t *testing.T) {
 
 	//レスポンスボディをDecode
 	var p model.JWT
-	dec := json.NewDecoder(res.Body)
-	if err := dec.Decode(&p); err != nil {
+	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
 		log.Println(err)
 	}
 
