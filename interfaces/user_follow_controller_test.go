@@ -21,8 +21,8 @@ func (fufr *FakeUserFollowRepository) Unfollow(requestUserEmail string, targetUs
 	return nil
 }
 
-func FollowUserHandler(t *testing.T) {
-	req := httptest.NewRequest("POST", "/api/user/{id}/follow", nil)
+func TestFollowUserHandler(t *testing.T) {
+	req := httptest.NewRequest("POST", "/api/user/2/follow", nil)
 
 	//リクエストユーザー作成
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
@@ -40,12 +40,12 @@ func FollowUserHandler(t *testing.T) {
 	//テスト用にコントローラ用意
 	fakeUserFollowController := &UserFollowController{
 		UserFollowInteractor: usecases.UserFollowInteractor{
-			BookmarkRepository: &BookmarkRepository{},
+			UserFollowRepository: &FakeUserFollowRepository{},
 		},
 	}
 	//テスト用にルーティング用意
 	r := mux.NewRouter()
-	r.Handle("/api/user/{id}/follow", http.HandlerFunc(fakeBookmarkController.BookmarkHandler)).Methods("POST")
+	r.Handle("/api/user/{id}/follow", http.HandlerFunc(fakeUserFollowController.FollowUserHandler)).Methods("POST")
 	r.ServeHTTP(res, req)
 
 	// レスポンスのステータスコードのテスト
@@ -54,8 +54,8 @@ func FollowUserHandler(t *testing.T) {
 	}
 }
 
-func UnfollowUserHandler(t *testing.T) {
-	req := httptest.NewRequest("POST", "/api/user/{id}/unfollow", nil)
+func TestUnfollowUserHandler(t *testing.T) {
+	req := httptest.NewRequest("POST", "/api/user/2/unfollow", nil)
 
 	//リクエストユーザー作成
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
@@ -71,14 +71,14 @@ func UnfollowUserHandler(t *testing.T) {
 	res := httptest.NewRecorder()
 
 	//テスト用にコントローラ用意
-	fakeUserFollowController := &BookmarkController{
-		BookmarkInteractor: usecases.BookmarkInteractor{
-			BookmarkRepository: &BookmarkRepository{},
+	fakeUserFollowController := &UserFollowController{
+		UserFollowInteractor: usecases.UserFollowInteractor{
+			UserFollowRepository: &FakeUserFollowRepository{},
 		},
 	}
 	//テスト用にルーティング用意
 	r := mux.NewRouter()
-	r.Handle("/api/user/{id}/unfollow", http.HandlerFunc(fakeBookmarkController.BookmarkHandler)).Methods("POST")
+	r.Handle("/api/user/{id}/unfollow", http.HandlerFunc(fakeUserFollowController.UnfollowUserHandler)).Methods("POST")
 	r.ServeHTTP(res, req)
 
 	// レスポンスのステータスコードのテスト
