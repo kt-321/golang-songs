@@ -118,8 +118,7 @@ func TestAllSongsHandler(t *testing.T) {
 
 	//レスポンスボディをDecode
 	var p []model.Song
-	dec := json.NewDecoder(res.Body)
-	if err := dec.Decode(&p); err != nil {
+	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
 		log.Println(err)
 	}
 
@@ -158,8 +157,8 @@ func TestAllSongsHandler(t *testing.T) {
 
 	// レスポンスのボディが期待通りか確認
 	if diff := cmp.Diff(p, expected); diff != "" {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			p, expected)
+		t.Errorf("handler returned unexpected body: %v",
+			diff)
 	}
 }
 
@@ -205,8 +204,7 @@ func TestGetSongHandler(t *testing.T) {
 
 	//レスポンスボディをDecode
 	var p model.Song
-	dec := json.NewDecoder(res.Body)
-	if err := dec.Decode(&p); err != nil {
+	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
 		log.Println(err)
 	}
 
@@ -228,8 +226,8 @@ func TestGetSongHandler(t *testing.T) {
 
 	// レスポンスのボディが期待通りか確認
 	if diff := cmp.Diff(p, expected); diff != "" {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			p, expected)
+		t.Errorf("handler returned unexpected body: %v",
+			diff)
 	}
 }
 
