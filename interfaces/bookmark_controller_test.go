@@ -1,11 +1,12 @@
 package interfaces
 
 import (
-	"encoding/json"
 	"golang-songs/model"
+	"golang-songs/usecases"
+	"log"
 	"net/http"
-	"strconv"
-	"strings"
+	"net/http/httptest"
+	"testing"
 
 	"github.com/gorilla/mux"
 )
@@ -34,150 +35,68 @@ func (fbr *FakeBookmarkRepository) RemoveBookmark(userEmail string, songID int) 
 //	return &user, nil
 //}
 
-//全てのユーザーを返す
-func (uc *UserController) AllUsersHandler(w http.ResponseWriter, r *http.Request) {
-	allUsers, err := uc.UserInteractor.Index()
+func BookmarkHandler(t *testing.T) {
+	req := httptest.NewRequest("POST", "/api/song/{id}/bookmark", nil)
+
+	//リクエストユーザー作成
+	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
+	//トークン作成
+	token, err := createToken(user)
 	if err != nil {
-		var error model.Error
-		error.Message = "曲が見つかりません。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
+		log.Println("err:", err)
 	}
+	jointToken := "Bearer" + " " + token
+	req.Header.Set("Authorization", jointToken)
 
-	v, err := json.Marshal(allUsers)
-	if err != nil {
-		var error model.Error
-		error.Message = "ユーザー一覧の取得に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
+	// テスト用のレスポンス作成
+	res := httptest.NewRecorder()
+
+	//テスト用にコントローラ用意
+	fakeBookmarkController := &BookmarkController{
+		BookmarkInteractor: usecases.BookmarkInteractor{
+			BookmarkRepository: &BookmarkRepository{},
+		},
 	}
-	if _, err := w.Write(v); err != nil {
-		//var error model.Error
-		//error.Message = "ユーザー一覧の取得に失敗しました。"
-		//errorInResponse(w, http.StatusInternalServerError, error)
-		return
-	}
+	//テスト用にルーティング用意
+	r := mux.NewRouter()
+	r.Handle("/api/song/{id}/bookmark", http.HandlerFunc(fakeBookmarkController.BookmarkHandler)).Methods("POST")
+	r.ServeHTTP(res, req)
 
-}
-
-//リクエストユーザーの情報を返す
-func (uc *UserController) UserHandler(w http.ResponseWriter, r *http.Request) {
-	header_hoge := r.Header.Get("Authorization")
-	bearerToken := strings.Split(header_hoge, " ")
-	authToken := bearerToken[1]
-
-	parsedToken, err := Parse(authToken)
-	if err != nil {
-		var error model.Error
-		error.Message = "認証コードのパースに失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
-	}
-
-	userEmail := parsedToken.Email
-
-	var user *model.User
-
-	user, err = uc.UserInteractor.User(userEmail)
-	if err != nil {
-		var error model.Error
-		error.Message = "該当するアカウントが見つかりません。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
-	}
-
-	v, err := json.Marshal(user)
-	if err != nil {
-		var error model.Error
-		error.Message = "JSONへの変換に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
-	}
-
-	if _, err := w.Write(v); err != nil {
-		var error model.Error
-		error.Message = "ユーザー情報の取得に失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
+	// レスポンスのステータスコードのテスト
+	if res.Code != http.StatusOK {
+		t.Errorf("invalid code: %d", res.Code)
 	}
 }
 
-//idで指定したユーザーの情報を返す
-func (uc *UserController) GetUserHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, ok := vars["id"]
-	if !ok {
-		var error model.Error
-		error.Message = "ユーザーのidを取得できません。"
-		errorInResponse(w, http.StatusBadRequest, error)
-		return
-	}
+func RemoveBookmarkHandler(t *testing.T) {
+	req := httptest.NewRequest("POST", "/api/song/{id}/remove-bookmark", nil)
 
-	userID, err := strconv.Atoi(id)
+	//リクエストユーザー作成
+	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
+	//トークン作成
+	token, err := createToken(user)
 	if err != nil {
-		var error model.Error
-		error.Message = "idのint型への型変換に失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
+		log.Println("err:", err)
 	}
+	jointToken := "Bearer" + " " + token
+	req.Header.Set("Authorization", jointToken)
 
-	var user *model.User
+	// テスト用のレスポンス作成
+	res := httptest.NewRecorder()
 
-	user, err = uc.UserInteractor.Show(userID)
-	if err != nil {
-		var error model.Error
-		error.Message = "該当するアカウントが見つかりません。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
+	//テスト用にコントローラ用意
+	fakeBookmarkController := &BookmarkController{
+		BookmarkInteractor: usecases.BookmarkInteractor{
+			BookmarkRepository: &BookmarkRepository{},
+		},
 	}
+	//テスト用にルーティング用意
+	r := mux.NewRouter()
+	r.Handle("/api/song/{id}/remove-bookmark", http.HandlerFunc(fakeBookmarkController.RemoveBookmarkHandler)).Methods("POST")
+	r.ServeHTTP(res, req)
 
-	v, err := json.Marshal(user)
-	if err != nil {
-		var error model.Error
-		error.Message = "JSONへの変換に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
-	}
-
-	if _, err := w.Write(v); err != nil {
-		var error model.Error
-		error.Message = "ユーザー情報の取得に失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
-	}
-}
-
-//idで指定したユーザーの情報を更新する
-func (uc *UserController) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, ok := vars["id"]
-	if !ok {
-		var error model.Error
-		error.Message = "ユーザーのidを取得できません。"
-		errorInResponse(w, http.StatusBadRequest, error)
-		return
-	}
-	userID, err := strconv.Atoi(id)
-	if err != nil {
-		var error model.Error
-		error.Message = "idのint型への型変換に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
-	}
-
-	dec := json.NewDecoder(r.Body)
-	var d model.User
-	if err := dec.Decode(&d); err != nil {
-		var error model.Error
-		error.Message = "リクエストボディのデコードに失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
-	}
-
-	if err := uc.UserInteractor.Update(userID, d); err != nil {
-		var error model.Error
-		error.Message = "曲の更新に失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
+	// レスポンスのステータスコードのテスト
+	if res.Code != http.StatusOK {
+		t.Errorf("invalid code: %d", res.Code)
 	}
 }
