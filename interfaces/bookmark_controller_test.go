@@ -21,20 +21,6 @@ func (fbr *FakeBookmarkRepository) RemoveBookmark(userEmail string, songID int) 
 	return nil
 }
 
-//func (fbr *FakeBookmarkRepository) RemoveBookmark(form model.Form) (*model.User, error) {
-//	email := "test@test"
-//	password := "testtest"
-//
-//	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	user := model.User{Email: email, Password: string(hash)}
-//
-//	return &user, nil
-//}
-
 func BookmarkHandler(t *testing.T) {
 	req := httptest.NewRequest("POST", "/api/song/{id}/bookmark", nil)
 
@@ -54,7 +40,7 @@ func BookmarkHandler(t *testing.T) {
 	//テスト用にコントローラ用意
 	fakeBookmarkController := &BookmarkController{
 		BookmarkInteractor: usecases.BookmarkInteractor{
-			BookmarkRepository: &BookmarkRepository{},
+			BookmarkRepository: &FakeBookmarkRepository{},
 		},
 	}
 	//テスト用にルーティング用意
@@ -87,7 +73,7 @@ func RemoveBookmarkHandler(t *testing.T) {
 	//テスト用にコントローラ用意
 	fakeBookmarkController := &BookmarkController{
 		BookmarkInteractor: usecases.BookmarkInteractor{
-			BookmarkRepository: &BookmarkRepository{},
+			BookmarkRepository: &FakeBookmarkRepository{},
 		},
 	}
 	//テスト用にルーティング用意
