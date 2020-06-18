@@ -21,8 +21,8 @@ func (fbr *FakeBookmarkRepository) RemoveBookmark(userEmail string, songID int) 
 	return nil
 }
 
-func BookmarkHandler(t *testing.T) {
-	req := httptest.NewRequest("POST", "/api/song/{id}/bookmark", nil)
+func TestBookmarkHandler(t *testing.T) {
+	req := httptest.NewRequest("POST", "/api/song/1/bookmark", nil)
 
 	//リクエストユーザー作成
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
@@ -54,8 +54,8 @@ func BookmarkHandler(t *testing.T) {
 	}
 }
 
-func RemoveBookmarkHandler(t *testing.T) {
-	req := httptest.NewRequest("POST", "/api/song/{id}/remove-bookmark", nil)
+func TestRemoveBookmarkHandler(t *testing.T) {
+	req := httptest.NewRequest("POST", "/api/song/1/remove-bookmark", nil)
 
 	//リクエストユーザー作成
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
