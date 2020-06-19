@@ -160,9 +160,8 @@ func (uc *UserController) UpdateUserHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	dec := json.NewDecoder(r.Body)
 	var d model.User
-	if err := dec.Decode(&d); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
 		var error model.Error
 		error.Message = "リクエストボディのデコードに失敗しました。"
 		errorInResponse(w, http.StatusInternalServerError, error)
