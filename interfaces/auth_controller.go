@@ -2,7 +2,6 @@ package interfaces
 
 import (
 	"encoding/json"
-	"fmt"
 	"golang-songs/model"
 	"net/http"
 	"os"
@@ -32,10 +31,8 @@ func NewAuthController(DB *gorm.DB) *AuthController {
 
 //ユーザー登録
 func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) {
-	var user model.User
-	dec := json.NewDecoder(r.Body)
 	var d model.Form
-	if err := dec.Decode(&d); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
 		var error model.Error
 		error.Message = "リクエストボディのデコードに失敗しました。"
 		errorInResponse(w, http.StatusInternalServerError, error)
@@ -59,10 +56,6 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// dump も出せる
-	fmt.Println("---------------------")
-	spew.Dump(user)
-
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
 		var error model.Error
@@ -71,8 +64,7 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	user.Email = email
-	user.Password = string(hash)
+	user := model.User{Email: email, Password: string(hash)}
 
 	d.Password = string(hash)
 
@@ -105,11 +97,8 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 
 //ログイン
 func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
-	var user model.User
-
-	dec := json.NewDecoder(r.Body)
 	var d model.Form
-	if err := dec.Decode(&d); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
 		var error model.Error
 		error.Message = "リクエストボディのデコードに失敗しました。"
 		errorInResponse(w, http.StatusInternalServerError, error)
@@ -132,8 +121,7 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		errorInResponse(w, http.StatusBadRequest, error)
 	}
 
-	user.Email = email
-	user.Password = password
+	user := model.User{Email: email, Password: password}
 
 	userData, err := ac.AuthInteractor.Login(d)
 	if err != nil {
