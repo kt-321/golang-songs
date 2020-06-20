@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"golang-songs/model"
 	"golang-songs/usecases"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -96,7 +95,7 @@ func TestAllSongsHandler(t *testing.T) {
 	//トークン作成
 	token, err := createToken(user)
 	if err != nil {
-		log.Println("err:", err)
+		t.Fatal("トークンの作成に失敗しました")
 	}
 
 	jointToken := "Bearer" + " " + token
@@ -119,7 +118,7 @@ func TestAllSongsHandler(t *testing.T) {
 	//レスポンスボディをDecode
 	var p []model.Song
 	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
-		log.Println(err)
+		t.Fatal("リクエストボディのデコードに失敗しました。")
 	}
 
 	song1 := model.Song{
@@ -175,7 +174,7 @@ func TestGetSongHandler(t *testing.T) {
 	//トークン作成
 	token, err := createToken(user)
 	if err != nil {
-		log.Println("err:", err)
+		t.Fatal("トークンの作成に失敗しました")
 	}
 
 	jointToken := "Bearer" + " " + token
@@ -205,7 +204,7 @@ func TestGetSongHandler(t *testing.T) {
 	//レスポンスボディをDecode
 	var p model.Song
 	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
-		log.Println(err)
+		t.Fatal("リクエストボディのデコードに失敗しました。")
 	}
 
 	//期待値(アサート用の構造体)
@@ -250,7 +249,7 @@ func TestCreateSongHandler(t *testing.T) {
 	//トークン作成
 	token, err := createToken(user)
 	if err != nil {
-		log.Println("err:", err)
+		t.Fatal("トークンの作成に失敗しました")
 	}
 
 	jointToken := "Bearer" + " " + token
@@ -290,7 +289,7 @@ func TestUpdateSongHandler(t *testing.T) {
 	//トークン作成
 	token, err := createToken(user)
 	if err != nil {
-		log.Println("err:", err)
+		t.Fatal("トークンの作成に失敗しました")
 	}
 
 	jointToken := "Bearer" + " " + token
@@ -328,7 +327,7 @@ func TestDeleteSongHandler(t *testing.T) {
 	//トークン作成
 	token, err := createToken(user)
 	if err != nil {
-		log.Println("err:", err)
+		t.Fatal("トークンの作成に失敗しました")
 	}
 
 	jointToken := "Bearer" + " " + token
