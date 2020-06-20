@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"golang-songs/model"
 	"golang-songs/usecases"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -94,7 +93,7 @@ func TestLoginHandler(t *testing.T) {
 	//トークン作成
 	token, err := createToken(user)
 	if err != nil {
-		log.Println(err)
+		t.Fatal("トークンの作成に失敗しました")
 	}
 
 	var jwt model.JWT
@@ -103,7 +102,7 @@ func TestLoginHandler(t *testing.T) {
 	//JSONに変換し、string型に変換
 	v, err := json.Marshal(jwt)
 	if err != nil {
-		log.Println(err)
+		t.Fatal("JSONへの変換に失敗しました")
 	}
 	expected := string(v)
 
