@@ -118,7 +118,7 @@ func TestAllSongsHandler(t *testing.T) {
 	//レスポンスボディをDecode
 	var p []model.Song
 	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
-		t.Fatal("リクエストボディのデコードに失敗しました。")
+		t.Fatal("レスポンスボディのデコードに失敗しました。")
 	}
 
 	song1 := model.Song{
@@ -204,7 +204,7 @@ func TestGetSongHandler(t *testing.T) {
 	//レスポンスボディをDecode
 	var p model.Song
 	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
-		t.Fatal("リクエストボディのデコードに失敗しました。")
+		t.Fatal("レスポンスボディのデコードに失敗しました。。")
 	}
 
 	//期待値(アサート用の構造体)
