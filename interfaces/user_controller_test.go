@@ -339,8 +339,8 @@ func TestUpdateUserHandler(t *testing.T) {
 	r.Handle("/api/user/{id}/update", http.HandlerFunc(fakeUserController.UpdateUserHandler)).Methods("PUT")
 	r.ServeHTTP(res, req)
 
-	// レスポンスのステータスコードのテスト
-	if res.Code != http.StatusOK {
+	// レスポンスのステータスコードのテスト(204)
+	if res.Code != http.StatusNoContent {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 }
