@@ -8,7 +8,7 @@ type UserInteractor struct {
 	UserRepository UserRepository
 }
 
-func (ui *UserInteractor) Index() (*model.Users, error) {
+func (ui *UserInteractor) Index() (*[]model.User, error) {
 	return ui.UserRepository.FindAll()
 }
 

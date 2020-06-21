@@ -98,12 +98,11 @@ func (sc *SongController) GetSongHandler(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-//曲をお気に入り登録
+//曲を追加
 func (sc *SongController) CreateSongHandler(w http.ResponseWriter, r *http.Request) {
-	dec := json.NewDecoder(r.Body)
 	var d model.Song
 
-	if err := dec.Decode(&d); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
 		var error model.Error
 		error.Message = "リクエストボディのデコードに失敗しました。"
 		errorInResponse(w, http.StatusInternalServerError, error)
@@ -130,14 +129,17 @@ func (sc *SongController) CreateSongHandler(w http.ResponseWriter, r *http.Reque
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
+
+	//201 Created
+	w.WriteHeader(201)
+	return
 }
 
 //idで指定した曲の情報を更新
 func (sc *SongController) UpdateSongHandler(w http.ResponseWriter, r *http.Request) {
-	dec := json.NewDecoder(r.Body)
 	var d model.Song
 
-	if err := dec.Decode(&d); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
 		var error model.Error
 		error.Message = "リクエストボディのデコードに失敗しました。"
 		errorInResponse(w, http.StatusInternalServerError, error)
@@ -180,6 +182,10 @@ func (sc *SongController) UpdateSongHandler(w http.ResponseWriter, r *http.Reque
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
+
+	//204 No Content
+	w.WriteHeader(204)
+	return
 }
 
 //idで指定した曲を削除
@@ -206,4 +212,8 @@ func (sc *SongController) DeleteSongHandler(w http.ResponseWriter, r *http.Reque
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
+
+	//204 No Content
+	w.WriteHeader(204)
+	return
 }

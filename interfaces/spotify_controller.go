@@ -68,9 +68,8 @@ func (spc *SpotifyController) GetRedirectURLHandler(w http.ResponseWriter, r *ht
 
 //SpotifyAPIのトークンを取得して返す
 func (spc *SpotifyController) GetTokenHandler(w http.ResponseWriter, r *http.Request) {
-	dec := json.NewDecoder(r.Body)
 	var d model.Code
-	if err := dec.Decode(&d); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
 		var error model.Error
 		error.Message = "リクエストボディのデコードに失敗しました。"
 		errorInResponse(w, http.StatusInternalServerError, error)
@@ -124,10 +123,8 @@ func (spc *SpotifyController) GetTokenHandler(w http.ResponseWriter, r *http.Req
 
 //SpotifyAPIにより曲を検索して取得する
 func (spc *SpotifyController) GetTracksHandler(w http.ResponseWriter, r *http.Request) {
-	dec := json.NewDecoder(r.Body)
-
 	var d model.SearchTitle
-	if err := dec.Decode(&d); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
 		var error model.Error
 		error.Message = "リクエストボディのデコードに失敗しました。"
 		errorInResponse(w, http.StatusInternalServerError, error)
