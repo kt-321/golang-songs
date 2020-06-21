@@ -3,7 +3,6 @@ package interfaces
 import (
 	"golang-songs/model"
 	"golang-songs/usecases"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -29,7 +28,7 @@ func TestBookmarkHandler(t *testing.T) {
 	//トークン作成
 	token, err := createToken(user)
 	if err != nil {
-		log.Println("err:", err)
+		t.Fatal("トークンの作成に失敗しました")
 	}
 	jointToken := "Bearer" + " " + token
 	req.Header.Set("Authorization", jointToken)
@@ -49,7 +48,7 @@ func TestBookmarkHandler(t *testing.T) {
 	r.ServeHTTP(res, req)
 
 	// レスポンスのステータスコードのテスト
-	if res.Code != http.StatusOK {
+	if res.Code != http.StatusCreated {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 }
@@ -62,7 +61,7 @@ func TestRemoveBookmarkHandler(t *testing.T) {
 	//トークン作成
 	token, err := createToken(user)
 	if err != nil {
-		log.Println("err:", err)
+		t.Fatal("トークンの作成に失敗しました")
 	}
 	jointToken := "Bearer" + " " + token
 	req.Header.Set("Authorization", jointToken)
@@ -82,7 +81,7 @@ func TestRemoveBookmarkHandler(t *testing.T) {
 	r.ServeHTTP(res, req)
 
 	// レスポンスのステータスコードのテスト
-	if res.Code != http.StatusOK {
+	if res.Code != http.StatusCreated {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 }
