@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"golang-songs/model"
 	"golang-songs/usecases"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -109,7 +108,7 @@ func TestGetUserHandler(t *testing.T) {
 	//トークン作成
 	token, err := createToken(user)
 	if err != nil {
-		log.Println("err:", err)
+		t.Fatal("トークンの作成に失敗しました")
 	}
 
 	jointToken := "Bearer" + " " + token
@@ -137,7 +136,7 @@ func TestGetUserHandler(t *testing.T) {
 	//レスポンスボディをDecode
 	var p model.User
 	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
-		log.Println(err)
+		t.Fatal("レスポンスボディのデコードに失敗しました。")
 	}
 
 	//期待値(アサート用の構造体)
@@ -175,7 +174,7 @@ func TestUserHandler(t *testing.T) {
 	//トークン作成
 	token, err := createToken(user)
 	if err != nil {
-		log.Println("err:", err)
+		t.Fatal("トークンの作成に失敗しました")
 	}
 
 	jointToken := "Bearer" + " " + token
@@ -198,7 +197,7 @@ func TestUserHandler(t *testing.T) {
 	//レスポンスボディをDecode
 	var p model.User
 	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
-		log.Println(err)
+		t.Fatal("レスポンスボディのデコードに失敗しました。")
 	}
 
 	//期待値(アサート用の構造体)
@@ -236,7 +235,7 @@ func TestAllUsersHandler(t *testing.T) {
 	//トークン作成
 	token, err := createToken(user)
 	if err != nil {
-		log.Println("err:", err)
+		t.Fatal("トークンの作成に失敗しました")
 	}
 
 	jointToken := "Bearer" + " " + token
@@ -259,7 +258,7 @@ func TestAllUsersHandler(t *testing.T) {
 	//レスポンスボディをDecode
 	var p []model.User
 	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
-		log.Println(err)
+		t.Fatal("レスポンスボディのデコードに失敗しました。")
 	}
 
 	user1 := model.User{
@@ -320,7 +319,7 @@ func TestUpdateUserHandler(t *testing.T) {
 	//トークン作成
 	token, err := createToken(user)
 	if err != nil {
-		log.Println("err:", err)
+		t.Fatal("トークンの作成に失敗しました")
 	}
 
 	jointToken := "Bearer" + " " + token
@@ -340,8 +339,8 @@ func TestUpdateUserHandler(t *testing.T) {
 	r.Handle("/api/user/{id}/update", http.HandlerFunc(fakeUserController.UpdateUserHandler)).Methods("PUT")
 	r.ServeHTTP(res, req)
 
-	// レスポンスのステータスコードのテスト
-	if res.Code != http.StatusOK {
+	// レスポンスのステータスコードのテスト(204)
+	if res.Code != http.StatusNoContent {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 }

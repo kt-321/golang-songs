@@ -174,4 +174,8 @@ func (uc *UserController) UpdateUserHandler(w http.ResponseWriter, r *http.Reque
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
+
+	//204 No Content
+	w.WriteHeader(204)
+	return
 }

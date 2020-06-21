@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"golang-songs/model"
 	"golang-songs/usecases"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -96,13 +95,13 @@ func TestLoginHandler(t *testing.T) {
 	//トークン作成
 	token, err := createToken(user)
 	if err != nil {
-		log.Println(err)
+		t.Fatal("トークンの作成に失敗しました")
 	}
 
 	//レスポンスボディをDecode
 	var p model.JWT
 	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
-		log.Println(err)
+		t.Fatal("JSONへの変換に失敗しました")
 	}
 
 	//期待値(アサート用の構造体)
