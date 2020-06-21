@@ -264,8 +264,8 @@ func TestCreateSongHandler(t *testing.T) {
 	}}
 	f.CreateSongHandler(res, req)
 
-	// レスポンスのステータスコードのテスト
-	if res.Code != http.StatusOK {
+	// レスポンスのステータスコードのテスト(201)
+	if res.Code != http.StatusCreated {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 }
@@ -311,8 +311,8 @@ func TestUpdateSongHandler(t *testing.T) {
 	r.Handle("/api/song/{id}", http.HandlerFunc(fakeSongController.UpdateSongHandler)).Methods("PUT")
 	r.ServeHTTP(res, req)
 
-	// レスポンスのステータスコードのテスト
-	if res.Code != http.StatusOK {
+	// レスポンスのステータスコードのテスト(204)
+	if res.Code != http.StatusNoContent {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 }
@@ -349,8 +349,8 @@ func TestDeleteSongHandler(t *testing.T) {
 	r.Handle("/api/song/{id}", http.HandlerFunc(fakeSongController.DeleteSongHandler)).Methods("DELETE")
 	r.ServeHTTP(res, req)
 
-	// レスポンスのステータスコードのテスト
-	if res.Code != http.StatusOK {
+	// レスポンスのステータスコードのテスト(204)
+	if res.Code != http.StatusNoContent {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 }
