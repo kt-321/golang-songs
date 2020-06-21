@@ -129,6 +129,10 @@ func (sc *SongController) CreateSongHandler(w http.ResponseWriter, r *http.Reque
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
+
+	//201 Created
+	w.WriteHeader(201)
+	return
 }
 
 //idで指定した曲の情報を更新
@@ -178,6 +182,10 @@ func (sc *SongController) UpdateSongHandler(w http.ResponseWriter, r *http.Reque
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
+
+	//204 No Content
+	w.WriteHeader(204)
+	return
 }
 
 //idで指定した曲を削除
@@ -204,4 +212,8 @@ func (sc *SongController) DeleteSongHandler(w http.ResponseWriter, r *http.Reque
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
+
+	//204 No Content
+	w.WriteHeader(204)
+	return
 }
