@@ -49,7 +49,7 @@ func TestFollowUserHandler(t *testing.T) {
 	r.ServeHTTP(res, req)
 
 	// レスポンスのステータスコードのテスト
-	if res.Code != http.StatusOK {
+	if res.Code != http.StatusCreated {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 }
@@ -82,7 +82,7 @@ func TestUnfollowUserHandler(t *testing.T) {
 	r.ServeHTTP(res, req)
 
 	// レスポンスのステータスコードのテスト
-	if res.Code != http.StatusOK {
+	if res.Code != http.StatusCreated {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 }
