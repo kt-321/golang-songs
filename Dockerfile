@@ -10,7 +10,6 @@ RUN make
 # runtime image
 FROM alpine
 RUN apk add --no-cache ca-certificates
-COPY --from=builder /go/src/golang-songs /app
-#EXPOSE 8080
-EXPOSE 8082
+COPY --from=builder /go/src/golang-songs/app /app
+EXPOSE 8081
 ENTRYPOINT ["/app"]
