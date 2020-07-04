@@ -54,7 +54,7 @@ jobs:
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: golang-yoursongs-cluster
+        service: golang-yoursongs-service
 #        service: sample-app-service
         cluster: golang-yoursongs-cluster
 #        cluster: spot-ecs
