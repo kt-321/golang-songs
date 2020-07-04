@@ -54,8 +54,9 @@ jobs:
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: spot-ecs
+        service: golang-yoursongs-cluster
 #        service: sample-app-service
-        cluster: spot-ecs
+        cluster: golang-yoursongs-cluster
+#        cluster: spot-ecs
 #        cluster: default
         wait-for-service-stability: true
