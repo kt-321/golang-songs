@@ -20,7 +20,6 @@ jobs:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ap-northeast-1
-#        aws-region: us-east-2
 
     - name: Login to Amazon ECR
       id: login-ecr
@@ -30,7 +29,6 @@ jobs:
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-#        ECR_REPOSITORY: my-ecr-repo
         ECR_REPOSITORY: githubactions-yoursongs
         IMAGE_TAG: ${{ github.sha }}
       run: |
@@ -47,8 +45,6 @@ jobs:
       with:
         task-definition: task-definition.json
         container-name: golang-yoursongs-container
-#        container-name: golang
-#        container-name: sample-app
         image: ${{ steps.build-image.outputs.image }}
 
     - name: Deploy Amazon ECS task definition
@@ -56,8 +52,5 @@ jobs:
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
         service: golang-yoursongs-service
-#        service: sample-app-service
         cluster: golang-yoursongs-cluster
-#        cluster: spot-ecs
-#        cluster: default
         wait-for-service-stability: true
