@@ -27,7 +27,28 @@
       "dnsServers": null,
       "mountPoints": [],
       "workingDirectory": null,
-      "secrets": null,
+      "secrets": [
+        {
+          "name": "mysqlConfig",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:646711902531:secret:SECRET_MESSAGE-DRiGXh"
+        },
+        {
+          "name": "SIGNINGKEY",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:646711902531:secret:SECRET_MESSAGE-DRiGXh"
+        },
+        {
+          "name": "client_id",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:646711902531:secret:SECRET_MESSAGE-DRiGXh"
+        },
+        {
+          "name": "client_secret",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:646711902531:secret:SECRET_MESSAGE-DRiGXh"
+        },
+        {
+          "name": "redirect_url",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:646711902531:secret:SECRET_MESSAGE-DRiGXh"
+        }
+      ],
       "dockerSecurityOptions": null,
       "memory": null,
       "memoryReservation": null,
