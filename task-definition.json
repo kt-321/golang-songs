@@ -15,7 +15,13 @@
         }
       },
       "entryPoint": null,
-      "portMappings": [],
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
       "command": [
         "date"
       ],
