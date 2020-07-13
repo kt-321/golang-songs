@@ -51,6 +51,6 @@ jobs:
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: golang-yoursongs-service
+        service: golang-yoursongs-service2
         cluster: golang-yoursongs-cluster
         wait-for-service-stability: true
