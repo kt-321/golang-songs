@@ -50,7 +50,7 @@ func Dispatch(DB *gorm.DB) {
 
 	r.HandleFunc("/", healthzHandler).Methods("GET")
 
-	if err := http.ListenAndServe(":8081", r); err != nil {
+	if err := http.ListenAndServe(":8080", r); err != nil {
 		log.Println(err)
 	}
 }
