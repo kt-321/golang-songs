@@ -36,7 +36,7 @@
       "secrets": [
         {
           "name": "mysqlConfig",
-          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:646711902531:secret:SECRET_MESSAGE-DRiGXh"
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:646711902531:secret:SECRET_MESSAGE-DRiGXh/mysqlConfig"
         },
         {
           "name": "SIGNINGKEY",
