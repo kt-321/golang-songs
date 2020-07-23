@@ -36,23 +36,23 @@
       "secrets": [
         {
           "name": "mysqlConfig",
-          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:646711902531:secret:SECRET_MESSAGE-DRiGXh"
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:646711902531:secret:SECRET_MESSAGE-DRiGXh:mysqlConfig"
         },
         {
           "name": "SIGNINGKEY",
-          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:646711902531:secret:SECRET_MESSAGE-DRiGXh"
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:646711902531:secret:SECRET_MESSAGE-DRiGXh:SIGNINGKEY"
         },
         {
           "name": "client_id",
-          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:646711902531:secret:SECRET_MESSAGE-DRiGXh"
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:646711902531:secret:SECRET_MESSAGE-DRiGXh:client_id"
         },
         {
           "name": "client_secret",
-          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:646711902531:secret:SECRET_MESSAGE-DRiGXh"
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:646711902531:secret:SECRET_MESSAGE-DRiGXh:client_secret"
         },
         {
           "name": "redirect_url",
-          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:646711902531:secret:SECRET_MESSAGE-DRiGXh"
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:646711902531:secret:SECRET_MESSAGE-DRiGXh:redirect_url"
         }
       ],
       "dockerSecurityOptions": null,
