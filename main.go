@@ -13,6 +13,7 @@ func main() {
 	db, err := gorm.Open("mysql", os.Getenv("mysqlConfig"))
 	if err != nil {
 		log.Println(err)
+		log.Println(os.Getenv("mysqlConfig"))
 	}
 
 	//一旦直打ち
