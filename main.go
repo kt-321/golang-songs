@@ -13,8 +13,6 @@ func main() {
 	db, err := gorm.Open("mysql", os.Getenv("mysqlConfig"))
 	if err != nil {
 		log.Println(err)
-		log.Println(os.Getenv("mysqlConfig"))
-		log.Println("mysqlConfig")
 	}
 
 	infrastructure.Dispatch(db)
