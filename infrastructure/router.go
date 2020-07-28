@@ -58,6 +58,9 @@ func Dispatch(DB *gorm.DB) {
 var JwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
 		secret := os.Getenv("SIGNINGKEY")
+
+		log.Println(os.Getenv("SIGNINGKEY"))
+
 		if os.Getenv("SIGNINGKEY") == "" {
 			panic("環境変数SIGNINGKEYが存在しません。")
 		}
