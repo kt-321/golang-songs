@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/joho/godotenv"
 	"golang.org/x/oauth2"
 
 	"os"
@@ -32,13 +31,13 @@ func NewSpotifyController(DB *gorm.DB) *SpotifyController {
 
 //SpotifyAPIのリダイレクトURLを返す
 func (spc *SpotifyController) GetRedirectURLHandler(w http.ResponseWriter, r *http.Request) {
-	err := godotenv.Load()
-	if err != nil {
-		var error model.Error
-		error.Message = ".envの読み込みに失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
-		return
-	}
+	//err := godotenv.Load()
+	//if err != nil {
+	//	var error model.Error
+	//	error.Message = ".envの読み込みに失敗しました。"
+	//	errorInResponse(w, http.StatusInternalServerError, error)
+	//	return
+	//}
 
 	config := oauth2.Config{
 		ClientID:     os.Getenv("client_id"),
