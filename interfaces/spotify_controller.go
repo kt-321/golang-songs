@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"golang-songs/model"
 	"golang-songs/usecases"
-	"log"
 	"net/http"
 
 	"golang.org/x/oauth2"
@@ -31,14 +30,6 @@ func NewSpotifyController(DB *gorm.DB) *SpotifyController {
 
 //SpotifyAPIのリダイレクトURLを返す
 func (spc *SpotifyController) GetRedirectURLHandler(w http.ResponseWriter, r *http.Request) {
-	//err := godotenv.Load()
-	//if err != nil {
-	//	var error model.Error
-	//	error.Message = ".envの読み込みに失敗しました。"
-	//	errorInResponse(w, http.StatusInternalServerError, error)
-	//	return
-	//}
-
 	config := oauth2.Config{
 		ClientID:     os.Getenv("client_id"),
 		ClientSecret: os.Getenv("client_secret"),
@@ -75,23 +66,6 @@ func (spc *SpotifyController) GetTokenHandler(w http.ResponseWriter, r *http.Req
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-
-	//err := godotenv.Load()
-	//if err != nil {
-	//	var error model.Error
-	//	error.Message = ".envの読み込みに失敗しました。"
-	//	errorInResponse(w, http.StatusInternalServerError, error)
-	//	return
-	//}
-
-	log.Println("client_id")
-	log.Println(os.Getenv("client_id"))
-
-	log.Println("client_secret")
-	log.Println(os.Getenv("client_secret"))
-
-	log.Println("redirect_url")
-	log.Println(os.Getenv("redirect_url"))
 
 	config := oauth2.Config{
 		ClientID:     os.Getenv("client_id"),
