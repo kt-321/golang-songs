@@ -14,6 +14,7 @@ func main() {
 	if err != nil {
 		log.Println(err)
 		log.Println(os.Getenv("mysqlConfig"))
+		log.Println("mysqlConfig")
 	}
 
 	//一旦直打ち
