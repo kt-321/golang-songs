@@ -1,20 +1,18 @@
 # golang-songs
-golang project
 
-## オリジナルで作成したアプリケーション「Your Songs」のバックエンド
+## 概要
+- Golang+Nuxt.jsのSPAであるオリジナルアプリケーション「Your Songs」のGolangのコード
+- 元々PHP/Laravel+Nuxt.jsのSPAで作っていたところを、バックエンドをGolangにリプレイスしました。実際に業務でGolangを使用している方に、コードレビューしてもらいながら実装を進めてきました。
+- Spotifyの無料アカウントを作ってお持ちであれば、Spotifyで曲を検索して投稿することができます。
 
-プロジェクト3に記載のオリジナルアプリケーション（PHP/Laravel+Nuxt.jsのSPA）のバックエンドをGolangにリプレイスしました。Spotifyの無料アカウントを作ってお持ちであれば、Spotifyで曲を検索して投稿することができます。
-
-【アプリケーションURL】
+## アプリケーションURL
 http://your-songs-laravel.site
 
-【Github】
-- https://github.com/kt-321/golang-songs　→　Golang
-- https://github.com/kt-321/nuxt-songs-go　→　Nuxt.js
+## フロント側のコード（Nuxt.js）
+- https://github.com/kt-321/nuxt-songs-go
 
-　実際に業務でGolangを使用している方に、コードレビューしてもらいながら実装を進めています。
 
-【主な使用技術】
+## アプリケーション全体での主な使用技術
 - Golang
 - Nuxt.js
 - TypeScript
@@ -30,7 +28,7 @@ http://your-songs-laravel.site
 - Terraform
 - AWS Secrets Manager
 
-【Golangのコード】
+## Golangのコード
 - net/httpパッケージでHTTPサーバーの起動
 - gorilla/muxを用いてルーティング作成
 - ORM用ライブラリGORMを使用
@@ -41,7 +39,7 @@ http://your-songs-laravel.site
 
 APIリクエストがあるとJSON形式でフロントにレスポンスを返しています。
 
-【実装済みの主な機能】
+## 実装済みの主な機能
 - ユーザー登録
 - ログイン
 - ユーザー情報編集
@@ -58,8 +56,11 @@ APIリクエストがあるとJSON形式でフロントにレスポンスを返�
 - Github Actionsを用いた自動テスト
 - Github Actionsを用いて、ECR への image の push, ECS(Fargate)への自動デプロイ
 
-【現在実装中】
+## 現在実装中
 - 画像をアップロードしてS3に保存する機能
 
+## アプリケーションのTOP画面
+<a href="https://gyazo.com/6bc2a6b38c9420c9e41b829ca3a9eba1"><img src="https://i.gyazo.com/6bc2a6b38c9420c9e41b829ca3a9eba1.jpg" alt="Image from Gyazo" width="1511"/></a>
 
+## インフラ構成図
 <a href="https://gyazo.com/ce7bf25c667275e805debd2a415009f6"><img src="https://i.gyazo.com/ce7bf25c667275e805debd2a415009f6.png" alt="Image from Gyazo" width="700"/></a>
