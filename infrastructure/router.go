@@ -64,6 +64,7 @@ var JwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 		}
 		return []byte(secret), nil
 	},
+	Debug:         true,
 	SigningMethod: jwt.SigningMethodHS256,
 })
 
