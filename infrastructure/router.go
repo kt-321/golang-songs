@@ -8,16 +8,18 @@ import (
 
 	"github.com/jinzhu/gorm"
 
+	"github.com/garyburd/redigo/redis"
+
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
 
 	"github.com/gorilla/mux"
 )
 
-func Dispatch(DB *gorm.DB) {
+func Dispatch(DB *gorm.DB, Redis redis.Conn) {
 	authController := interfaces.NewAuthController(DB)
 	userController := interfaces.NewUserController(DB)
-	songController := interfaces.NewSongController(DB)
+	songController := interfaces.NewSongController(DB, Redis)
 	bookmarkController := interfaces.NewBookmarkController(DB)
 	userFollowController := interfaces.NewUserFollowController(DB)
 	spotifyController := interfaces.NewSpotifyController(DB)
@@ -50,7 +52,8 @@ func Dispatch(DB *gorm.DB) {
 
 	r.HandleFunc("/", healthzHandler).Methods("GET")
 
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	//if err := http.ListenAndServe(":8080", r); err != nil {
+	if err := http.ListenAndServe(":8081", r); err != nil {
 		log.Println(err)
 	}
 }
