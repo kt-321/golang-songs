@@ -8,16 +8,18 @@ import (
 
 	"github.com/jinzhu/gorm"
 
+	"github.com/garyburd/redigo/redis"
+
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
 
 	"github.com/gorilla/mux"
 )
 
-func Dispatch(DB *gorm.DB) {
+func Dispatch(DB *gorm.DB, Redis redis.Conn) {
 	authController := interfaces.NewAuthController(DB)
 	userController := interfaces.NewUserController(DB)
-	songController := interfaces.NewSongController(DB)
+	songController := interfaces.NewSongController(DB, Redis)
 	bookmarkController := interfaces.NewBookmarkController(DB)
 	userFollowController := interfaces.NewUserFollowController(DB)
 	spotifyController := interfaces.NewSpotifyController(DB)
