@@ -25,6 +25,7 @@ http://your-songs-laravel.site
 - ALB
 - ECS
 - ECR
+- ElastiCache (Redis)
 - Terraform
 - AWS Secrets Manager
 
@@ -36,21 +37,21 @@ http://your-songs-laravel.site
 - GolangCI-Lint
 - net/http/httptestを用いてテストコード記述
 - ルーティングについて必要であるものはJwtMiddlewareでラップ
+- Redigoを用いてRedisの使用
 
 APIリクエストがあるとJSON形式でフロントにレスポンスを返しています。
 
 ## 実装済みの主な機能
-- ユーザー登録
-- ログイン
+- ユーザー登録・ログイン
+- ユーザー情報の取得
 - ユーザー情報編集
-- 指定したユーザーの情報参照
 - SpotifyAPIを用いた曲検索
 - 曲の追加
-- 曲情報の参照
+- 曲情報の取得
 - 曲の編集
 - 曲の削除
-- ユーザーフォロー機能
-- 曲のお気に入り機能
+- 曲をお気に入りする機能
+- Redis(ElastiCache)の利用（曲の取得・追加・更新・削除）
 - Clean Architectureを倣ったディレクトリ構成
 - テストコード
 - Github Actionsを用いた自動テスト
@@ -58,9 +59,11 @@ APIリクエストがあるとJSON形式でフロントにレスポンスを返�
 
 ## 現在実装中
 - 画像をアップロードしてS3に保存する機能
+- CloudFrontの導入
+- Lambda・API Gatewayの導入
 
 ## アプリケーションのTOP画面
 <a href="https://gyazo.com/6bc2a6b38c9420c9e41b829ca3a9eba1"><img src="https://i.gyazo.com/6bc2a6b38c9420c9e41b829ca3a9eba1.jpg" alt="Image from Gyazo" width="1511"/></a>
 
 ## インフラ構成図
-<a href="https://gyazo.com/ce7bf25c667275e805debd2a415009f6"><img src="https://i.gyazo.com/ce7bf25c667275e805debd2a415009f6.png" alt="Image from Gyazo" width="700"/></a>
+<a href="https://gyazo.com/68eb106befe391785cdfb0e826a61fb0"><img src="https://i.gyazo.com/68eb106befe391785cdfb0e826a61fb0.png" alt="Image from Gyazo" width="700"/></a>
