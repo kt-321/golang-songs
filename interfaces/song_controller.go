@@ -8,6 +8,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
 
 	"golang-songs/usecases"
@@ -18,11 +19,12 @@ type SongController struct {
 	SongInteractor usecases.SongInteractor
 }
 
-func NewSongController(DB *gorm.DB) *SongController {
+func NewSongController(DB *gorm.DB, Redis redis.Conn) *SongController {
 	return &SongController{
 		SongInteractor: usecases.SongInteractor{
 			SongRepository: &SongRepository{
-				DB: DB,
+				DB:    DB,
+				Redis: Redis,
 			},
 		},
 	}
