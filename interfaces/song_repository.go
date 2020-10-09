@@ -88,8 +88,8 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 			DeletedAt:      nil,
 		}
 
-		//キャッシュのTTLを120秒にリセット
-		_, err = sr.Redis.Do("EXPIRE", fmt.Sprintf("song:%d", songID), "120")
+		//キャッシュのTTLを1800秒(30分)にリセット
+		_, err = sr.Redis.Do("EXPIRE", fmt.Sprintf("song:%d", songID), "1800")
 		if err != nil {
 			return nil, err
 		}
@@ -110,8 +110,8 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 				return nil, err
 			}
 
-			//キャッシュのTTLを120秒に設定
-			_, err = sr.Redis.Do("EXPIRE", fmt.Sprintf("song:%d", songID), "120")
+			//キャッシュのTTLを1800秒(30分)に設定
+			_, err = sr.Redis.Do("EXPIRE", fmt.Sprintf("song:%d", songID), "1800")
 			if err != nil {
 				return nil, err
 			}
@@ -159,8 +159,8 @@ func (sr *SongRepository) Save(userEmail string, p model.Song) error {
 			return err
 		}
 
-		//キャッシュのTTLを120秒に設定
-		_, err = sr.Redis.Do("EXPIRE", fmt.Sprintf("song:%d", song.ID), "120")
+		//キャッシュのTTLを1800秒(30分)に設定
+		_, err = sr.Redis.Do("EXPIRE", fmt.Sprintf("song:%d", song.ID), "1800")
 		if err != nil {
 			return err
 		}
@@ -208,8 +208,8 @@ func (sr *SongRepository) UpdateByID(userEmail string, songID int, p model.Song)
 			return err
 		}
 
-		//キャッシュのTTLを120秒に設定
-		_, err = sr.Redis.Do("EXPIRE", fmt.Sprintf("song:%d", songID), "120")
+		//キャッシュのTTLを1800秒(30分)に設定
+		_, err = sr.Redis.Do("EXPIRE", fmt.Sprintf("song:%d", songID), "1800")
 		if err != nil {
 			return err
 		}
