@@ -3,6 +3,7 @@ package interfaces
 import (
 	"fmt"
 	"golang-songs/model"
+	"log"
 	"strconv"
 	"time"
 
@@ -42,24 +43,29 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 		//ロケーションを指定して、パース
 		jst, err := time.LoadLocation("Asia/Tokyo")
 		if err != nil {
+			log.Println(err)
 			return nil, err
 		}
 		CreatedAt, err := time.ParseInLocation("2006年01月02日 15時04分05秒", t["CreatedAt"], jst)
 		if err != nil {
+			log.Println(err)
 			return nil, err
 		}
 		UpdatedAt, err := time.ParseInLocation("2006年01月02日 15時04分05秒", t["UpdatedAt"], jst)
 		if err != nil {
+			log.Println(err)
 			return nil, err
 		}
 
 		//IDとUserIDをstringからunitに変換
 		intID, err := strconv.Atoi(t["ID"])
 		if err != nil {
+			log.Println(err)
 			return nil, err
 		}
 		uintID := uint(intID)
 		if err != nil {
+			log.Println(err)
 			return nil, err
 		}
 		intUserId, err := strconv.Atoi(t["UserID"])
@@ -69,6 +75,7 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 		//MusicAgeをstringからintに変換
 		MusicAge, err := strconv.Atoi(t["MusicAge"])
 		if err != nil {
+			log.Println(err)
 			return nil, err
 		}
 
@@ -91,6 +98,7 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 		//キャッシュのTTLを1800秒(30分)にリセット
 		_, err = sr.Redis.Do("EXPIRE", fmt.Sprintf("song:%d", songID), "1800")
 		if err != nil {
+			log.Println(err)
 			return nil, err
 		}
 
