@@ -41,9 +41,9 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 		}
 
 		//予めtime.Localにタイムゾーンの設定情報を入れておく
-		time.Local = time.FixedZone("Asia/Tokyo", 9*60*60)
+		time.Local = time.FixedZone("Local", 9*60*60)
 		//ロケーションを指定して、パース
-		jst, err := time.LoadLocation("Asia/Tokyo")
+		jst, err := time.LoadLocation("Local")
 		if err != nil {
 			log.Println(err)
 			return nil, err
