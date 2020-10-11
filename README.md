@@ -13,8 +13,8 @@ http://your-songs-laravel.site
 
 
 ## アプリケーション全体での主な使用技術
-- Golang
-- Nuxt.js
+- Golang 1.14
+- Nuxt.js 2.11
 - TypeScript
 - AWS
 - VPC
