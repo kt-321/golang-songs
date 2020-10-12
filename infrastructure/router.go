@@ -57,7 +57,6 @@ func Dispatch(DB *gorm.DB, Redis redis.Conn) {
 
 	r.HandleFunc("/", healthzHandler).Methods("GET")
 
-	//引数を追加した
 	os.Exit(run(context.Background(), r))
 }
 
@@ -79,7 +78,6 @@ func healthzHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-//引数を追加した
 func run(ctx context.Context, r *mux.Router) int {
 	var eg *errgroup.Group
 	eg, ctx = errgroup.WithContext(ctx)
@@ -118,7 +116,7 @@ func acceptSignal(ctx context.Context) error {
 
 func runServer(ctx context.Context, r *mux.Router) error {
 	s := &http.Server{
-		Addr:    ":8082",
+		Addr:    ":8080",
 		Handler: r,
 	}
 
