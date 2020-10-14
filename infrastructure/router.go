@@ -1,12 +1,17 @@
 package infrastructure
 
 import (
+	"context"
+	"fmt"
 	"golang-songs/interfaces"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/jinzhu/gorm"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/garyburd/redigo/redis"
 
@@ -52,9 +57,7 @@ func Dispatch(DB *gorm.DB, Redis redis.Conn) {
 
 	r.HandleFunc("/", healthzHandler).Methods("GET")
 
-	if err := http.ListenAndServe(":8080", r); err != nil {
-		log.Println(err)
-	}
+	os.Exit(run(context.Background(), r))
 }
 
 var JwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
@@ -73,4 +76,62 @@ var JwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 //ELBのヘルスチェック用のハンドラ
 func healthzHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
+}
+
+func run(ctx context.Context, r *mux.Router) int {
+	var eg *errgroup.Group
+	eg, ctx = errgroup.WithContext(ctx)
+
+	eg.Go(func() error {
+		return runServer(ctx, r)
+	})
+	eg.Go(func() error {
+		return acceptSignal(ctx)
+	})
+	eg.Go(func() error {
+		<-ctx.Done()
+		return ctx.Err()
+	})
+
+	if err := eg.Wait(); err != nil {
+		log.Println(err)
+		return 1
+	}
+	return 0
+}
+
+func acceptSignal(ctx context.Context) error {
+	sigCh := make(chan os.Signal, 1)
+	//signalをハンドリングする。SIGINTとSIGTERMの両方
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+
+	select {
+	case <-ctx.Done():
+		signal.Reset()
+		return ctx.Err()
+	case sig := <-sigCh:
+		return fmt.Errorf("signal received: %v", sig.String())
+	}
+}
+
+func runServer(ctx context.Context, r *mux.Router) error {
+	s := &http.Server{
+		Addr:    ":8080",
+		Handler: r,
+	}
+
+	errCh := make(chan error)
+	go func() {
+		defer close(errCh)
+		if err := s.ListenAndServe(); err != nil {
+			errCh <- err
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		return s.Shutdown(ctx)
+	case err := <-errCh:
+		return err
+	}
 }
