@@ -108,7 +108,7 @@ func acceptSignal(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		signal.Reset()
-		return nil
+		return ctx.Err()
 	case sig := <-sigCh:
 		return fmt.Errorf("signal received: %v", sig.String())
 	}
