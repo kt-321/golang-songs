@@ -1,3 +1,4 @@
 .env
 /dbconfig.yml
-/conf/
+conf/
+data/
