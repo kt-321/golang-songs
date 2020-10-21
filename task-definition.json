@@ -28,7 +28,7 @@
       "linuxParameters": null,
       "cpu": 0,
       "environment": [
-        {"SIDECAR_REDIS_HOST": "127.0.0.1"}
+        { "name" : "SIDECAR_REDIS_HOST", "value": "127.0.0.1"}
       ],
       "resourceRequirements": null,
       "ulimits": null,
