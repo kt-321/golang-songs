@@ -27,7 +27,9 @@
       ],
       "linuxParameters": null,
       "cpu": 0,
-      "environment": [],
+      "environment": [
+        {"SIDECAR_REDIS_HOST": "127.0.0.1"}
+      ],
       "resourceRequirements": null,
       "ulimits": null,
       "dnsServers": null,
@@ -96,13 +98,7 @@
         }
       },
       "entryPoint": null,
-      "portMappings": [
-        {
-          "containerPort": 6379,
-          "hostPort": 6379,
-          "protocol": "tcp"
-        }
-      ],
+      "portMappings": [],
       "command": [
         "date"
       ],
