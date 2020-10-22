@@ -55,6 +55,12 @@
       "volumesFrom": [],
       "image": "646711902531.dkr.ecr.ap-northeast-1.amazonaws.com/githubactions-yoursongs:7741f29936845e30f6705589a88532d6ab9ddd49",
       "essential": true,
+      "dependsOn": [
+        {
+          "containerName": "redis-yoursongs-container",
+          "condition": "START"
+        }
+      ],
       "name": "golang-yoursongs-container"
     },
     {
