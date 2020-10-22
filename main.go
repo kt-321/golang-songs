@@ -40,7 +40,7 @@ func main() {
 		MaxActive:   6,
 		IdleTimeout: 240 * time.Second,
 		Dial: func() (redis.Conn, error) {
-			rc, err := redis.Dial("tcp", os.Getenv("SIDECAR_REDIS_HOST"))
+			rc, err := redis.Dial("tcp", os.Getenv("SIDECAR_REDIS_ADDRESS"))
 			if err != nil {
 				return nil, err
 			}
