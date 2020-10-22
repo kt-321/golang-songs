@@ -23,7 +23,7 @@
       ],
       "cpu": 0,
       "environment": [
-        { "name" : "SIDECAR_REDIS_HOST", "value": "127.0.0.1"}
+        { "name" : "SIDECAR_REDIS_ADDRESS", "value": "127.0.0.1:6379"}
       ],
       "mountPoints": [],
       "secrets": [
