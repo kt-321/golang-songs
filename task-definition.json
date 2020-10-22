@@ -67,9 +67,6 @@
         }
       },
       "portMappings": [],
-      "command": [
-        "date"
-      ],
       "cpu": 0,
       "environment": [],
       "mountPoints": [],
