@@ -58,7 +58,7 @@
       "dependsOn": [
         {
           "containerName": "redis-yoursongs-container",
-          "condition": "START"
+          "condition": "HEALTHY"
         }
       ],
       "name": "golang-yoursongs-container"
@@ -79,6 +79,16 @@
           "protocol": "tcp"
         }
       ],
+      "healthCheck": {
+        "command": [
+          "CMD-SHELL",
+          "ping=\"$(redis-cli -h localhost ping)\" && [ \"$ping\" = 'PONG' ] || exit 1"
+        ],
+        "interval": 5,
+        "retries": 3,
+        "startPeriod": 5,
+        "timeout": 5
+      },
       "cpu": 0,
       "environment": [],
       "mountPoints": [],
