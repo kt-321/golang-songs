@@ -1,15 +1,15 @@
 # golang-songs
 
 ## 概要
-- Golang+Nuxt.jsのSPAであるオリジナルアプリケーション「Your Songs」のGolangのコード
-- 元々PHP/Laravel+Nuxt.jsのSPAで作っていたところを、バックエンドをGolangにリプレイスしました。実際に業務でGolangを使用している方に、コードレビューしてもらいながら実装を進めてきました。
+- Golang+Nuxt.jsのSPAであるオリジナルアプリケーション「Your Songs」のGolang(バックエンド)のコード
+- 元はPHP/Laravel+Nuxt.jsのSPAで作っていたところを、バックエンドをGolangにリプレイスしました。実際に業務でGolangを使用している方に、コードレビューしてもらいながら実装を進めてきました。
 - Spotifyの無料アカウントを作ってお持ちであれば、Spotifyで曲を検索して投稿することができます。
 
 ## アプリケーションURL
 http://your-songs-laravel.site
 
 ## フロント側のコード（Nuxt.js）
-- https://github.com/kt-321/nuxt-songs-go
+https://github.com/kt-321/nuxt-songs-go
 
 
 ## アプリケーション全体での主な使用技術
@@ -34,12 +34,17 @@ http://your-songs-laravel.site
 - gorilla/muxを用いてルーティング作成
 - ORM用ライブラリGORMを使用
 - sql-migrateを用いてマイグレーション
-- GolangCI-Lint
-- net/http/httptestを用いてテストコード記述
-- ルーティングについて必要であるものはJwtMiddlewareでラップ
+- パッケージ管理にGOMODULE使用
+- testing パッケージを用いてテストコード記述
+- go-jwt-middlewareパッケージを用いてJWT認証の実装
 - Redigoを用いてRedisの使用
+- HTTPサーバーのgraceful shutdown
+- encoding/jsonを用いてjsonのエンコード/デコード
+- bcryptを用いてパスワードをハッシュ化
+- GolangCI-Lintの使用
+- デバッグにdelveを使用
 
-APIリクエストがあるとJSON形式でフロントにレスポンスを返しています。
+構造体にjsonタグを付与することで、APIリクエストがあるとJSON形式でフロントにレスポンスを返しています。
 
 ## 実装済みの主な機能
 - ユーザー登録・ログイン
@@ -50,14 +55,15 @@ APIリクエストがあるとJSON形式でフロントにレスポンスを返�
 - 曲情報の取得
 - 曲の編集
 - 曲の削除
-- 曲をお気に入りする機能
+- 曲をお気に入り登録する機能
 - Redis(ElastiCache)の利用（曲の取得・追加・更新・削除）
 - Clean Architectureを倣ったディレクトリ構成
 - テストコード
 - Github Actionsを用いた自動テスト
-- Github Actionsを用いて、ECR への image の push, ECS(Fargate)への自動デプロイ
+- Github Actionsを用いて、ECR へのimageの自動push, ECS(Fargate)でのコンテナ作成
 
 ## 現在実装中
+- 多層キャッシュ構造
 - 画像をアップロードしてS3に保存する機能
 - CloudFrontの導入
 - Lambda・API Gatewayの導入
