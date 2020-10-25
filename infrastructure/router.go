@@ -21,10 +21,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func Dispatch(DB *gorm.DB, Redis redis.Conn) {
+func Dispatch(DB *gorm.DB, Redis redis.Conn, SidecarRedis redis.Conn) {
 	authController := interfaces.NewAuthController(DB)
 	userController := interfaces.NewUserController(DB)
-	songController := interfaces.NewSongController(DB, Redis)
+	songController := interfaces.NewSongController(DB, Redis, SidecarRedis)
 	bookmarkController := interfaces.NewBookmarkController(DB)
 	userFollowController := interfaces.NewUserFollowController(DB)
 	spotifyController := interfaces.NewSpotifyController(DB)
@@ -116,7 +116,8 @@ func acceptSignal(ctx context.Context) error {
 
 func runServer(ctx context.Context, r *mux.Router) error {
 	s := &http.Server{
-		Addr:    ":8080",
+		Addr: ":8082",
+		//Addr:    ":8080",
 		Handler: r,
 	}
 
