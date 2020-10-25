@@ -6,22 +6,12 @@ import (
 	"os"
 	"time"
 
-	"github.com/joho/godotenv"
-
 	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
 func main() {
-	//+++++++
-	//ここは消した上でpushする
-	err := godotenv.Load()
-	if err != nil {
-		log.Println(".envファイルの読み込み失敗")
-	}
-	//+++++++++
-
 	//RDBに接続
 	db, err := gorm.Open("mysql", os.Getenv("mysqlConfig"))
 	if err != nil {
