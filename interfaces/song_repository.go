@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"errors"
 	"fmt"
 	"golang-songs/model"
 	"strconv"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
+	"golang.org/x/sync/singleflight"
 )
 
 type SongRepository struct {
@@ -64,81 +66,18 @@ func (sr *SongRepository) FindAll() (*[]model.Song, error) {
 func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 	var song model.Song
 
-	// サイドカーコンテナのRedisにキャッシュがあるか確認
-	exists, err := ExistsSongByID(songID, sr.SidecarRedis)
-	if err != nil {
-		return nil, err
-	}
-	// サイドカーコンテナのRedisにキャッシュが存在する場合
-	if exists > 0 {
-		// サイドカーのRedisのキャッシュを取得
-		t, err := GetSongByID(songID, sr.SidecarRedis)
+	//singleflightで同時関数呼び出しを1度に抑える
+	var g singleflight.Group
+	v, err, _ := g.Do("key", func() (interface{}, error) {
+		// サイドカーコンテナのRedisにキャッシュがあるか確認
+		exists, err := ExistsSongByID(songID, sr.SidecarRedis)
 		if err != nil {
 			return nil, err
 		}
-
-		//予めtime.Localにタイムゾーンの設定情報を入れておく
-		time.Local = time.FixedZone("Local", 9*60*60)
-		//ロケーションを指定して、パース
-		jst, err := time.LoadLocation("Local")
-		if err != nil {
-			return nil, err
-		}
-
-		CreatedAt, err := time.ParseInLocation("2006年01月02日 15時04分05秒", t["CreatedAt"], jst)
-		if err != nil {
-			return nil, err
-		}
-		UpdatedAt, err := time.ParseInLocation("2006年01月02日 15時04分05秒", t["UpdatedAt"], jst)
-		if err != nil {
-			return nil, err
-		}
-
-		//IDとUserIDをstringからunitに変換
-		intID, err := strconv.Atoi(t["ID"])
-		if err != nil {
-			return nil, err
-		}
-		uintID := uint(intID)
-		if err != nil {
-			return nil, err
-		}
-
-		intUserId, err := strconv.Atoi(t["UserID"])
-		uintUserID := uint(intUserId)
-
-		//MusicAgeをstringからintに変換
-		MusicAge, err := strconv.Atoi(t["MusicAge"])
-		if err != nil {
-			return nil, err
-		}
-
-		song = model.Song{
-			ID:             uintID,
-			Title:          t["Title"],
-			Artist:         t["Artist"],
-			MusicAge:       MusicAge,
-			Image:          t["Image"],
-			Video:          t["Video"],
-			Album:          t["Album"],
-			Description:    t["Description"],
-			SpotifyTrackId: t["SpotifyTrackId"],
-			UserID:         uintUserID,
-			CreatedAt:      CreatedAt,
-			UpdatedAt:      UpdatedAt,
-			DeletedAt:      nil,
-		}
-	} else {
-		// サイドカーコンテナのRedisにキャッシュが存在しない場合、リモートのRedisにキャッシュがあるか確認
-		exists, err := ExistsSongByID(songID, sr.Redis)
-		if err != nil {
-			return nil, err
-		}
-
-		//リモートのRedisにキャッシュが存在する場合
+		// サイドカーコンテナのRedisにキャッシュが存在する場合
 		if exists > 0 {
-			// リモートのRedisのキャッシュを取得
-			t, err := GetSongByID(songID, sr.Redis)
+			// サイドカーのRedisのキャッシュを取得
+			t, err := GetSongByID(songID, sr.SidecarRedis)
 			if err != nil {
 				return nil, err
 			}
@@ -169,6 +108,7 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 			if err != nil {
 				return nil, err
 			}
+
 			intUserId, err := strconv.Atoi(t["UserID"])
 			uintUserID := uint(intUserId)
 
@@ -193,49 +133,70 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 				UpdatedAt:      UpdatedAt,
 				DeletedAt:      nil,
 			}
-
-			//サイドカーコンテナのRedisに保存
-			err = SetSongByID(songID, t, sr.SidecarRedis)
-			if err != nil {
-				return nil, err
-			}
-
-			//キャッシュのTTLを1800秒(30分)に設定
-			_, err = sr.SidecarRedis.Do("EXPIRE", fmt.Sprintf("song:%d", songID), "1800")
-			if err != nil {
-				return nil, err
-			}
 		} else {
-			//リモートのRedisにキャッシュが存在しない場合RDSに値を取りに行く。
-			result := sr.DB.Where("id = ?", songID).Find(&song)
+			// サイドカーコンテナのRedisにキャッシュが存在しない場合、リモートのRedisにキャッシュがあるか確認
+			exists, err := ExistsSongByID(songID, sr.Redis)
+			if err != nil {
+				return nil, err
+			}
 
-			//RDSからの値取得に成功した場合
-			if result.Error == nil {
-				t := map[string]string{
-					"ID":             strconv.Itoa(songID),
-					"CreatedAt":      song.CreatedAt.Format("2006年01月02日 15時04分05秒"),
-					"UpdatedAt":      song.UpdatedAt.Format("2006年01月02日 15時04分05秒"),
-					"DeletedAt":      "",
-					"Title":          song.Title,
-					"Artist":         song.Artist,
-					"MusicAge":       strconv.Itoa(song.MusicAge),
-					"Image":          song.Image,
-					"Video":          song.Video,
-					"Album":          song.Album,
-					"Description":    song.Description,
-					"SpotifyTrackId": song.SpotifyTrackId,
-					"UserID":         strconv.Itoa(int(song.UserID)),
-				}
-
-				//リモートのRedisに保存
-				err = SetSongByID(songID, t, sr.Redis)
+			//リモートのRedisにキャッシュが存在する場合
+			if exists > 0 {
+				// リモートのRedisのキャッシュを取得
+				t, err := GetSongByID(songID, sr.Redis)
 				if err != nil {
 					return nil, err
 				}
-				//キャッシュのTTLを1800秒(30分)に設定
-				_, err = sr.Redis.Do("EXPIRE", fmt.Sprintf("song:%d", songID), "1800")
+
+				//予めtime.Localにタイムゾーンの設定情報を入れておく
+				time.Local = time.FixedZone("Local", 9*60*60)
+				//ロケーションを指定して、パース
+				jst, err := time.LoadLocation("Local")
 				if err != nil {
 					return nil, err
+				}
+
+				CreatedAt, err := time.ParseInLocation("2006年01月02日 15時04分05秒", t["CreatedAt"], jst)
+				if err != nil {
+					return nil, err
+				}
+				UpdatedAt, err := time.ParseInLocation("2006年01月02日 15時04分05秒", t["UpdatedAt"], jst)
+				if err != nil {
+					return nil, err
+				}
+
+				//IDとUserIDをstringからunitに変換
+				intID, err := strconv.Atoi(t["ID"])
+				if err != nil {
+					return nil, err
+				}
+				uintID := uint(intID)
+				if err != nil {
+					return nil, err
+				}
+				intUserId, err := strconv.Atoi(t["UserID"])
+				uintUserID := uint(intUserId)
+
+				//MusicAgeをstringからintに変換
+				MusicAge, err := strconv.Atoi(t["MusicAge"])
+				if err != nil {
+					return nil, err
+				}
+
+				song = model.Song{
+					ID:             uintID,
+					Title:          t["Title"],
+					Artist:         t["Artist"],
+					MusicAge:       MusicAge,
+					Image:          t["Image"],
+					Video:          t["Video"],
+					Album:          t["Album"],
+					Description:    t["Description"],
+					SpotifyTrackId: t["SpotifyTrackId"],
+					UserID:         uintUserID,
+					CreatedAt:      CreatedAt,
+					UpdatedAt:      UpdatedAt,
+					DeletedAt:      nil,
 				}
 
 				//サイドカーコンテナのRedisに保存
@@ -243,20 +204,73 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 				if err != nil {
 					return nil, err
 				}
+
 				//キャッシュのTTLを1800秒(30分)に設定
 				_, err = sr.SidecarRedis.Do("EXPIRE", fmt.Sprintf("song:%d", songID), "1800")
 				if err != nil {
 					return nil, err
 				}
 			} else {
-				//RDSからの値取得に失敗した場合
-				return nil, result.Error
+				//リモートのRedisにキャッシュが存在しない場合RDSに値を取りに行く。
+				result := sr.DB.Where("id = ?", songID).Find(&song)
+
+				//RDSからの値取得に成功した場合
+				if result.Error == nil {
+					t := map[string]string{
+						"ID":             strconv.Itoa(songID),
+						"CreatedAt":      song.CreatedAt.Format("2006年01月02日 15時04分05秒"),
+						"UpdatedAt":      song.UpdatedAt.Format("2006年01月02日 15時04分05秒"),
+						"DeletedAt":      "",
+						"Title":          song.Title,
+						"Artist":         song.Artist,
+						"MusicAge":       strconv.Itoa(song.MusicAge),
+						"Image":          song.Image,
+						"Video":          song.Video,
+						"Album":          song.Album,
+						"Description":    song.Description,
+						"SpotifyTrackId": song.SpotifyTrackId,
+						"UserID":         strconv.Itoa(int(song.UserID)),
+					}
+
+					//リモートのRedisに保存
+					err = SetSongByID(songID, t, sr.Redis)
+					if err != nil {
+						return nil, err
+					}
+					//キャッシュのTTLを1800秒(30分)に設定
+					_, err = sr.Redis.Do("EXPIRE", fmt.Sprintf("song:%d", songID), "1800")
+					if err != nil {
+						return nil, err
+					}
+
+					//サイドカーコンテナのRedisに保存
+					err = SetSongByID(songID, t, sr.SidecarRedis)
+					if err != nil {
+						return nil, err
+					}
+					//キャッシュのTTLを1800秒(30分)に設定
+					_, err = sr.SidecarRedis.Do("EXPIRE", fmt.Sprintf("song:%d", songID), "1800")
+					if err != nil {
+						return nil, err
+					}
+				} else {
+					//RDSからの値取得に失敗した場合
+					return nil, result.Error
+				}
 			}
-
 		}
-
+		return song, nil
+	})
+	if err != nil {
+		return nil, err
 	}
-	return &song, nil
+
+	//model.Song型に戻す
+	responseSong, ok := v.(model.Song)
+	if !ok {
+		return nil, errors.New("型変換に失敗")
+	}
+	return &responseSong, nil
 }
 
 func (sr *SongRepository) Save(userEmail string, p model.Song) error {
