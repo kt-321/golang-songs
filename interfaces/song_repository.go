@@ -3,7 +3,6 @@ package interfaces
 import (
 	"fmt"
 	"golang-songs/model"
-	"log"
 	"strconv"
 	"time"
 
@@ -138,7 +137,6 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 
 		//リモートのRedisにキャッシュが存在する場合
 		if exists > 0 {
-			log.Println("リモートにキャッシュあり")
 			// リモートのRedisのキャッシュを取得
 			t, err := GetSongByID(songID, sr.Redis)
 			if err != nil {
@@ -207,22 +205,16 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 			if err != nil {
 				return nil, err
 			}
-
-			log.Println("リモートから取ってきてサイドカーに保存完了")
 		} else {
-			log.Println("リモートにもサイドカーにも値なし")
 			//リモートのRedisにキャッシュが存在しない場合RDSに値を取りに行く。
 			result := sr.DB.Where("id = ?", songID).Find(&song)
 
 			//RDSからの値取得に成功した場合
 			if result.Error == nil {
-				//Redisに保存する前にformatする
-				formattedCreatedAt := song.CreatedAt.Format("2006年01月02日 15時04分05秒")
-				formattedUpdatedAt := song.UpdatedAt.Format("2006年01月02日 15時04分05秒")
 				t := map[string]string{
 					"ID":             strconv.Itoa(songID),
-					"CreatedAt":      formattedCreatedAt,
-					"UpdatedAt":      formattedUpdatedAt,
+					"CreatedAt":      song.CreatedAt.Format("2006年01月02日 15時04分05秒"),
+					"UpdatedAt":      song.UpdatedAt.Format("2006年01月02日 15時04分05秒"),
 					"DeletedAt":      "",
 					"Title":          song.Title,
 					"Artist":         song.Artist,
@@ -294,15 +286,11 @@ func (sr *SongRepository) Save(userEmail string, p model.Song) error {
 			return scanResult.Error
 		}
 
-		//Redisに入れる前にformatする
-		formattedCreatedAt := song.CreatedAt.Format("2006年01月02日 15時04分05秒")
-		formattedUpdatedAt := song.UpdatedAt.Format("2006年01月02日 15時04分05秒")
-
 		//mapに変換
 		t := map[string]string{
 			"ID":             strconv.Itoa(int(song.ID)),
-			"CreatedAt":      formattedCreatedAt,
-			"UpdatedAt":      formattedUpdatedAt,
+			"CreatedAt":      song.CreatedAt.Format("2006年01月02日 15時04分05秒"),
+			"UpdatedAt":      song.UpdatedAt.Format("2006年01月02日 15時04分05秒"),
 			"DeletedAt":      "",
 			"Title":          song.Title,
 			"Artist":         song.Artist,
@@ -372,15 +360,11 @@ func (sr *SongRepository) UpdateByID(userEmail string, songID int, p model.Song)
 			return scanResult.Error
 		}
 
-		//Redisに入れる前にformatする
-		formattedCreatedAt := updatedSong.CreatedAt.Format("2006年01月02日 15時04分05秒")
-		formattedUpdatedAt := updatedSong.UpdatedAt.Format("2006年01月02日 15時04分05秒")
-
 		//mapに変換
 		t := map[string]string{
 			"ID":             strconv.Itoa(int(updatedSong.ID)),
-			"CreatedAt":      formattedCreatedAt,
-			"UpdatedAt":      formattedUpdatedAt,
+			"CreatedAt":      updatedSong.CreatedAt.Format("2006年01月02日 15時04分05秒"),
+			"UpdatedAt":      updatedSong.UpdatedAt.Format("2006年01月02日 15時04分05秒"),
 			"DeletedAt":      "",
 			"Title":          updatedSong.Title,
 			"Artist":         updatedSong.Artist,
