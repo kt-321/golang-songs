@@ -116,8 +116,7 @@ func acceptSignal(ctx context.Context) error {
 
 func runServer(ctx context.Context, r *mux.Router) error {
 	s := &http.Server{
-		Addr: ":8082",
-		//Addr:    ":8080",
+		Addr:    ":8080",
 		Handler: r,
 	}
 
