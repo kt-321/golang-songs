@@ -6,12 +6,22 @@ import (
 	"os"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
 func main() {
+	//+++++++
+	//ここは消した上でpushする
+	err := godotenv.Load()
+	if err != nil {
+		log.Println(".envファイルの読み込み失敗")
+	}
+	//+++++++++
+
 	//RDBに接続
 	db, err := gorm.Open("mysql", os.Getenv("mysqlConfig"))
 	if err != nil {
@@ -60,13 +70,13 @@ func main() {
 
 	//サイドカーRedis
 	// コネクションの取得
-	redis2 := pool2.Get()
-	if redis2.Err() != nil {
-		log.Println(redis2.Err())
+	sidecar_redis := pool2.Get()
+	if sidecar_redis.Err() != nil {
+		log.Println(sidecar_redis.Err())
 	} else {
 		log.Println("サイドカーのRedisに接続成功")
 	}
-	defer redis2.Close()
+	defer sidecar_redis.Close()
 
-	infrastructure.Dispatch(db, redis)
+	infrastructure.Dispatch(db, redis, sidecar_redis)
 }
