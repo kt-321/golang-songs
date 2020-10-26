@@ -68,5 +68,8 @@ func main() {
 	}
 	defer sidecar_redis.Close()
 
+	//予めtime.Localにタイムゾーンの設定情報を入れておく
+	time.Local = time.FixedZone("Local", 9*60*60)
+
 	infrastructure.Dispatch(db, redis, sidecar_redis)
 }

@@ -105,12 +105,11 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 				return nil, err
 			}
 			uintID := uint(intID)
+
+			intUserId, err := strconv.Atoi(t["UserID"])
 			if err != nil {
 				return nil, err
 			}
-
-			intUserId, err := strconv.Atoi(t["UserID"])
-			uintUserID := uint(intUserId)
 
 			//MusicAgeをstringからintに変換
 			MusicAge, err := strconv.Atoi(t["MusicAge"])
@@ -128,7 +127,7 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 				Album:          t["Album"],
 				Description:    t["Description"],
 				SpotifyTrackId: t["SpotifyTrackId"],
-				UserID:         uintUserID,
+				UserID:         uint(intUserId),
 				CreatedAt:      CreatedAt,
 				UpdatedAt:      UpdatedAt,
 				DeletedAt:      nil,
@@ -148,8 +147,6 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 					return nil, err
 				}
 
-				//予めtime.Localにタイムゾーンの設定情報を入れておく
-				time.Local = time.FixedZone("Local", 9*60*60)
 				//ロケーションを指定して、パース
 				jst, err := time.LoadLocation("Local")
 				if err != nil {
@@ -171,11 +168,10 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 					return nil, err
 				}
 				uintID := uint(intID)
+				intUserId, err := strconv.Atoi(t["UserID"])
 				if err != nil {
 					return nil, err
 				}
-				intUserId, err := strconv.Atoi(t["UserID"])
-				uintUserID := uint(intUserId)
 
 				//MusicAgeをstringからintに変換
 				MusicAge, err := strconv.Atoi(t["MusicAge"])
@@ -193,7 +189,7 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 					Album:          t["Album"],
 					Description:    t["Description"],
 					SpotifyTrackId: t["SpotifyTrackId"],
-					UserID:         uintUserID,
+					UserID:         uint(intUserId),
 					CreatedAt:      CreatedAt,
 					UpdatedAt:      UpdatedAt,
 					DeletedAt:      nil,
