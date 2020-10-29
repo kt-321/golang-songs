@@ -146,7 +146,6 @@ func (sr *SongRepository) FindAll() (*[]model.Song, error) {
 }
 
 func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
-	//var song model.Song
 	var song model.Song
 
 	//singleflightで同時関数呼び出しを1度に抑える
