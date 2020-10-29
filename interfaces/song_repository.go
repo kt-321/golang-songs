@@ -258,22 +258,8 @@ func (sr *SongRepository) Save(userEmail string, p model.Song) error {
 			return scanResult.Error
 		}
 
-		//mapに変換
-		t := map[string]string{
-			"ID":             strconv.Itoa(int(song.ID)),
-			"CreatedAt":      song.CreatedAt.Format("2006年01月02日 15時04分05秒"),
-			"UpdatedAt":      song.UpdatedAt.Format("2006年01月02日 15時04分05秒"),
-			"DeletedAt":      "",
-			"Title":          song.Title,
-			"Artist":         song.Artist,
-			"MusicAge":       strconv.Itoa(song.MusicAge),
-			"Image":          song.Image,
-			"Video":          song.Video,
-			"Album":          song.Album,
-			"Description":    song.Description,
-			"SpotifyTrackId": song.SpotifyTrackId,
-			"UserID":         strconv.Itoa(int(song.UserID)),
-		}
+		// 曲情報をmapへと変換
+		t := rdsSongToMap(song)
 
 		//リモートのRedisに入れる。キャッシュのTTLは1800秒(30分)
 		err := SetSongByID(int(song.ID), t, sr.Redis, 1800)
@@ -321,22 +307,8 @@ func (sr *SongRepository) UpdateByID(userEmail string, songID int, p model.Song)
 			return scanResult.Error
 		}
 
-		//mapに変換
-		t := map[string]string{
-			"ID":             strconv.Itoa(int(updatedSong.ID)),
-			"CreatedAt":      updatedSong.CreatedAt.Format("2006年01月02日 15時04分05秒"),
-			"UpdatedAt":      updatedSong.UpdatedAt.Format("2006年01月02日 15時04分05秒"),
-			"DeletedAt":      "",
-			"Title":          updatedSong.Title,
-			"Artist":         updatedSong.Artist,
-			"MusicAge":       strconv.Itoa(updatedSong.MusicAge),
-			"Image":          updatedSong.Image,
-			"Video":          updatedSong.Video,
-			"Album":          updatedSong.Album,
-			"Description":    updatedSong.Description,
-			"SpotifyTrackId": updatedSong.SpotifyTrackId,
-			"UserID":         strconv.Itoa(int(updatedSong.UserID)),
-		}
+		// 曲情報をmapへと変換
+		t := rdsSongToMap(updatedSong)
 
 		//リモートのRedisに保存。キャッシュのTTLは1800秒(30分)
 		err := SetSongByID(int(updatedSong.ID), t, sr.Redis, 1800)
