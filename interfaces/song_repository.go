@@ -37,10 +37,18 @@ func GetSongByID(songID int, rc redis.Conn) (map[string]string, error) {
 }
 
 //Redisに曲を保存
-func SetSongByID(songID int, t map[string]string, rc redis.Conn) error {
+func SetSongByID(songID int, t map[string]string, rc redis.Conn, ttl int) error {
 	_, err := rc.Do("HMSET", fmt.Sprintf("song:%d", songID), "ID", t["ID"], "CreatedAt", t["CreatedAt"], "UpdatedAt", t["UpdatedAt"], "DeletedAt", t["DeletedAt"], "Title", t["Title"], "Artist", t["Artist"], "MusicAge", t["MusicAge"], "Image", t["Image"], "Video", t["Video"], "Album", t["Album"], "Description", t["Description"], "SpotifyTrackId", t["SpotifyTrackId"], "UserID", t["UserID"])
 	if err != nil {
 		return err
+	}
+
+	if ttl > 0 {
+		//キャッシュのTTLを設定
+		_, err = rc.Do("EXPIRE", fmt.Sprintf("song:%d", songID), ttl)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -54,6 +62,80 @@ func DeleteSongByID(songID int, rc redis.Conn) error {
 	return nil
 }
 
+//mapから構造体Songへと変換
+func MapToSong(t map[string]string) (*model.Song, error) {
+	//ロケーションを指定して、パース
+	jst, err := time.LoadLocation("Local")
+	if err != nil {
+		return nil, err
+	}
+
+	CreatedAt, err := time.ParseInLocation("2006年01月02日 15時04分05秒", t["CreatedAt"], jst)
+	if err != nil {
+		return nil, err
+	}
+	UpdatedAt, err := time.ParseInLocation("2006年01月02日 15時04分05秒", t["UpdatedAt"], jst)
+	if err != nil {
+		return nil, err
+	}
+
+	//IDとUserIDをstringからunitに変換
+	intID, err := strconv.Atoi(t["ID"])
+	if err != nil {
+		return nil, err
+	}
+	uintID := uint(intID)
+	intUserId, err := strconv.Atoi(t["UserID"])
+	if err != nil {
+		return nil, err
+	}
+
+	//MusicAgeをstringからintに変換
+	MusicAge, err := strconv.Atoi(t["MusicAge"])
+	if err != nil {
+		return nil, err
+	}
+
+	song := model.Song{
+		ID:             uintID,
+		Title:          t["Title"],
+		Artist:         t["Artist"],
+		MusicAge:       MusicAge,
+		Image:          t["Image"],
+		Video:          t["Video"],
+		Album:          t["Album"],
+		Description:    t["Description"],
+		SpotifyTrackId: t["SpotifyTrackId"],
+		UserID:         uint(intUserId),
+		CreatedAt:      CreatedAt,
+		UpdatedAt:      UpdatedAt,
+		DeletedAt:      nil,
+	}
+
+	return &song, nil
+}
+
+//RDSから取得した曲情報をmapへと変換
+func rdsSongToMap(song model.Song) map[string]string {
+	t := map[string]string{
+		"ID":             strconv.Itoa(int(song.ID)),
+		"CreatedAt":      song.CreatedAt.Format("2006年01月02日 15時04分05秒"),
+		"UpdatedAt":      song.UpdatedAt.Format("2006年01月02日 15時04分05秒"),
+		"DeletedAt":      "",
+		"Title":          song.Title,
+		"Artist":         song.Artist,
+		"MusicAge":       strconv.Itoa(song.MusicAge),
+		"Image":          song.Image,
+		"Video":          song.Video,
+		"Album":          song.Album,
+		"Description":    song.Description,
+		"SpotifyTrackId": song.SpotifyTrackId,
+		"UserID":         strconv.Itoa(int(song.UserID)),
+	}
+
+	return t
+}
+
 func (sr *SongRepository) FindAll() (*[]model.Song, error) {
 	var songs []model.Song
 
@@ -64,6 +146,7 @@ func (sr *SongRepository) FindAll() (*[]model.Song, error) {
 }
 
 func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
+	//var song model.Song
 	var song model.Song
 
 	//singleflightで同時関数呼び出しを1度に抑える
@@ -82,56 +165,9 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 				return nil, err
 			}
 
-			//予めtime.Localにタイムゾーンの設定情報を入れておく
-			time.Local = time.FixedZone("Local", 9*60*60)
-			//ロケーションを指定して、パース
-			jst, err := time.LoadLocation("Local")
-			if err != nil {
-				return nil, err
-			}
-
-			CreatedAt, err := time.ParseInLocation("2006年01月02日 15時04分05秒", t["CreatedAt"], jst)
-			if err != nil {
-				return nil, err
-			}
-			UpdatedAt, err := time.ParseInLocation("2006年01月02日 15時04分05秒", t["UpdatedAt"], jst)
-			if err != nil {
-				return nil, err
-			}
-
-			//IDとUserIDをstringからunitに変換
-			intID, err := strconv.Atoi(t["ID"])
-			if err != nil {
-				return nil, err
-			}
-			uintID := uint(intID)
-
-			intUserId, err := strconv.Atoi(t["UserID"])
-			if err != nil {
-				return nil, err
-			}
-
-			//MusicAgeをstringからintに変換
-			MusicAge, err := strconv.Atoi(t["MusicAge"])
-			if err != nil {
-				return nil, err
-			}
-
-			song = model.Song{
-				ID:             uintID,
-				Title:          t["Title"],
-				Artist:         t["Artist"],
-				MusicAge:       MusicAge,
-				Image:          t["Image"],
-				Video:          t["Video"],
-				Album:          t["Album"],
-				Description:    t["Description"],
-				SpotifyTrackId: t["SpotifyTrackId"],
-				UserID:         uint(intUserId),
-				CreatedAt:      CreatedAt,
-				UpdatedAt:      UpdatedAt,
-				DeletedAt:      nil,
-			}
+			//mapから構造体Songへと変換
+			value, err := MapToSong(t)
+			song = *value
 		} else {
 			// サイドカーコンテナのRedisにキャッシュが存在しない場合、リモートのRedisにキャッシュがあるか確認
 			exists, err := ExistsSongByID(songID, sr.Redis)
@@ -147,62 +183,12 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 					return nil, err
 				}
 
-				//ロケーションを指定して、パース
-				jst, err := time.LoadLocation("Local")
-				if err != nil {
-					return nil, err
-				}
+				//mapから構造体Songへと変換
+				value, err := MapToSong(t)
+				song = *value
 
-				CreatedAt, err := time.ParseInLocation("2006年01月02日 15時04分05秒", t["CreatedAt"], jst)
-				if err != nil {
-					return nil, err
-				}
-				UpdatedAt, err := time.ParseInLocation("2006年01月02日 15時04分05秒", t["UpdatedAt"], jst)
-				if err != nil {
-					return nil, err
-				}
-
-				//IDとUserIDをstringからunitに変換
-				intID, err := strconv.Atoi(t["ID"])
-				if err != nil {
-					return nil, err
-				}
-				uintID := uint(intID)
-				intUserId, err := strconv.Atoi(t["UserID"])
-				if err != nil {
-					return nil, err
-				}
-
-				//MusicAgeをstringからintに変換
-				MusicAge, err := strconv.Atoi(t["MusicAge"])
-				if err != nil {
-					return nil, err
-				}
-
-				song = model.Song{
-					ID:             uintID,
-					Title:          t["Title"],
-					Artist:         t["Artist"],
-					MusicAge:       MusicAge,
-					Image:          t["Image"],
-					Video:          t["Video"],
-					Album:          t["Album"],
-					Description:    t["Description"],
-					SpotifyTrackId: t["SpotifyTrackId"],
-					UserID:         uint(intUserId),
-					CreatedAt:      CreatedAt,
-					UpdatedAt:      UpdatedAt,
-					DeletedAt:      nil,
-				}
-
-				//サイドカーコンテナのRedisに保存
-				err = SetSongByID(songID, t, sr.SidecarRedis)
-				if err != nil {
-					return nil, err
-				}
-
-				//キャッシュのTTLを1800秒(30分)に設定
-				_, err = sr.SidecarRedis.Do("EXPIRE", fmt.Sprintf("song:%d", songID), "1800")
+				//サイドカーコンテナのRedisに保存。キャッシュのTTLは1800秒(30分)
+				err = SetSongByID(songID, t, sr.SidecarRedis, 1800)
 				if err != nil {
 					return nil, err
 				}
@@ -212,40 +198,17 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 
 				//RDSからの値取得に成功した場合
 				if result.Error == nil {
-					t := map[string]string{
-						"ID":             strconv.Itoa(songID),
-						"CreatedAt":      song.CreatedAt.Format("2006年01月02日 15時04分05秒"),
-						"UpdatedAt":      song.UpdatedAt.Format("2006年01月02日 15時04分05秒"),
-						"DeletedAt":      "",
-						"Title":          song.Title,
-						"Artist":         song.Artist,
-						"MusicAge":       strconv.Itoa(song.MusicAge),
-						"Image":          song.Image,
-						"Video":          song.Video,
-						"Album":          song.Album,
-						"Description":    song.Description,
-						"SpotifyTrackId": song.SpotifyTrackId,
-						"UserID":         strconv.Itoa(int(song.UserID)),
-					}
+					//RDSから取得した曲情報をmapへと変換
+					t := rdsSongToMap(song)
 
-					//リモートのRedisに保存
-					err = SetSongByID(songID, t, sr.Redis)
-					if err != nil {
-						return nil, err
-					}
-					//キャッシュのTTLを1800秒(30分)に設定
-					_, err = sr.Redis.Do("EXPIRE", fmt.Sprintf("song:%d", songID), "1800")
+					//リモートのRedisに保存。キャッシュのTTLは1800秒(30分)
+					err = SetSongByID(songID, t, sr.Redis, 1800)
 					if err != nil {
 						return nil, err
 					}
 
-					//サイドカーコンテナのRedisに保存
-					err = SetSongByID(songID, t, sr.SidecarRedis)
-					if err != nil {
-						return nil, err
-					}
-					//キャッシュのTTLを1800秒(30分)に設定
-					_, err = sr.SidecarRedis.Do("EXPIRE", fmt.Sprintf("song:%d", songID), "1800")
+					//サイドカーコンテナのRedisに保存。キャッシュのTTLは1800秒(30分)
+					err = SetSongByID(songID, t, sr.SidecarRedis, 1800)
 					if err != nil {
 						return nil, err
 					}
@@ -313,28 +276,17 @@ func (sr *SongRepository) Save(userEmail string, p model.Song) error {
 			"UserID":         strconv.Itoa(int(song.UserID)),
 		}
 
-		//リモートのRedisに入れる
-		err := SetSongByID(int(song.ID), t, sr.Redis)
-		if err != nil {
-			return err
-		}
-		//キャッシュのTTLを1800秒(30分)に設定
-		_, err = sr.Redis.Do("EXPIRE", fmt.Sprintf("song:%d", song.ID), "1800")
+		//リモートのRedisに入れる。キャッシュのTTLは1800秒(30分)
+		err := SetSongByID(int(song.ID), t, sr.Redis, 1800)
 		if err != nil {
 			return err
 		}
 
-		//サイドカーコンテナのRedisに入れる
-		err = SetSongByID(int(song.ID), t, sr.SidecarRedis)
+		//サイドカーコンテナのRedisに入れる。キャッシュのTTLは1800秒(30分)
+		err = SetSongByID(int(song.ID), t, sr.SidecarRedis, 1800)
 		if err != nil {
 			return err
 		}
-		//キャッシュのTTLを1800秒(30分)に設定
-		_, err = sr.SidecarRedis.Do("EXPIRE", fmt.Sprintf("song:%d", song.ID), "1800")
-		if err != nil {
-			return err
-		}
-
 		return nil
 	} else {
 		//RDBへのInsertに失敗した場合
@@ -387,28 +339,17 @@ func (sr *SongRepository) UpdateByID(userEmail string, songID int, p model.Song)
 			"UserID":         strconv.Itoa(int(updatedSong.UserID)),
 		}
 
-		//リモートのRedisに保存
-		err := SetSongByID(int(updatedSong.ID), t, sr.Redis)
-		if err != nil {
-			return err
-		}
-		//キャッシュのTTLを1800秒(30分)に設定
-		_, err = sr.Redis.Do("EXPIRE", fmt.Sprintf("song:%d", updatedSong.ID), "1800")
+		//リモートのRedisに保存。キャッシュのTTLは1800秒(30分)
+		err := SetSongByID(int(updatedSong.ID), t, sr.Redis, 1800)
 		if err != nil {
 			return err
 		}
 
-		//サイドカーコンテナのRedisに保存
-		err = SetSongByID(int(updatedSong.ID), t, sr.SidecarRedis)
+		//サイドカーコンテナのRedisに保存。キャッシュのTTLは1800秒(30分)
+		err = SetSongByID(int(updatedSong.ID), t, sr.SidecarRedis, 1800)
 		if err != nil {
 			return err
 		}
-		//キャッシュのTTLを1800秒(30分)に設定
-		_, err = sr.SidecarRedis.Do("EXPIRE", fmt.Sprintf("song:%d", updatedSong.ID), "1800")
-		if err != nil {
-			return err
-		}
-
 		return nil
 	} else {
 		//RDBにInsertするのに失敗した場合
