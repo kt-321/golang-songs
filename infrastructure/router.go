@@ -21,10 +21,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func Dispatch(DB *gorm.DB, Redis redis.Conn) {
+func Dispatch(DB *gorm.DB, Redis redis.Conn, SidecarRedis redis.Conn) {
 	authController := interfaces.NewAuthController(DB)
 	userController := interfaces.NewUserController(DB)
-	songController := interfaces.NewSongController(DB, Redis)
+	songController := interfaces.NewSongController(DB, Redis, SidecarRedis)
 	bookmarkController := interfaces.NewBookmarkController(DB)
 	userFollowController := interfaces.NewUserFollowController(DB)
 	spotifyController := interfaces.NewSpotifyController(DB)

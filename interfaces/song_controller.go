@@ -19,12 +19,13 @@ type SongController struct {
 	SongInteractor usecases.SongInteractor
 }
 
-func NewSongController(DB *gorm.DB, Redis redis.Conn) *SongController {
+func NewSongController(DB *gorm.DB, Redis redis.Conn, SidecarRedis redis.Conn) *SongController {
 	return &SongController{
 		SongInteractor: usecases.SongInteractor{
 			SongRepository: &SongRepository{
-				DB:    DB,
-				Redis: Redis,
+				DB:           DB,
+				Redis:        Redis,
+				SidecarRedis: SidecarRedis,
 			},
 		},
 	}

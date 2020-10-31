@@ -60,13 +60,16 @@ func main() {
 
 	//サイドカーRedis
 	// コネクションの取得
-	redis2 := pool2.Get()
-	if redis2.Err() != nil {
-		log.Println(redis2.Err())
+	sidecar_redis := pool2.Get()
+	if sidecar_redis.Err() != nil {
+		log.Println(sidecar_redis.Err())
 	} else {
 		log.Println("サイドカーのRedisに接続成功")
 	}
-	defer redis2.Close()
+	defer sidecar_redis.Close()
 
-	infrastructure.Dispatch(db, redis)
+	//予めtime.Localにタイムゾーンの設定情報を入れておく
+	time.Local = time.FixedZone("Local", 9*60*60)
+
+	infrastructure.Dispatch(db, redis, sidecar_redis)
 }
