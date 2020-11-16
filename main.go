@@ -34,7 +34,7 @@ func main() {
 		},
 	}
 
-	//サイドカーのRedisのコネクションプール設定
+	// サイドカーのRedisのコネクションプール設定
 	pool2 := &redis.Pool{
 		MaxIdle:     3,
 		MaxActive:   6,
