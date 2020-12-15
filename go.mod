@@ -6,6 +6,7 @@ require (
 	github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b
 	github.com/davecgh/go-spew v1.1.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/fukata/golang-stats-api-handler v1.0.0
 	github.com/garyburd/redigo v1.6.2
 	github.com/gin-gonic/gin v1.6.2
 	github.com/go-delve/delve v1.5.0 // indirect

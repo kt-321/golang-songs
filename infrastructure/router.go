@@ -3,6 +3,7 @@ package infrastructure
 import (
 	"context"
 	"fmt"
+	stats_api "github.com/fukata/golang-stats-api-handler"
 	"golang-songs/interfaces"
 	"log"
 	"net/http"
@@ -56,6 +57,7 @@ func Dispatch(DB *gorm.DB, Redis redis.Conn, SidecarRedis redis.Conn) {
 	r.Handle("/api/user/{id}/unfollow", JwtMiddleware.Handler(http.HandlerFunc(userFollowController.UnfollowUserHandler))).Methods("POST")
 
 	r.HandleFunc("/", healthzHandler).Methods("GET")
+	r.HandleFunc("/api/stats", stats_api.Handler)
 
 	os.Exit(run(context.Background(), r))
 }
