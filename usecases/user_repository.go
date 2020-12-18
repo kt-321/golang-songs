@@ -2,7 +2,7 @@ package usecases
 
 import "golang-songs/model"
 
-type UserRepository interface {
+type UserRepositoryInterface interface {
 	FindAll() (*[]model.User, error)
 	GetUser(string) (*model.User, error)
 	FindByID(int) (*model.User, error)
