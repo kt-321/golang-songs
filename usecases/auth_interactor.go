@@ -3,7 +3,7 @@ package usecases
 import "golang-songs/model"
 
 type AuthInteractor struct {
-	AuthRepository AuthRepository
+	AuthRepository AuthRepositoryInterface
 }
 
 func (ai *AuthInteractor) SignUp(p model.Form) error {

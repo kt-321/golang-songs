@@ -2,6 +2,6 @@ package usecases
 
 import "golang-songs/model"
 
-type SpotifyRepository interface {
+type SpotifyRepositoryInterface interface {
 	GetTracks(token string, title string) (*model.Response, error)
 }

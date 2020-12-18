@@ -1,6 +1,6 @@
 package usecases
 
-type BookmarkRepository interface {
+type BookmarkRepositoryInterface interface {
 	Bookmark(string, int) error
 	RemoveBookmark(string, int) error
 }
