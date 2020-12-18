@@ -2,7 +2,7 @@ package usecases
 
 import "golang-songs/model"
 
-type AuthRepository interface {
+type AuthRepositoryInterface interface {
 	SignUp(model.Form) error
 	Login(model.Form) (*model.User, error)
 }

@@ -5,7 +5,7 @@ import (
 	"golang-songs/model"
 )
 
-type SongRepository interface {
+type SongRepositoryInterface interface {
 	FindAll() (*[]model.Song, error)
 	FindByID(int) (*model.Song, error)
 	Save(string, model.Song) error

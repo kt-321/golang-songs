@@ -1,7 +1,7 @@
 package usecases
 
 type BookmarkInteractor struct {
-	BookmarkRepository BookmarkRepository
+	BookmarkRepository BookmarkRepositoryInterface
 }
 
 func (bi *BookmarkInteractor) Bookmark(userEmail string, songID int) error {

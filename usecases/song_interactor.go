@@ -5,7 +5,7 @@ import (
 )
 
 type SongInteractor struct {
-	SongRepository SongRepository
+	SongRepository SongRepositoryInterface
 }
 
 func (si *SongInteractor) Index() (*[]model.Song, error) {

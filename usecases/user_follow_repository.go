@@ -1,6 +1,6 @@
 package usecases
 
-type UserFollowRepository interface {
+type UserFollowRepositoryInterface interface {
 	Follow(string, int) error
 	Unfollow(string, int) error
 }

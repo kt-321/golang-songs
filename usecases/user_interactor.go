@@ -5,7 +5,7 @@ import (
 )
 
 type UserInteractor struct {
-	UserRepository UserRepository
+	UserRepository UserRepositoryInterface
 }
 
 func (ui *UserInteractor) Index() (*[]model.User, error) {

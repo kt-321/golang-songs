@@ -1,7 +1,7 @@
 package usecases
 
 type UserFollowInteractor struct {
-	UserFollowRepository UserFollowRepository
+	UserFollowRepository UserFollowRepositoryInterface
 }
 
 func (ufi *UserFollowInteractor) Follow(requestUserEmail string, tagertUserID int) error {
