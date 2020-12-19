@@ -81,7 +81,6 @@ func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *htt
 
 	//201 Created
 	w.WriteHeader(201)
-	return
 }
 
 //idで指定したユーザーのフォローを解除する
@@ -140,5 +139,4 @@ func (ufc *UserFollowController) UnfollowUserHandler(w http.ResponseWriter, r *h
 
 	//201 Created
 	w.WriteHeader(201)
-	return
 }

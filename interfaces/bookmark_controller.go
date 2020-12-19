@@ -80,7 +80,7 @@ func (bc *BookmarkController) BookmarkHandler(w http.ResponseWriter, r *http.Req
 
 	//201 Created
 	w.WriteHeader(201)
-	return
+	//return
 }
 
 //曲をお気に入り登録から解除
@@ -124,5 +124,5 @@ func (bc *BookmarkController) RemoveBookmarkHandler(w http.ResponseWriter, r *ht
 
 	//201 Created
 	w.WriteHeader(201)
-	return
+	//return
 }

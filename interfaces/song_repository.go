@@ -166,6 +166,9 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 
 			//mapから構造体Songへと変換
 			value, err := MapToSong(t)
+			if err != nil {
+				return nil, err
+			}
 			song = *value
 		} else {
 			// サイドカーコンテナのRedisにキャッシュが存在しない場合、リモートのRedisにキャッシュがあるか確認
@@ -184,6 +187,10 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 
 				//mapから構造体Songへと変換
 				value, err := MapToSong(t)
+				if err != nil {
+					return nil, err
+				}
+
 				song = *value
 
 				//サイドカーコンテナのRedisに保存。キャッシュのTTLは1800秒(30分)

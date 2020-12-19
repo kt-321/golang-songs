@@ -177,5 +177,5 @@ func (uc *UserController) UpdateUserHandler(w http.ResponseWriter, r *http.Reque
 
 	//204 No Content
 	w.WriteHeader(204)
-	return
+	//return
 }
