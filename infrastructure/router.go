@@ -69,13 +69,14 @@ var JwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 		if os.Getenv("SIGNINGKEY") == "" {
 			panic("環境変数SIGNINGKEYが存在しません。")
 		}
+
 		return []byte(secret), nil
 	},
 	Debug:         true,
 	SigningMethod: jwt.SigningMethodHS256,
 })
 
-//ELBのヘルスチェック用のハンドラ
+// ELBのヘルスチェック用のハンドラ.
 func healthzHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
@@ -92,24 +93,28 @@ func run(ctx context.Context, r *mux.Router) int {
 	})
 	eg.Go(func() error {
 		<-ctx.Done()
+
 		return ctx.Err()
 	})
 
 	if err := eg.Wait(); err != nil {
 		log.Println(err)
+
 		return 1
 	}
+
 	return 0
 }
 
 func acceptSignal(ctx context.Context) error {
 	sigCh := make(chan os.Signal, 1)
-	//signalをハンドリングする。SIGINTとSIGTERMの両方
+	// signalをハンドリングする。SIGINTとSIGTERMの両方.
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 
 	select {
 	case <-ctx.Done():
 		signal.Reset()
+
 		return ctx.Err()
 	case sig := <-sigCh:
 		return fmt.Errorf("signal received: %v", sig.String())
@@ -123,8 +128,10 @@ func runServer(ctx context.Context, r *mux.Router) error {
 	}
 
 	errCh := make(chan error)
+
 	go func() {
 		defer close(errCh)
+
 		if err := s.ListenAndServe(); err != nil {
 			errCh <- err
 		}

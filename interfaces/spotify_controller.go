@@ -28,7 +28,7 @@ func NewSpotifyController(DB *gorm.DB) *SpotifyController {
 	}
 }
 
-//SpotifyAPIのリダイレクトURLを返す
+// SpotifyAPIのリダイレクトURLを返す.
 func (spc *SpotifyController) GetRedirectURLHandler(w http.ResponseWriter, r *http.Request) {
 	config := oauth2.Config{
 		ClientID:     os.Getenv("client_id"),
@@ -45,26 +45,25 @@ func (spc *SpotifyController) GetRedirectURLHandler(w http.ResponseWriter, r *ht
 
 	w.Header().Set("Content-Type", "application/json")
 
-	// Encodeを用いたJson変換
+	// Encodeを用いたJson変換.
 	encoder := json.NewEncoder(w)
-	//自動エスケープを無効に
+	// 自動エスケープを無効に.
 	encoder.SetEscapeHTML(false)
 
 	if err := encoder.Encode(url); err != nil {
-		var error model.Error
-		error.Message = "JSONへの変換に失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 6)
+
 		return
 	}
 }
 
-//SpotifyAPIのトークンを取得して返す
+// SpotifyAPIのトークンを取得して返す.
 func (spc *SpotifyController) GetTokenHandler(w http.ResponseWriter, r *http.Request) {
 	var d model.Code
+
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		var error model.Error
-		error.Message = "リクエストボディのデコードに失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 17)
+
 		return
 	}
 
@@ -81,70 +80,66 @@ func (spc *SpotifyController) GetTokenHandler(w http.ResponseWriter, r *http.Req
 	token, err := config.Exchange(context.TODO(), d.Code)
 
 	if err != nil {
-		var error model.Error
-		error.Message = "トークンの取得に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 34)
+
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 
 	v, err := json.Marshal(token.AccessToken)
+
 	if err != nil {
-		var error model.Error
-		error.Message = "JSONへの変換に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 6)
+
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
-		var error model.Error
-		error.Message = "URLの取得に失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 35)
+
 		return
 	}
 }
 
-//SpotifyAPIにより曲を検索して取得する
+// SpotifyAPIにより曲を検索して取得する.
 func (spc *SpotifyController) GetTracksHandler(w http.ResponseWriter, r *http.Request) {
 	var d model.SearchTitle
+
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		var error model.Error
-		error.Message = "リクエストボディのデコードに失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 17)
+
 		return
 	}
 
 	if d.Token == "" {
-		var error model.Error
-		error.Message = "アクセストークンの取得に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 36)
+
 		return
 	}
 
-	//トラック（曲）検索
+	// トラック（曲）検索.
 	tracks, err := spc.SpotifyInteractor.GetTracks(d.Token, d.Title)
+
 	if err != nil {
-		var error model.Error
-		error.Message = "トラックの取得に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 37)
+
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 
 	v, err := json.Marshal(tracks)
+
 	if err != nil {
-		var error model.Error
-		error.Message = "JSONへの変換に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 6)
+
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
-		var error model.Error
-		error.Message = "トラックの取得に失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 37)
+
 		return
 	}
 }

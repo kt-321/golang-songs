@@ -1,6 +1,7 @@
 package interfaces
 
 import (
+	"fmt"
 	"golang-songs/model"
 	"os"
 
@@ -21,7 +22,7 @@ func Parse(signedString string) (*model.Auth, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse string type jwttoken: %v", err)
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)

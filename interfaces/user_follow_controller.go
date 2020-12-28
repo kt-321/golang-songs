@@ -1,7 +1,6 @@
 package interfaces
 
 import (
-	"golang-songs/model"
 	"golang-songs/usecases"
 	"net/http"
 	"strconv"
@@ -25,42 +24,38 @@ func NewUserFollowController(DB *gorm.DB) *UserFollowController {
 	}
 }
 
-//idで指定したユーザーをフォローする
+// idで指定したユーザーをフォローする.
 func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 
 	if !ok {
-		var error model.Error
-		error.Message = "ユーザーのidを取得できません。"
-		errorInResponse(w, http.StatusBadRequest, error)
+		errorInResponse(w, http.StatusBadRequest, 26)
+
 		return
 	}
 
 	targetUserID, err := strconv.Atoi(id)
 
 	if err != nil {
-		var error model.Error
-		error.Message = "idのint型への型変換に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 14)
+
 		return
 	}
 
 	headerAuthorization := r.Header.Get("Authorization")
 
 	if len(headerAuthorization) == 0 {
-		var error model.Error
-		error.Message = "認証トークンの取得に失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 28)
+
 		return
 	}
 
 	bearerToken := strings.Split(headerAuthorization, " ")
 
 	if len(bearerToken) < 2 {
-		var error model.Error
-		error.Message = "bearerトークンの取得に失敗しました。"
-		errorInResponse(w, http.StatusUnauthorized, error)
+		errorInResponse(w, http.StatusUnauthorized, 29)
+
 		return
 	}
 
@@ -69,61 +64,55 @@ func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *htt
 	parsedToken, err := Parse(authToken)
 
 	if err != nil {
-		var error model.Error
-		error.Message = "認証コードのパースに失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 18)
+
 		return
 	}
 
 	requestUserEmail := parsedToken.Email
 
 	if err := ufc.UserFollowInteractor.Follow(requestUserEmail, targetUserID); err != nil {
-		var error model.Error
-		error.Message = "ユーザーのフォローに失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 30)
+
 		return
 	}
 
-	//201 Created
+	// 201 Created.
 	w.WriteHeader(201)
 }
 
-//idで指定したユーザーのフォローを解除する
+// idで指定したユーザーのフォローを解除する.
 func (ufc *UserFollowController) UnfollowUserHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 
 	if !ok {
-		var error model.Error
-		error.Message = "ユーザーのidを取得できません。"
-		errorInResponse(w, http.StatusBadRequest, error)
+		errorInResponse(w, http.StatusBadRequest, 26)
+
 		return
 	}
 
 	targetUserID, err := strconv.Atoi(id)
 
 	if err != nil {
-		var error model.Error
-		error.Message = "idのint型への型変換に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 14)
+
 		return
 	}
 
 	headerAuthorization := r.Header.Get("Authorization")
 
 	if len(headerAuthorization) == 0 {
-		var error model.Error
-		error.Message = "認証トークンの取得に失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 28)
+
 		return
 	}
 
 	bearerToken := strings.Split(headerAuthorization, " ")
 
 	if len(bearerToken) < 2 {
-		var error model.Error
-		error.Message = "bearerトークンの取得に失敗しました。"
-		errorInResponse(w, http.StatusUnauthorized, error)
+		errorInResponse(w, http.StatusUnauthorized, 29)
+
 		return
 	}
 
@@ -131,21 +120,19 @@ func (ufc *UserFollowController) UnfollowUserHandler(w http.ResponseWriter, r *h
 
 	parsedToken, err := Parse(authToken)
 	if err != nil {
-		var error model.Error
-		error.Message = "認証コードのパースに失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 18)
+
 		return
 	}
 
 	requestUserEmail := parsedToken.Email
 
 	if err := ufc.UserFollowInteractor.Unfollow(requestUserEmail, targetUserID); err != nil {
-		var error model.Error
-		error.Message = "ユーザーのフォロー解除に失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 31)
+
 		return
 	}
 
-	//201 Created
+	// 201 Created.
 	w.WriteHeader(201)
 }

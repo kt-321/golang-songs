@@ -17,7 +17,9 @@ func main() {
 	if err != nil {
 		log.Println(err)
 	}
+
 	db.DB().SetMaxIdleConns(10)
+
 	defer db.Close()
 
 	//リモートのRedisのコネクションプールの設定
@@ -30,6 +32,7 @@ func main() {
 			if err != nil {
 				return nil, err
 			}
+
 			return rc, nil
 		},
 	}
@@ -41,14 +44,16 @@ func main() {
 		IdleTimeout: 240 * time.Second,
 		Dial: func() (redis.Conn, error) {
 			rc, err := redis.Dial("tcp", os.Getenv("SIDECAR_REDIS_ADDRESS"))
+
 			if err != nil {
 				return nil, err
 			}
+
 			return rc, nil
 		},
 	}
 
-	//リモートRedis
+	// リモートRedis
 	// コネクションの取得
 	redis := pool.Get()
 	if redis.Err() != nil {
@@ -60,16 +65,16 @@ func main() {
 
 	//サイドカーRedis
 	// コネクションの取得
-	sidecar_redis := pool2.Get()
-	if sidecar_redis.Err() != nil {
-		log.Println(sidecar_redis.Err())
+	sidecarRedis := pool2.Get()
+	if sidecarRedis.Err() != nil {
+		log.Println(sidecarRedis.Err())
 	} else {
 		log.Println("サイドカーのRedisに接続成功")
 	}
-	defer sidecar_redis.Close()
+	defer sidecarRedis.Close()
 
 	//予めtime.Localにタイムゾーンの設定情報を入れておく
 	time.Local = time.FixedZone("Local", 9*60*60)
 
-	infrastructure.Dispatch(db, redis, sidecar_redis)
+	infrastructure.Dispatch(db, redis, sidecarRedis)
 }

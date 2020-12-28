@@ -15,6 +15,7 @@ func (ur *UserRepository) FindAll() (*[]model.User, error) {
 	if err := ur.DB.Find(&users).Error; gorm.IsRecordNotFoundError(err) {
 		return nil, err
 	}
+
 	return &users, nil
 }
 
@@ -83,5 +84,6 @@ func (ur *UserRepository) Update(userID int, p model.User) error {
 	if err := ur.DB.Model(&user).Where("id = ?", userID).Update(model.User{Email: p.Email, Name: p.Name, Age: p.Age, Gender: p.Gender, FavoriteMusicAge: p.FavoriteMusicAge, FavoriteArtist: p.FavoriteArtist, Comment: p.Comment}).Error; err != nil {
 		return err
 	}
+
 	return nil
 }
