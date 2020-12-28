@@ -6,9 +6,10 @@ import (
 	"net/http"
 )
 
-// レスポンスにエラーを突っ込んで、返却するメソッド
+// レスポンスにエラーを突っ込んで返却するメソッド.
 func errorInResponse(w http.ResponseWriter, status int, error model.Error) {
 	w.WriteHeader(status)
+
 	if err := json.NewEncoder(w).Encode(error); err != nil {
 		var error model.Error
 		error.Message = "リクエストボディのデコードに失敗しました。"

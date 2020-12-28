@@ -46,19 +46,19 @@ func (uc *UserController) AllUsersHandler(w http.ResponseWriter, r *http.Request
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
+
 	if _, err := w.Write(v); err != nil {
 		//var error model.Error
 		//error.Message = "ユーザー一覧の取得に失敗しました。"
 		//errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
-
 }
 
 //リクエストユーザーの情報を返す
 func (uc *UserController) UserHandler(w http.ResponseWriter, r *http.Request) {
-	header_hoge := r.Header.Get("Authorization")
-	bearerToken := strings.Split(header_hoge, " ")
+	headerHoge := r.Header.Get("Authorization")
+	bearerToken := strings.Split(headerHoge, " ")
 	authToken := bearerToken[1]
 
 	parsedToken, err := Parse(authToken)
@@ -101,6 +101,7 @@ func (uc *UserController) UserHandler(w http.ResponseWriter, r *http.Request) {
 func (uc *UserController) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
+
 	if !ok {
 		var error model.Error
 		error.Message = "ユーザーのidを取得できません。"
@@ -109,6 +110,7 @@ func (uc *UserController) GetUserHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	userID, err := strconv.Atoi(id)
+
 	if err != nil {
 		var error model.Error
 		error.Message = "idのint型への型変換に失敗しました。"
@@ -119,6 +121,7 @@ func (uc *UserController) GetUserHandler(w http.ResponseWriter, r *http.Request)
 	var user *model.User
 
 	user, err = uc.UserInteractor.Show(userID)
+
 	if err != nil {
 		var error model.Error
 		error.Message = "該当するアカウントが見つかりません。"
@@ -146,13 +149,16 @@ func (uc *UserController) GetUserHandler(w http.ResponseWriter, r *http.Request)
 func (uc *UserController) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
+
 	if !ok {
 		var error model.Error
 		error.Message = "ユーザーのidを取得できません。"
 		errorInResponse(w, http.StatusBadRequest, error)
 		return
 	}
+
 	userID, err := strconv.Atoi(id)
+
 	if err != nil {
 		var error model.Error
 		error.Message = "idのint型への型変換に失敗しました"
@@ -161,6 +167,7 @@ func (uc *UserController) UpdateUserHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	var d model.User
+
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
 		var error model.Error
 		error.Message = "リクエストボディのデコードに失敗しました。"
@@ -177,5 +184,4 @@ func (uc *UserController) UpdateUserHandler(w http.ResponseWriter, r *http.Reque
 
 	//204 No Content
 	w.WriteHeader(204)
-	//return
 }

@@ -35,9 +35,11 @@ func (ur *UserRepository) GetUser(userEmail string) (*model.User, error) {
 	}
 
 	var followings []model.User
+
 	if err := ur.DB.Preload("Followings").Find(&user).Error; err != nil {
 		return nil, err
 	}
+
 	if err := ur.DB.Model(&user).Related(&followings, "Followings").Error; err != nil {
 		return nil, err
 	}
@@ -63,9 +65,11 @@ func (ur *UserRepository) FindByID(userID int) (*model.User, error) {
 	}
 
 	var followings []model.User
+
 	if err := ur.DB.Preload("Followings").Find(&user).Error; err != nil {
 		return nil, err
 	}
+
 	if err := ur.DB.Model(&user).Related(&followings, "Followings").Error; err != nil {
 		return nil, err
 	}

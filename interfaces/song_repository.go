@@ -59,6 +59,7 @@ func DeleteSongByID(songID int, rc redis.Conn) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -74,7 +75,9 @@ func MapToSong(t map[string]string) (*model.Song, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	UpdatedAt, err := time.ParseInLocation("2006年01月02日 15時04分05秒", t["UpdatedAt"], jst)
+
 	if err != nil {
 		return nil, err
 	}
@@ -84,8 +87,10 @@ func MapToSong(t map[string]string) (*model.Song, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	uintID := uint(intID)
 	intUserId, err := strconv.Atoi(t["UserID"])
+
 	if err != nil {
 		return nil, err
 	}
@@ -153,9 +158,11 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 	v, err, _ := g.Do("key", func() (interface{}, error) {
 		// サイドカーコンテナのRedisにキャッシュがあるか確認
 		exists, err := ExistsSongByID(songID, sr.SidecarRedis)
+
 		if err != nil {
 			return nil, err
 		}
+
 		// サイドカーコンテナのRedisにキャッシュが存在する場合
 		if exists > 0 {
 			// サイドカーのRedisのキャッシュを取得
@@ -224,8 +231,10 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 				}
 			}
 		}
+
 		return song, nil
 	})
+
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +248,6 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 }
 
 func (sr *SongRepository) Save(userEmail string, p model.Song) error {
-
 	var user model.User
 	if err := sr.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
 		return err
@@ -280,10 +288,9 @@ func (sr *SongRepository) Save(userEmail string, p model.Song) error {
 			return err
 		}
 		return nil
-	} else {
-		//RDBへのInsertに失敗した場合
-		return result.Error
 	}
+	// RDBへのInsertに失敗した場合
+	return result.Error
 }
 
 func (sr *SongRepository) UpdateByID(userEmail string, songID int, p model.Song) error {
@@ -329,10 +336,9 @@ func (sr *SongRepository) UpdateByID(userEmail string, songID int, p model.Song)
 			return err
 		}
 		return nil
-	} else {
-		//RDBにInsertするのに失敗した場合
-		return result.Error
 	}
+	//RDBにInsertするのに失敗した場合
+	return result.Error
 }
 
 func (sr *SongRepository) DeleteByID(songID int) error {
@@ -347,6 +353,7 @@ func (sr *SongRepository) DeleteByID(songID int) error {
 	if err != nil {
 		return err
 	}
+
 	if remoteExists > 0 {
 		err := DeleteSongByID(int(songID), sr.Redis)
 		if err != nil {
@@ -359,6 +366,7 @@ func (sr *SongRepository) DeleteByID(songID int) error {
 	if err != nil {
 		return err
 	}
+
 	if sidecarExists > 0 {
 		err := DeleteSongByID(int(songID), sr.SidecarRedis)
 		if err != nil {

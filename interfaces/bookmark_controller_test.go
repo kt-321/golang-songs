@@ -30,6 +30,7 @@ func TestBookmarkHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
 	}
+
 	jointToken := "Bearer" + " " + token
 	req.Header.Set("Authorization", jointToken)
 
@@ -63,6 +64,7 @@ func TestRemoveBookmarkHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
 	}
+
 	jointToken := "Bearer" + " " + token
 	req.Header.Set("Authorization", jointToken)
 

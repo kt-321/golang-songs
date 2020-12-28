@@ -8,7 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Parse は jwt トークンから元になった認証情報を取り出す。
+// Parse は jwt トークンから元になった認証情報を取り出す.
 func Parse(signedString string) (*model.Auth, error) {
 	secret := os.Getenv("SIGNINGKEY")
 
@@ -16,6 +16,7 @@ func Parse(signedString string) (*model.Auth, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return "", errors.Errorf("unexpected signing method: %v", token.Header)
 		}
+
 		return []byte(secret), nil
 	})
 

@@ -29,6 +29,7 @@ func NewUserFollowController(DB *gorm.DB) *UserFollowController {
 func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
+
 	if !ok {
 		var error model.Error
 		error.Message = "ユーザーのidを取得できません。"
@@ -37,6 +38,7 @@ func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *htt
 	}
 
 	targetUserID, err := strconv.Atoi(id)
+
 	if err != nil {
 		var error model.Error
 		error.Message = "idのint型への型変換に失敗しました"
@@ -45,6 +47,7 @@ func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *htt
 	}
 
 	headerAuthorization := r.Header.Get("Authorization")
+
 	if len(headerAuthorization) == 0 {
 		var error model.Error
 		error.Message = "認証トークンの取得に失敗しました。"
@@ -53,6 +56,7 @@ func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *htt
 	}
 
 	bearerToken := strings.Split(headerAuthorization, " ")
+
 	if len(bearerToken) < 2 {
 		var error model.Error
 		error.Message = "bearerトークンの取得に失敗しました。"
@@ -63,6 +67,7 @@ func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *htt
 	authToken := bearerToken[1]
 
 	parsedToken, err := Parse(authToken)
+
 	if err != nil {
 		var error model.Error
 		error.Message = "認証コードのパースに失敗しました。"
@@ -87,6 +92,7 @@ func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *htt
 func (ufc *UserFollowController) UnfollowUserHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
+
 	if !ok {
 		var error model.Error
 		error.Message = "ユーザーのidを取得できません。"
@@ -95,6 +101,7 @@ func (ufc *UserFollowController) UnfollowUserHandler(w http.ResponseWriter, r *h
 	}
 
 	targetUserID, err := strconv.Atoi(id)
+
 	if err != nil {
 		var error model.Error
 		error.Message = "idのint型への型変換に失敗しました"
@@ -103,6 +110,7 @@ func (ufc *UserFollowController) UnfollowUserHandler(w http.ResponseWriter, r *h
 	}
 
 	headerAuthorization := r.Header.Get("Authorization")
+
 	if len(headerAuthorization) == 0 {
 		var error model.Error
 		error.Message = "認証トークンの取得に失敗しました。"
@@ -111,6 +119,7 @@ func (ufc *UserFollowController) UnfollowUserHandler(w http.ResponseWriter, r *h
 	}
 
 	bearerToken := strings.Split(headerAuthorization, " ")
+
 	if len(bearerToken) < 2 {
 		var error model.Error
 		error.Message = "bearerトークンの取得に失敗しました。"

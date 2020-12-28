@@ -31,6 +31,7 @@ func TestFollowUserHandler(t *testing.T) {
 	if err != nil {
 		log.Println("err:", err)
 	}
+
 	jointToken := "Bearer" + " " + token
 	req.Header.Set("Authorization", jointToken)
 
@@ -64,6 +65,7 @@ func TestUnfollowUserHandler(t *testing.T) {
 	if err != nil {
 		log.Println("err:", err)
 	}
+
 	jointToken := "Bearer" + " " + token
 	req.Header.Set("Authorization", jointToken)
 

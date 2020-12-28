@@ -49,6 +49,7 @@ func (spc *SpotifyController) GetRedirectURLHandler(w http.ResponseWriter, r *ht
 	encoder := json.NewEncoder(w)
 	//自動エスケープを無効に
 	encoder.SetEscapeHTML(false)
+
 	if err := encoder.Encode(url); err != nil {
 		var error model.Error
 		error.Message = "JSONへの変換に失敗しました。"

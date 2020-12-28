@@ -29,13 +29,14 @@ func NewAuthController(DB *gorm.DB) *AuthController {
 	}
 }
 
-//ユーザー登録
+// ユーザー登録.
 func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	var d model.Form
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
 		var error model.Error
 		error.Message = "リクエストボディのデコードに失敗しました。"
 		errorInResponse(w, http.StatusInternalServerError, error)
+
 		return
 	}
 
@@ -46,6 +47,7 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 		var error model.Error
 		error.Message = "Emailは必須です。"
 		errorInResponse(w, http.StatusBadRequest, error)
+
 		return
 	}
 
@@ -53,6 +55,7 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 		var error model.Error
 		error.Message = "パスワードは必須です。"
 		errorInResponse(w, http.StatusBadRequest, error)
+
 		return
 	}
 
@@ -61,6 +64,7 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 		var error model.Error
 		error.Message = "パスワードの値が不正です。"
 		errorInResponse(w, http.StatusBadRequest, error)
+
 		return
 	}
 
@@ -73,10 +77,12 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 		var error model.Error
 		error.Message = "アカウントの作成に失敗しました"
 		errorInResponse(w, http.StatusUnauthorized, error)
+
 		return
 	}
 
 	user.Password = ""
+
 	w.Header().Set("Content-Type", "application/json")
 
 	v, err := json.Marshal(user)
@@ -84,6 +90,7 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 		var error model.Error
 		error.Message = "JSONへの変換に失敗しました"
 		errorInResponse(w, http.StatusInternalServerError, error)
+
 		return
 	}
 
@@ -91,17 +98,19 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 		var error model.Error
 		error.Message = "ユーザー情報の取得に失敗しました。"
 		errorInResponse(w, http.StatusInternalServerError, error)
+
 		return
 	}
 }
 
-//ログイン
+// ログイン.
 func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var d model.Form
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
 		var error model.Error
 		error.Message = "リクエストボディのデコードに失敗しました。"
 		errorInResponse(w, http.StatusInternalServerError, error)
+
 		return
 	}
 
@@ -112,6 +121,7 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		var error model.Error
 		error.Message = "Email は必須です。"
 		errorInResponse(w, http.StatusBadRequest, error)
+
 		return
 	}
 
@@ -119,6 +129,8 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		var error model.Error
 		error.Message = "パスワードは必須です。"
 		errorInResponse(w, http.StatusBadRequest, error)
+
+		return
 	}
 
 	user := model.User{Email: email, Password: password}
@@ -128,6 +140,7 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		var error model.Error
 		error.Message = "無効なパスワードです。"
 		errorInResponse(w, http.StatusInternalServerError, error)
+
 		return
 	}
 
@@ -138,21 +151,24 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		var error model.Error
 		error.Message = "無効なパスワードです。"
 		errorInResponse(w, http.StatusInternalServerError, error)
+
 		return
 	}
 
-	//トークン作成
+	// トークン作成
 	token, err := createToken(user)
 	if err != nil {
 		var error model.Error
 		error.Message = "トークンの作成に失敗しました"
 		errorInResponse(w, http.StatusUnauthorized, error)
+
 		return
 	}
 
 	var jwt model.JWT
 
 	w.WriteHeader(http.StatusOK)
+
 	jwt.Token = token
 
 	v, err := json.Marshal(jwt)
@@ -171,13 +187,13 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//JWT
+// JWT.
 func createToken(user model.User) (string, error) {
 	var err error
 
 	secret := os.Getenv("SIGNINGKEY")
 
-	// Token を作成
+	// Token を作成.
 	// jwt -> JSON Web Token - JSON をセキュアにやり取りするための仕様
 	// jwtの構造 -> {Base64 encoded Header}.{Base64 encoded Payload}.{Signature}
 	// HS254 -> 証明生成用(https://ja.wikipedia.org/wiki/JSON_Web_Token)
@@ -186,7 +202,7 @@ func createToken(user model.User) (string, error) {
 		"iss":   "__init__", // JWT の発行者が入る(文字列(__init__)は任意)
 	})
 
-	//Dumpを吐く
+	// Dumpを吐く.
 	spew.Dump(token)
 
 	tokenString, err := token.SignedString([]byte(secret))

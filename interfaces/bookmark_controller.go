@@ -25,17 +25,20 @@ func NewBookmarkController(DB *gorm.DB) *BookmarkController {
 	}
 }
 
-//曲をお気に入りに登録
+// 曲をお気に入りに登録.
 func (bc *BookmarkController) BookmarkHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
+
 	if !ok {
 		var error model.Error
 		error.Message = "idの取得に失敗しました"
 		errorInResponse(w, http.StatusBadRequest, error)
 		return
 	}
+
 	songID, err := strconv.Atoi(id)
+
 	if err != nil {
 		var error model.Error
 		error.Message = "idのint型への型変換に失敗しました"
@@ -52,6 +55,7 @@ func (bc *BookmarkController) BookmarkHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	bearerToken := strings.Split(headerAuthorization, " ")
+
 	if len(bearerToken) < 2 {
 		var error model.Error
 		error.Message = "bearerトークンの取得に失敗しました。"
@@ -78,22 +82,24 @@ func (bc *BookmarkController) BookmarkHandler(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	//201 Created
+	// 201 Created
 	w.WriteHeader(201)
-	//return
 }
 
-//曲をお気に入り登録から解除
+// 曲をお気に入り登録から解除.
 func (bc *BookmarkController) RemoveBookmarkHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
+
 	if !ok {
 		var error model.Error
 		error.Message = "idの取得に失敗しました"
 		errorInResponse(w, http.StatusBadRequest, error)
 		return
 	}
+
 	songID, err := strconv.Atoi(id)
+
 	if err != nil {
 		var error model.Error
 		error.Message = "idのint型への型変換に失敗しました"
@@ -101,8 +107,8 @@ func (bc *BookmarkController) RemoveBookmarkHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	header_hoge := r.Header.Get("Authorization")
-	bearerToken := strings.Split(header_hoge, " ")
+	headerHoge := r.Header.Get("Authorization")
+	bearerToken := strings.Split(headerHoge, " ")
 	authToken := bearerToken[1]
 
 	parsedToken, err := Parse(authToken)
@@ -122,7 +128,6 @@ func (bc *BookmarkController) RemoveBookmarkHandler(w http.ResponseWriter, r *ht
 		return
 	}
 
-	//201 Created
+	// 201 Created
 	w.WriteHeader(201)
-	//return
 }

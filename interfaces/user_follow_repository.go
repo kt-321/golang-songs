@@ -32,6 +32,7 @@ func (ufr *UserFollowRepository) Follow(requestUserEmail string, targetUserID in
 	if err := ufr.DB.Preload("Followings").Find(&requestUser).Error; err != nil {
 		return err
 	}
+
 	if err := ufr.DB.Model(&requestUser).Association("Followings").Append(&targetUser).Error; err != nil {
 		return err
 	}
@@ -55,6 +56,7 @@ func (ufr *UserFollowRepository) Unfollow(requestUserEmail string, targetUserID 
 	if err := ufr.DB.Preload("Followings").Find(&requestUser).Error; err != nil {
 		return err
 	}
+
 	if err := ufr.DB.Model(&requestUser).Association("Followings").Delete(&targetUser).Error; err != nil {
 		return err
 	}

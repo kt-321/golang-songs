@@ -40,7 +40,9 @@ func (sc *SongController) AllSongsHandler(w http.ResponseWriter, r *http.Request
 		errorInResponse(w, http.StatusInternalServerError, error)
 		return
 	}
+
 	v, err := json.Marshal(songs)
+
 	if err != nil {
 		var error model.Error
 		error.Message = "曲一覧の取得に失敗しました"
@@ -60,6 +62,7 @@ func (sc *SongController) AllSongsHandler(w http.ResponseWriter, r *http.Request
 func (sc *SongController) GetSongHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
+
 	if !ok {
 		var error model.Error
 		error.Message = "曲のidを取得できません。"
@@ -112,8 +115,8 @@ func (sc *SongController) CreateSongHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	header_hoge := r.Header.Get("Authorization")
-	bearerToken := strings.Split(header_hoge, " ")
+	headerHoge := r.Header.Get("Authorization")
+	bearerToken := strings.Split(headerHoge, " ")
 	authToken := bearerToken[1]
 
 	parsedToken, err := Parse(authToken)
@@ -148,8 +151,8 @@ func (sc *SongController) UpdateSongHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	header_hoge := r.Header.Get("Authorization")
-	bearerToken := strings.Split(header_hoge, " ")
+	headerHoge := r.Header.Get("Authorization")
+	bearerToken := strings.Split(headerHoge, " ")
 	authToken := bearerToken[1]
 
 	parsedToken, err := Parse(authToken)
@@ -164,12 +167,14 @@ func (sc *SongController) UpdateSongHandler(w http.ResponseWriter, r *http.Reque
 
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
+
 	if !ok {
 		var error model.Error
 		error.Message = "曲のidを取得できません。"
 		errorInResponse(w, http.StatusBadRequest, error)
 		return
 	}
+
 	songID, err := strconv.Atoi(id)
 	if err != nil {
 		var error model.Error
@@ -193,12 +198,14 @@ func (sc *SongController) UpdateSongHandler(w http.ResponseWriter, r *http.Reque
 func (sc *SongController) DeleteSongHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
+
 	if !ok {
 		var error model.Error
 		error.Message = "曲のidを取得できません。"
 		errorInResponse(w, http.StatusBadRequest, error)
 		return
 	}
+
 	songID, err := strconv.Atoi(id)
 	if err != nil {
 		var error model.Error
