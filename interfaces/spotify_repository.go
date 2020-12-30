@@ -30,7 +30,7 @@ func (spr *SpotifyRepository) GetTracks(token string, title string) (*model.Resp
 
 	req.URL.RawQuery = values.Encode()
 
-	//ヘッダにアクセストークン入れている
+	// ヘッダにアクセストークン入れている.
 	req.Header.Set("Authorization", "Bearer "+token)
 
 	client := &http.Client{

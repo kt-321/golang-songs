@@ -35,7 +35,7 @@ func (far *FakeAuthRepository) Login(form model.Form) (*model.User, error) {
 }
 
 func TestSignUpHandler(t *testing.T) {
-	// テスト用の JSON ボディ作成
+	// テスト用の JSON ボディ作成.
 	b, err := json.Marshal(model.Form{Email: "test@test", Password: "testtest"})
 	if err != nil {
 		t.Fatal(err)
@@ -45,24 +45,24 @@ func TestSignUpHandler(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	//headerをセット
+	// headerをセット.
 	req.Header.Set("Content-Type", "application/json")
 
-	// テスト用のレスポンス作成
+	// テスト用のレスポンス作成.
 	res := httptest.NewRecorder()
 	f := &AuthController{AuthInteractor: usecases.AuthInteractor{
 		AuthRepository: &FakeAuthRepository{},
 	}}
 	f.SignUpHandler(res, req)
 
-	// レスポンスのステータスコードのテスト
+	// レスポンスのステータスコードのテスト.
 	if res.Code != http.StatusOK {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 }
 
 func TestLoginHandler(t *testing.T) {
-	//テスト用のemail,passwordを準備
+	// テスト用のemail,passwordを準備.
 	email := "test@test.co.jp"
 	password := "testtest"
 
@@ -72,12 +72,12 @@ func TestLoginHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// テスト用のリクエスト作成
+	// テスト用のリクエスト作成.
 	req := httptest.NewRequest("POST", "/api/login", bytes.NewBuffer(b))
-	//headerをセット
+	// headerをセット
 	req.Header.Set("Content-Type", "application/json")
 
-	// テスト用のレスポンス作成
+	// テスト用のレスポンス作成.
 	res := httptest.NewRecorder()
 
 	f := &AuthController{AuthInteractor: usecases.AuthInteractor{
@@ -85,30 +85,31 @@ func TestLoginHandler(t *testing.T) {
 	}}
 	f.LoginHandler(res, req)
 
-	// レスポンスのステータスコードのテスト
+	// レスポンスのステータスコードのテスト.
 	if res.Code != http.StatusOK {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 
 	user := model.User{Email: email, Password: password}
 
-	//トークン作成
+	// トークン作成.
 	token, err := createToken(user)
+
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
 	}
 
-	//レスポンスボディをDecode
+	// レスポンスボディをDecode.
 	var p model.JWT
 	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
 		t.Fatal("JSONへの変換に失敗しました")
 	}
 
-	//期待値(アサート用の構造体)
+	// 期待値(アサート用の構造体).
 	var expected model.JWT
 	expected.Token = token
 
-	// レスポンスのボディが期待通りか確認
+	// レスポンスのボディが期待通りか確認.
 	if diff := cmp.Diff(p, expected); diff != "" {
 		t.Errorf("handler returned unexpected body: %v",
 			diff)

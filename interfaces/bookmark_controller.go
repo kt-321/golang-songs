@@ -1,7 +1,6 @@
 package interfaces
 
 import (
-	"golang-songs/model"
 	"golang-songs/usecases"
 	"net/http"
 	"strconv"
@@ -25,37 +24,38 @@ func NewBookmarkController(DB *gorm.DB) *BookmarkController {
 	}
 }
 
-//曲をお気に入りに登録
+// 曲をお気に入りに登録.
 func (bc *BookmarkController) BookmarkHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
+
 	if !ok {
-		var error model.Error
-		error.Message = "idの取得に失敗しました"
-		errorInResponse(w, http.StatusBadRequest, error)
+		errorInResponse(w, http.StatusBadRequest, 13)
+
 		return
 	}
+
 	songID, err := strconv.Atoi(id)
+
 	if err != nil {
-		var error model.Error
-		error.Message = "idのint型への型変換に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 14)
+
 		return
 	}
 
 	headerAuthorization := r.Header.Get("Authorization")
+
 	if len(headerAuthorization) == 0 {
-		var error model.Error
-		error.Message = "認証トークンの取得に失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 28)
+
 		return
 	}
 
 	bearerToken := strings.Split(headerAuthorization, " ")
+
 	if len(bearerToken) < 2 {
-		var error model.Error
-		error.Message = "bearerトークンの取得に失敗しました。"
-		errorInResponse(w, http.StatusUnauthorized, error)
+		errorInResponse(w, http.StatusUnauthorized, 29)
+
 		return
 	}
 
@@ -63,66 +63,62 @@ func (bc *BookmarkController) BookmarkHandler(w http.ResponseWriter, r *http.Req
 
 	parsedToken, err := Parse(authToken)
 	if err != nil {
-		var error model.Error
-		error.Message = "認証コードのパースに失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 18)
+
 		return
 	}
 
 	userEmail := parsedToken.Email
 
 	if err := bc.BookmarkInteractor.Bookmark(userEmail, songID); err != nil {
-		var error model.Error
-		error.Message = "曲のお気に入り登録に失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 32)
+
 		return
 	}
 
-	//201 Created
+	// 201 Created
 	w.WriteHeader(201)
-	return
 }
 
-//曲をお気に入り登録から解除
+// 曲をお気に入り登録から解除.
 func (bc *BookmarkController) RemoveBookmarkHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
+
 	if !ok {
-		var error model.Error
-		error.Message = "idの取得に失敗しました"
-		errorInResponse(w, http.StatusBadRequest, error)
-		return
-	}
-	songID, err := strconv.Atoi(id)
-	if err != nil {
-		var error model.Error
-		error.Message = "idのint型への型変換に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusBadRequest, 13)
+
 		return
 	}
 
-	header_hoge := r.Header.Get("Authorization")
-	bearerToken := strings.Split(header_hoge, " ")
+	songID, err := strconv.Atoi(id)
+
+	if err != nil {
+		errorInResponse(w, http.StatusInternalServerError, 14)
+
+		return
+	}
+
+	headerHoge := r.Header.Get("Authorization")
+	bearerToken := strings.Split(headerHoge, " ")
 	authToken := bearerToken[1]
 
 	parsedToken, err := Parse(authToken)
+
 	if err != nil {
-		var error model.Error
-		error.Message = "認証コードのパースに失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 18)
+
 		return
 	}
 
 	userEmail := parsedToken.Email
 
 	if err := bc.BookmarkInteractor.RemoveBookmark(userEmail, songID); err != nil {
-		var error model.Error
-		error.Message = "曲のお気に入り解除に失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 33)
+
 		return
 	}
 
-	//201 Created
+	// 201 Created
 	w.WriteHeader(201)
-	return
 }

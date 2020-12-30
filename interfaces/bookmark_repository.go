@@ -10,9 +10,8 @@ type BookmarkRepository struct {
 	DB *gorm.DB
 }
 
-//曲をお気に入り登録
+// 曲をお気に入り登録.
 func (br *BookmarkRepository) Bookmark(userEmail string, songID int) error {
-
 	var user model.User
 	if err := br.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
 		return err
@@ -40,7 +39,7 @@ func (br *BookmarkRepository) Bookmark(userEmail string, songID int) error {
 	return nil
 }
 
-//曲をお気に入り登録から解除
+// 曲をお気に入り登録から解除.
 func (br *BookmarkRepository) RemoveBookmark(userEmail string, songID int) error {
 	var user model.User
 	if err := br.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {

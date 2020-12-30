@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"encoding/json"
+	"fmt"
 	"golang-songs/model"
 	"net/http"
 	"os"
@@ -29,13 +30,12 @@ func NewAuthController(DB *gorm.DB) *AuthController {
 	}
 }
 
-//ユーザー登録
+// ユーザー登録.
 func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	var d model.Form
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		var error model.Error
-		error.Message = "リクエストボディのデコードに失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 1)
+
 		return
 	}
 
@@ -43,24 +43,21 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 	password := d.Password
 
 	if email == "" {
-		var error model.Error
-		error.Message = "Emailは必須です。"
-		errorInResponse(w, http.StatusBadRequest, error)
+		errorInResponse(w, http.StatusBadRequest, 2)
+
 		return
 	}
 
 	if password == "" {
-		var error model.Error
-		error.Message = "パスワードは必須です。"
-		errorInResponse(w, http.StatusBadRequest, error)
+		errorInResponse(w, http.StatusBadRequest, 3)
+
 		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
-		var error model.Error
-		error.Message = "パスワードの値が不正です。"
-		errorInResponse(w, http.StatusBadRequest, error)
+		errorInResponse(w, http.StatusBadRequest, 4)
+
 		return
 	}
 
@@ -70,38 +67,35 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 
 	err = ac.AuthInteractor.SignUp(d)
 	if err != nil {
-		var error model.Error
-		error.Message = "アカウントの作成に失敗しました"
-		errorInResponse(w, http.StatusUnauthorized, error)
+		errorInResponse(w, http.StatusUnauthorized, 5)
+
 		return
 	}
 
 	user.Password = ""
+
 	w.Header().Set("Content-Type", "application/json")
 
 	v, err := json.Marshal(user)
 	if err != nil {
-		var error model.Error
-		error.Message = "JSONへの変換に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 6)
+
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
-		var error model.Error
-		error.Message = "ユーザー情報の取得に失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 7)
+
 		return
 	}
 }
 
-//ログイン
+// ログイン.
 func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var d model.Form
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		var error model.Error
-		error.Message = "リクエストボディのデコードに失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 1)
+
 		return
 	}
 
@@ -109,25 +103,23 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	password := d.Password
 
 	if email == "" {
-		var error model.Error
-		error.Message = "Email は必須です。"
-		errorInResponse(w, http.StatusBadRequest, error)
+		errorInResponse(w, http.StatusBadRequest, 2)
+
 		return
 	}
 
 	if password == "" {
-		var error model.Error
-		error.Message = "パスワードは必須です。"
-		errorInResponse(w, http.StatusBadRequest, error)
+		errorInResponse(w, http.StatusBadRequest, 3)
+
+		return
 	}
 
 	user := model.User{Email: email, Password: password}
 
 	userData, err := ac.AuthInteractor.Login(d)
 	if err != nil {
-		var error model.Error
-		error.Message = "無効なパスワードです。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 8)
+
 		return
 	}
 
@@ -135,49 +127,46 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = bcrypt.CompareHashAndPassword([]byte(passwordData), []byte(password))
 	if err != nil {
-		var error model.Error
-		error.Message = "無効なパスワードです。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 8)
+
 		return
 	}
 
-	//トークン作成
+	// トークン作成
 	token, err := createToken(user)
 	if err != nil {
-		var error model.Error
-		error.Message = "トークンの作成に失敗しました"
-		errorInResponse(w, http.StatusUnauthorized, error)
+		errorInResponse(w, http.StatusUnauthorized, 9)
+
 		return
 	}
 
 	var jwt model.JWT
 
 	w.WriteHeader(http.StatusOK)
+
 	jwt.Token = token
 
 	v, err := json.Marshal(jwt)
 	if err != nil {
-		var error model.Error
-		error.Message = "JSONへの変換に失敗しました"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 6)
+
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
-		var error model.Error
-		error.Message = "JWTトークンの取得に失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+		errorInResponse(w, http.StatusInternalServerError, 10)
+
 		return
 	}
 }
 
-//JWT
+// JWT.
 func createToken(user model.User) (string, error) {
 	var err error
 
 	secret := os.Getenv("SIGNINGKEY")
 
-	// Token を作成
+	// Token を作成.
 	// jwt -> JSON Web Token - JSON をセキュアにやり取りするための仕様
 	// jwtの構造 -> {Base64 encoded Header}.{Base64 encoded Payload}.{Signature}
 	// HS254 -> 証明生成用(https://ja.wikipedia.org/wiki/JSON_Web_Token)
@@ -186,12 +175,13 @@ func createToken(user model.User) (string, error) {
 		"iss":   "__init__", // JWT の発行者が入る(文字列(__init__)は任意)
 	})
 
-	//Dumpを吐く
+	// Dumpを吐く.
 	spew.Dump(token)
 
 	tokenString, err := token.SignedString([]byte(secret))
+
 	if err != nil {
-		return tokenString, err
+		return tokenString, fmt.Errorf("failed to change token to string: %v", err)
 	}
 
 	return tokenString, nil
