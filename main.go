@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	//RDBに接続
+	// RDBに接続.
 	db, err := gorm.Open("mysql", os.Getenv("mysqlConfig"))
 	if err != nil {
 		log.Println(err)
@@ -22,7 +22,7 @@ func main() {
 
 	defer db.Close()
 
-	//リモートのRedisのコネクションプールの設定
+	// リモートのRedisのコネクションプールの設定.
 	pool := &redis.Pool{
 		MaxIdle:     3,
 		MaxActive:   6,
@@ -37,7 +37,7 @@ func main() {
 		},
 	}
 
-	//サイドカーのRedisのコネクションプール設定
+	// サイドカーのRedisのコネクションプール設定.
 	pool2 := &redis.Pool{
 		MaxIdle:     3,
 		MaxActive:   6,
@@ -53,8 +53,8 @@ func main() {
 		},
 	}
 
-	// リモートRedis
-	// コネクションの取得
+	// リモートRedis.
+	// コネクションの取得.
 	redis := pool.Get()
 	if redis.Err() != nil {
 		log.Println(redis.Err())
@@ -63,8 +63,8 @@ func main() {
 	}
 	defer redis.Close()
 
-	//サイドカーRedis
-	// コネクションの取得
+	// サイドカーRedis.
+	// コネクションの取得.
 	sidecarRedis := pool2.Get()
 	if sidecarRedis.Err() != nil {
 		log.Println(sidecarRedis.Err())
@@ -73,7 +73,7 @@ func main() {
 	}
 	defer sidecarRedis.Close()
 
-	//予めtime.Localにタイムゾーンの設定情報を入れておく
+	// 予めtime.Localにタイムゾーンの設定情報を入れておく.
 	time.Local = time.FixedZone("Local", 9*60*60)
 
 	infrastructure.Dispatch(db, redis, sidecarRedis)

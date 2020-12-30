@@ -86,13 +86,13 @@ func (fsr *FakeSongRepository) DeleteByID(songID int) error {
 func TestAllSongsHandler(t *testing.T) {
 	req := httptest.NewRequest("GET", "/api/songs", nil)
 
-	//headerをセット
+	// headerをセット.
 	req.Header.Set("Content-Type", "application/json")
 
-	//リクエストユーザー作成
+	// リクエストユーザー作成.
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 
-	//トークン作成
+	// トークン作成.
 	token, err := createToken(user)
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
@@ -102,7 +102,7 @@ func TestAllSongsHandler(t *testing.T) {
 
 	req.Header.Set("Authorization", jointToken)
 
-	// テスト用のレスポンス作成
+	// テスト用のレスポンス作成.
 	res := httptest.NewRecorder()
 
 	f := &SongController{SongInteractor: usecases.SongInteractor{
@@ -110,12 +110,12 @@ func TestAllSongsHandler(t *testing.T) {
 	}}
 	f.AllSongsHandler(res, req)
 
-	// レスポンスのステータスコードのテスト
+	// レスポンスのステータスコードのテスト.
 	if res.Code != http.StatusOK {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 
-	//レスポンスボディをDecode
+	// レスポンスボディをDecode.
 	var p []model.Song
 	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
 		t.Fatal("レスポンスボディのデコードに失敗しました。")
@@ -151,27 +151,27 @@ func TestAllSongsHandler(t *testing.T) {
 		UserID:         2,
 	}
 
-	//期待値(アサート用の構造体)
+	// 期待値(アサート用の構造体).
 	expected := []model.Song{song1, song2}
 
-	// レスポンスのボディが期待通りか確認
+	// レスポンスのボディが期待通りか確認.
 	if diff := cmp.Diff(p, expected); diff != "" {
 		t.Errorf("handler returned unexpected body: %v",
 			diff)
 	}
 }
 
-//idで指定した曲の情報を返すハンドラのテスト
+// idで指定した曲の情報を返すハンドラのテスト.
 func TestGetSongHandler(t *testing.T) {
 	req := httptest.NewRequest("GET", "/api/song/1", nil)
 
-	//headerをセット
+	// headerをセット.
 	req.Header.Set("Content-Type", "application/json")
 
-	//リクエストユーザー作成
+	// リクエストユーザー作成.
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 
-	//トークン作成
+	// トークン作成.
 	token, err := createToken(user)
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
@@ -181,33 +181,33 @@ func TestGetSongHandler(t *testing.T) {
 
 	req.Header.Set("Authorization", jointToken)
 
-	// テスト用のレスポンス作成
+	// テスト用のレスポンス作成.
 	res := httptest.NewRecorder()
 
-	//テスト用にコントローラ用意
+	// テスト用にコントローラ用意.
 	fakeSongController := &SongController{
 		SongInteractor: usecases.SongInteractor{
 			SongRepository: &FakeSongRepository{},
 		},
 	}
 
-	//テスト用にルーティング用意
+	// テスト用にルーティング用意.
 	r := mux.NewRouter()
 	r.Handle("/api/song/{id}", http.HandlerFunc(fakeSongController.GetSongHandler)).Methods("GET")
 	r.ServeHTTP(res, req)
 
-	// レスポンスのステータスコードのテスト
+	// レスポンスのステータスコードのテスト.
 	if res.Code != http.StatusOK {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 
-	//レスポンスボディをDecode
+	// レスポンスボディをDecode.
 	var p model.Song
 	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
 		t.Fatal("レスポンスボディのデコードに失敗しました。。")
 	}
 
-	//期待値(アサート用の構造体)
+	// 期待値(アサート用の構造体).
 	expected := model.Song{
 		ID:             1,
 		CreatedAt:      time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
@@ -223,16 +223,16 @@ func TestGetSongHandler(t *testing.T) {
 		UserID:         1,
 	}
 
-	// レスポンスのボディが期待通りか確認
+	// レスポンスのボディが期待通りか確認.
 	if diff := cmp.Diff(p, expected); diff != "" {
 		t.Errorf("handler returned unexpected body: %v",
 			diff)
 	}
 }
 
-//新しく曲を追加するハンドラのテスト
+// 新しく曲を追加するハンドラのテスト.
 func TestCreateSongHandler(t *testing.T) {
-	// テスト用の JSON ボディ作成
+	// テスト用の JSON ボディ作成.
 	b, err := json.Marshal(model.Song{Title: "song1", Artist: "artist1", MusicAge: 1980, Image: "", Video: "", Album: "", Description: "テスト曲です。", SpotifyTrackId: "", UserID: 1})
 	if err != nil {
 		t.Fatal(err)
@@ -240,13 +240,13 @@ func TestCreateSongHandler(t *testing.T) {
 
 	req := httptest.NewRequest("POST", "/api/song", bytes.NewBuffer(b))
 
-	//headerをセット
+	// headerをセット.
 	req.Header.Set("Content-Type", "application/json")
 
-	//リクエストユーザー作成
+	// リクエストユーザー作成.
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 
-	//トークン作成
+	// トークン作成.
 	token, err := createToken(user)
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
@@ -256,7 +256,7 @@ func TestCreateSongHandler(t *testing.T) {
 
 	req.Header.Set("Authorization", jointToken)
 
-	// テスト用のレスポンス作成
+	// テスト用のレスポンス作成.
 	res := httptest.NewRecorder()
 
 	f := &SongController{SongInteractor: usecases.SongInteractor{
@@ -264,13 +264,13 @@ func TestCreateSongHandler(t *testing.T) {
 	}}
 	f.CreateSongHandler(res, req)
 
-	// レスポンスのステータスコードのテスト(201)
+	// レスポンスのステータスコードのテスト(201).
 	if res.Code != http.StatusCreated {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 }
 
-//idで指定した曲を更新するハンドラのテスト
+// idで指定した曲を更新するハンドラのテスト.
 func TestUpdateSongHandler(t *testing.T) {
 	// テスト用の JSON ボディ作成
 	b, err := json.Marshal(model.Song{Title: "song2", Artist: "artist2", MusicAge: 2000, Image: "", Video: "", Album: "", Description: "テスト曲です。2", SpotifyTrackId: "", UserID: 1})
@@ -280,13 +280,13 @@ func TestUpdateSongHandler(t *testing.T) {
 
 	req := httptest.NewRequest("PUT", "/api/song/1", bytes.NewBuffer(b))
 
-	//headerをセット
+	// headerをセット.
 	req.Header.Set("Content-Type", "application/json")
 
-	//リクエストユーザー作成
+	// リクエストユーザー作成.
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 
-	//トークン作成
+	// トークン作成.
 	token, err := createToken(user)
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
@@ -296,35 +296,35 @@ func TestUpdateSongHandler(t *testing.T) {
 
 	req.Header.Set("Authorization", jointToken)
 
-	// テスト用のレスポンス作成
+	// テスト用のレスポンス作成.
 	res := httptest.NewRecorder()
 
-	//テスト用にコントローラ用意
+	// テスト用にコントローラ用意.
 	fakeSongController := &SongController{
 		SongInteractor: usecases.SongInteractor{
 			SongRepository: &FakeSongRepository{},
 		},
 	}
 
-	//テスト用にルーティング用意
+	// テスト用にルーティング用意.
 	r := mux.NewRouter()
 	r.Handle("/api/song/{id}", http.HandlerFunc(fakeSongController.UpdateSongHandler)).Methods("PUT")
 	r.ServeHTTP(res, req)
 
-	// レスポンスのステータスコードのテスト(204)
+	// レスポンスのステータスコードのテスト(204).
 	if res.Code != http.StatusNoContent {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 }
 
-//idで指定した曲を削除するハンドラのテスト
+// idで指定した曲を削除するハンドラのテスト.
 func TestDeleteSongHandler(t *testing.T) {
 	req := httptest.NewRequest("DELETE", "/api/song/1", nil)
 
-	//リクエストユーザー作成
+	// リクエストユーザー作成.
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 
-	//トークン作成
+	// トークン作成.
 	token, err := createToken(user)
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
@@ -334,22 +334,22 @@ func TestDeleteSongHandler(t *testing.T) {
 
 	req.Header.Set("Authorization", jointToken)
 
-	// テスト用のレスポンス作成
+	// テスト用のレスポンス作成.
 	res := httptest.NewRecorder()
 
-	//テスト用にコントローラ用意
+	// テスト用にコントローラ用意.
 	fakeSongController := &SongController{
 		SongInteractor: usecases.SongInteractor{
 			SongRepository: &FakeSongRepository{},
 		},
 	}
 
-	//テスト用にルーティング用意
+	// テスト用にルーティング用意.
 	r := mux.NewRouter()
 	r.Handle("/api/song/{id}", http.HandlerFunc(fakeSongController.DeleteSongHandler)).Methods("DELETE")
 	r.ServeHTTP(res, req)
 
-	// レスポンスのステータスコードのテスト(204)
+	// レスポンスのステータスコードのテスト(204).
 	if res.Code != http.StatusNoContent {
 		t.Errorf("invalid code: %d", res.Code)
 	}

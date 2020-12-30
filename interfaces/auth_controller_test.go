@@ -105,11 +105,11 @@ func TestLoginHandler(t *testing.T) {
 		t.Fatal("JSONへの変換に失敗しました")
 	}
 
-	//期待値(アサート用の構造体)
+	// 期待値(アサート用の構造体).
 	var expected model.JWT
 	expected.Token = token
 
-	// レスポンスのボディが期待通りか確認
+	// レスポンスのボディが期待通りか確認.
 	if diff := cmp.Diff(p, expected); diff != "" {
 		t.Errorf("handler returned unexpected body: %v",
 			diff)
