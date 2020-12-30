@@ -23,31 +23,33 @@ func (fbr *FakeBookmarkRepository) RemoveBookmark(userEmail string, songID int) 
 func TestBookmarkHandler(t *testing.T) {
 	req := httptest.NewRequest("POST", "/api/song/1/bookmark", nil)
 
-	//リクエストユーザー作成
+	// リクエストユーザー作成.
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
-	//トークン作成
+	// トークン作成.
 	token, err := createToken(user)
+
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
 	}
+
 	jointToken := "Bearer" + " " + token
 	req.Header.Set("Authorization", jointToken)
 
-	// テスト用のレスポンス作成
+	// テスト用のレスポンス作成.
 	res := httptest.NewRecorder()
 
-	//テスト用にコントローラ用意
+	// テスト用にコントローラ用意.
 	fakeBookmarkController := &BookmarkController{
 		BookmarkInteractor: usecases.BookmarkInteractor{
 			BookmarkRepository: &FakeBookmarkRepository{},
 		},
 	}
-	//テスト用にルーティング用意
+	// テスト用にルーティング用意.
 	r := mux.NewRouter()
 	r.Handle("/api/song/{id}/bookmark", http.HandlerFunc(fakeBookmarkController.BookmarkHandler)).Methods("POST")
 	r.ServeHTTP(res, req)
 
-	// レスポンスのステータスコードのテスト
+	// レスポンスのステータスコードのテスト.
 	if res.Code != http.StatusCreated {
 		t.Errorf("invalid code: %d", res.Code)
 	}
@@ -56,31 +58,33 @@ func TestBookmarkHandler(t *testing.T) {
 func TestRemoveBookmarkHandler(t *testing.T) {
 	req := httptest.NewRequest("POST", "/api/song/1/remove-bookmark", nil)
 
-	//リクエストユーザー作成
+	// リクエストユーザー作成.
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
-	//トークン作成
+	// トークン作成.
 	token, err := createToken(user)
+
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
 	}
+
 	jointToken := "Bearer" + " " + token
 	req.Header.Set("Authorization", jointToken)
 
-	// テスト用のレスポンス作成
+	// テスト用のレスポンス作成.
 	res := httptest.NewRecorder()
 
-	//テスト用にコントローラ用意
+	// テスト用にコントローラ用意.
 	fakeBookmarkController := &BookmarkController{
 		BookmarkInteractor: usecases.BookmarkInteractor{
 			BookmarkRepository: &FakeBookmarkRepository{},
 		},
 	}
-	//テスト用にルーティング用意
+	// テスト用にルーティング用意.
 	r := mux.NewRouter()
 	r.Handle("/api/song/{id}/remove-bookmark", http.HandlerFunc(fakeBookmarkController.RemoveBookmarkHandler)).Methods("POST")
 	r.ServeHTTP(res, req)
 
-	// レスポンスのステータスコードのテスト
+	// レスポンスのステータスコードのテスト.
 	if res.Code != http.StatusCreated {
 		t.Errorf("invalid code: %d", res.Code)
 	}

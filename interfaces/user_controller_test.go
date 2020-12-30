@@ -95,17 +95,17 @@ func (fur *FakeUserRepository) Update(userID int, p model.User) error {
 	return nil
 }
 
-//idで指定したユーザーの情報を返すハンドラのテスト
+// idで指定したユーザーの情報を返すハンドラのテスト.
 func TestGetUserHandler(t *testing.T) {
 	req := httptest.NewRequest("GET", "/api/user/1", nil)
 
-	//headerをセット
+	// headerをセット.
 	req.Header.Set("Content-Type", "application/json")
 
-	//リクエストユーザー作成
+	// リクエストユーザー作成.
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 
-	//トークン作成
+	// トークン作成.
 	token, err := createToken(user)
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
@@ -115,7 +115,7 @@ func TestGetUserHandler(t *testing.T) {
 
 	req.Header.Set("Authorization", jointToken)
 
-	// テスト用のレスポンス作成
+	// テスト用のレスポンス作成.
 	res := httptest.NewRecorder()
 
 	fakeUserController := &UserController{
@@ -133,13 +133,13 @@ func TestGetUserHandler(t *testing.T) {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 
-	//レスポンスボディをDecode
+	// レスポンスボディをDecode.
 	var p model.User
 	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
 		t.Fatal("レスポンスボディのデコードに失敗しました。")
 	}
 
-	//期待値(アサート用の構造体)
+	// 期待値(アサート用の構造体).
 	expected := model.User{
 		ID:               1,
 		CreatedAt:        time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
@@ -161,17 +161,17 @@ func TestGetUserHandler(t *testing.T) {
 	}
 }
 
-//リクエストユーザーの情報を返すハンドラのテスト
+// リクエストユーザーの情報を返すハンドラのテスト.
 func TestUserHandler(t *testing.T) {
 	req := httptest.NewRequest("GET", "/api/user", nil)
 
-	//headerをセット
+	// headerをセット.
 	req.Header.Set("Content-Type", "application/json")
 
-	//リクエストユーザー作成
+	// リクエストユーザー作成.
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 
-	//トークン作成
+	// トークン作成.
 	token, err := createToken(user)
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
@@ -181,7 +181,7 @@ func TestUserHandler(t *testing.T) {
 
 	req.Header.Set("Authorization", jointToken)
 
-	// テスト用のレスポンス作成
+	// テスト用のレスポンス作成.
 	res := httptest.NewRecorder()
 
 	f := &UserController{UserInteractor: usecases.UserInteractor{
@@ -189,18 +189,18 @@ func TestUserHandler(t *testing.T) {
 	}}
 	f.UserHandler(res, req)
 
-	// レスポンスのステータスコードのテスト
+	// レスポンスのステータスコードのテスト.
 	if res.Code != http.StatusOK {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 
-	//レスポンスボディをDecode
+	// レスポンスボディをDecode.
 	var p model.User
 	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
 		t.Fatal("レスポンスボディのデコードに失敗しました。")
 	}
 
-	//期待値(アサート用の構造体)
+	// 期待値(アサート用の構造体).
 	expected := model.User{
 		ID:               1,
 		CreatedAt:        time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
@@ -215,24 +215,24 @@ func TestUserHandler(t *testing.T) {
 		Comment:          "",
 	}
 
-	// レスポンスのボディが期待通りか確認
+	// レスポンスのボディが期待通りか確認.
 	if diff := cmp.Diff(p, expected); diff != "" {
 		t.Errorf("handler returned unexpected body: %v",
 			diff)
 	}
 }
 
-//全てのユーザーの情報を返すハンドラのテスト
+// 全てのユーザーの情報を返すハンドラのテスト.
 func TestAllUsersHandler(t *testing.T) {
 	req := httptest.NewRequest("GET", "/api/users", nil)
 
-	//headerをセット
+	// headerをセット.
 	req.Header.Set("Content-Type", "application/json")
 
-	//リクエストユーザー作成
+	// リクエストユーザー作成.
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 
-	//トークン作成
+	// トークン作成.
 	token, err := createToken(user)
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
@@ -242,7 +242,7 @@ func TestAllUsersHandler(t *testing.T) {
 
 	req.Header.Set("Authorization", jointToken)
 
-	// テスト用のレスポンス作成
+	// テスト用のレスポンス作成.
 	res := httptest.NewRecorder()
 
 	f := &UserController{UserInteractor: usecases.UserInteractor{
@@ -250,12 +250,12 @@ func TestAllUsersHandler(t *testing.T) {
 	}}
 	f.AllUsersHandler(res, req)
 
-	// レスポンスのステータスコードのテスト
+	// レスポンスのステータスコードのテスト.
 	if res.Code != http.StatusOK {
 		t.Errorf("invalid code: %d", res.Code)
 	}
 
-	//レスポンスボディをDecode
+	// レスポンスボディをDecode.
 	var p []model.User
 	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
 		t.Fatal("レスポンスボディのデコードに失敗しました。")
@@ -289,34 +289,34 @@ func TestAllUsersHandler(t *testing.T) {
 		Comment:          "",
 	}
 
-	//期待値(アサート用の構造体)
+	// 期待値(アサート用の構造体).
 	expected := []model.User{user1, user2}
 
-	// レスポンスのボディが期待通りか確認
+	// レスポンスのボディが期待通りか確認.
 	if diff := cmp.Diff(p, expected); diff != "" {
 		t.Errorf("handler returned unexpected body: %v",
 			diff)
 	}
 }
 
-//idで指定したユーザーの情報を更新するハンドラのテスト
+// idで指定したユーザーの情報を更新するハンドラのテスト.
 func TestUpdateUserHandler(t *testing.T) {
-	// テスト用の JSON ボディ作成
+	// テスト用の JSON ボディ作成.
 	b, err := json.Marshal(model.User{Email: "hoge@test.co.jp", Name: "hogehoge", Age: 0, Gender: 0, FavoriteMusicAge: 0, FavoriteArtist: "椎名林檎", Comment: "テストユーザーです。"})
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// テスト用のリクエスト作成
+	// テスト用のリクエスト作成.
 	req := httptest.NewRequest("PUT", "/api/user/2/update", bytes.NewBuffer(b))
 
-	//headerをセット
+	// headerをセット.
 	req.Header.Set("Content-Type", "application/json")
 
-	//リクエストユーザー作成
+	// リクエストユーザー作成.
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 
-	//トークン作成
+	// トークン作成.
 	token, err := createToken(user)
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
@@ -326,7 +326,7 @@ func TestUpdateUserHandler(t *testing.T) {
 
 	req.Header.Set("Authorization", jointToken)
 
-	// テスト用のレスポンス作成
+	// テスト用のレスポンス作成.
 	res := httptest.NewRecorder()
 
 	fakeUserController := &UserController{
@@ -339,7 +339,7 @@ func TestUpdateUserHandler(t *testing.T) {
 	r.Handle("/api/user/{id}/update", http.HandlerFunc(fakeUserController.UpdateUserHandler)).Methods("PUT")
 	r.ServeHTTP(res, req)
 
-	// レスポンスのステータスコードのテスト(204)
+	// レスポンスのステータスコードのテスト(204).
 	if res.Code != http.StatusNoContent {
 		t.Errorf("invalid code: %d", res.Code)
 	}

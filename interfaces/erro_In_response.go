@@ -3,16 +3,66 @@ package interfaces
 import (
 	"encoding/json"
 	"golang-songs/model"
+	"log"
 	"net/http"
 )
 
-// レスポンスにエラーを突っ込んで、返却するメソッド
-func errorInResponse(w http.ResponseWriter, status int, error model.Error) {
+// レスポンスにエラーメッセージを突っ込んで返却するメソッド.
+func errorInResponse(w http.ResponseWriter, status int, messageNumber int) {
 	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(error); err != nil {
-		var error model.Error
-		error.Message = "リクエストボディのデコードに失敗しました。"
-		errorInResponse(w, http.StatusInternalServerError, error)
+
+	v, ok := ErrorMessage[messageNumber]
+	if !ok {
+		log.Println("指定された番号に該当するエラーメッセージが見つかりません")
+
 		return
 	}
+
+	error2 := model.Error{Message: v}
+
+	if err := json.NewEncoder(w).Encode(error2); err != nil {
+		log.Println("構造体errorのJSONエンコードに失敗しました")
+
+		return
+	}
+}
+
+var ErrorMessage = map[int]string{
+	1:  "リクエストボディのデコードに失敗しました",
+	2:  "Emailは必須です",
+	3:  "パスワードは必須です",
+	4:  "パスワードの値が不正です",
+	5:  "アカウントの作成に失敗しました",
+	6:  "JSONへの変換に失敗しました",
+	7:  "ユーザー情報の取得に失敗しました",
+	8:  "無効なパスワードです",
+	9:  "トークンの作成に失敗しました",
+	10: "JWTトークンの取得に失敗しました",
+	11: "曲が見つかりません",
+	12: "曲一覧の取得に失敗しました",
+	13: "曲のidを取得できません",
+	14: "idのint型への型変換に失敗しました",
+	15: "該当する曲が見つかりません",
+	16: "曲情報の取得に失敗しました",
+	17: "リクエストボディのデコードに失敗しました",
+	18: "認証コードのパースに失敗しました",
+	19: "曲の投稿に失敗しました",
+	20: "曲の更新に失敗しました",
+	21: "曲の削除に失敗しました",
+	22: "ユーザーが見つかりません",
+	23: "ユーザー一覧の取得に失敗しました",
+	24: "該当するアカウントが見つかりません",
+	25: "ユーザー情報の取得に失敗しました",
+	26: "ユーザーのidを取得できません",
+	27: "ユーザー情報の更新に失敗しました",
+	28: "認証トークンの取得に失敗しました",
+	29: "bearerトークンの取得に失敗しました",
+	30: "ユーザーのフォローに失敗しました",
+	31: "ユーザーのフォロー解除に失敗しました",
+	32: "曲のお気に入り登録に失敗しました",
+	33: "曲のお気に入り解除に失敗しました",
+	34: "トークンの取得に失敗しました",
+	35: "URLの取得に失敗しました",
+	36: "アクセストークンの取得に失敗しました",
+	37: "トラックの取得に失敗しました",
 }
