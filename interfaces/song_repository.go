@@ -262,6 +262,10 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 		return nil, errors.New("型変換に失敗")
 	}
 
+	if err := sr.DB.Preload("Bookmarkers", "bookmarks.deleted_at is null").Find(&responseSong).Error; err != nil {
+		return nil, err
+	}
+
 	return &responseSong, nil
 }
 
