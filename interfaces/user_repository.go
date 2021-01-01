@@ -25,23 +25,7 @@ func (ur *UserRepository) GetUser(userEmail string) (*model.User, error) {
 		return nil, err
 	}
 
-	var bookmarkings []model.Song
-
-	if err := ur.DB.Preload("Bookmarkings").Find(&user).Error; err != nil {
-		return nil, err
-	}
-
-	if err := ur.DB.Model(&user).Related(&bookmarkings, "Bookmarikings").Error; err != nil {
-		return nil, err
-	}
-
-	var followings []model.User
-
-	if err := ur.DB.Preload("Followings").Find(&user).Error; err != nil {
-		return nil, err
-	}
-
-	if err := ur.DB.Model(&user).Related(&followings, "Followings").Error; err != nil {
+	if err := ur.DB.Preload("Bookmarkings", "bookmarks.deleted_at is null").Preload("Followings", "user_follows.deleted_at is null").Find(&user).Error; err != nil {
 		return nil, err
 	}
 
@@ -55,23 +39,7 @@ func (ur *UserRepository) FindByID(userID int) (*model.User, error) {
 		return nil, err
 	}
 
-	var bookmarkings []model.Song
-
-	if err := ur.DB.Preload("Bookmarkings").Find(&user).Error; err != nil {
-		return nil, err
-	}
-
-	if err := ur.DB.Model(&user).Related(&bookmarkings, "Bookmarikings").Error; err != nil {
-		return nil, err
-	}
-
-	var followings []model.User
-
-	if err := ur.DB.Preload("Followings").Find(&user).Error; err != nil {
-		return nil, err
-	}
-
-	if err := ur.DB.Model(&user).Related(&followings, "Followings").Error; err != nil {
+	if err := ur.DB.Preload("Bookmarkings", "bookmarks.deleted_at is null").Preload("Followings", "user_follows.deleted_at is null").Find(&user).Error; err != nil {
 		return nil, err
 	}
 
