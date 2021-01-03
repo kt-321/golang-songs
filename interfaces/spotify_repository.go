@@ -3,7 +3,6 @@ package interfaces
 import (
 	"encoding/json"
 	"golang-songs/model"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
@@ -44,14 +43,9 @@ func (spr *SpotifyRepository) GetTracks(token string, title string) (*model.Resp
 
 	defer resp.Body.Close()
 
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
 	var tracks model.Tracks
 
-	if err := json.Unmarshal(b, &tracks); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&tracks); err != nil {
 		return nil, err
 	}
 
