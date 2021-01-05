@@ -2,13 +2,11 @@ package interfaces
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"golang-songs/model"
 	"golang-songs/usecases"
 	"net/http"
 	"strconv"
-	"strings"
-
-	"github.com/gorilla/mux"
 
 	"github.com/jinzhu/gorm"
 )
@@ -54,23 +52,17 @@ func (uc *UserController) AllUsersHandler(w http.ResponseWriter, r *http.Request
 
 // リクエストユーザーの情報を返す.
 func (uc *UserController) UserHandler(w http.ResponseWriter, r *http.Request) {
-	headerHoge := r.Header.Get("Authorization")
-	bearerToken := strings.Split(headerHoge, " ")
-	authToken := bearerToken[1]
+	userEmail, errorSet := GetEmail(r)
 
-	parsedToken, err := Parse(authToken)
-
-	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 18)
+	if errorSet != nil {
+		errorInResponse(w, errorSet.StatusCode, errorSet.MessageNumber)
 
 		return
 	}
 
-	userEmail := parsedToken.Email
-
 	var user *model.User
 
-	user, err = uc.UserInteractor.User(userEmail)
+	user, err := uc.UserInteractor.User(userEmail)
 
 	if err != nil {
 		errorInResponse(w, http.StatusInternalServerError, 24)

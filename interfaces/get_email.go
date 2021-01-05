@@ -3,7 +3,9 @@ package interfaces
 import (
 	"fmt"
 	"golang-songs/model"
+	"net/http"
 	"os"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
@@ -36,4 +38,27 @@ func Parse(signedString string) (*model.Auth, error) {
 	}
 
 	return &model.Auth{Email: email}, nil
+}
+
+// リクエストヘッダーからユーザーのEmailを取得するメソッド
+func GetEmail(r *http.Request) (string, *model.ErrorSet) {
+	headerAuthorization := r.Header.Get("Authorization")
+
+	if len(headerAuthorization) == 0 {
+		return "", &model.ErrorSet{http.StatusInternalServerError, 28}
+	}
+
+	bearerToken := strings.Split(headerAuthorization, " ")
+
+	if len(bearerToken) < 2 {
+		return "", &model.ErrorSet{http.StatusUnauthorized, 29}
+	}
+
+	parsedToken, err := Parse(bearerToken[1])
+
+	if err != nil {
+		return "", &model.ErrorSet{http.StatusInternalServerError, 18}
+	}
+
+	return parsedToken.Email, nil
 }

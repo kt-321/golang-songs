@@ -1,13 +1,11 @@
 package interfaces
 
 import (
+	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
 	"golang-songs/usecases"
 	"net/http"
 	"strconv"
-	"strings"
-
-	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 )
 
 type UserFollowController struct {
@@ -26,6 +24,14 @@ func NewUserFollowController(DB *gorm.DB) *UserFollowController {
 
 // idで指定したユーザーをフォローする.
 func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *http.Request) {
+	requestUserEmail, errorSet := GetEmail(r)
+
+	if errorSet != nil {
+		errorInResponse(w, errorSet.StatusCode, errorSet.MessageNumber)
+
+		return
+	}
+
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 
@@ -42,34 +48,6 @@ func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *htt
 
 		return
 	}
-
-	headerAuthorization := r.Header.Get("Authorization")
-
-	if len(headerAuthorization) == 0 {
-		errorInResponse(w, http.StatusInternalServerError, 28)
-
-		return
-	}
-
-	bearerToken := strings.Split(headerAuthorization, " ")
-
-	if len(bearerToken) < 2 {
-		errorInResponse(w, http.StatusUnauthorized, 29)
-
-		return
-	}
-
-	authToken := bearerToken[1]
-
-	parsedToken, err := Parse(authToken)
-
-	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 18)
-
-		return
-	}
-
-	requestUserEmail := parsedToken.Email
 
 	if err := ufc.UserFollowInteractor.Follow(requestUserEmail, targetUserID); err != nil {
 		errorInResponse(w, http.StatusInternalServerError, 30)
@@ -83,6 +61,14 @@ func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *htt
 
 // idで指定したユーザーのフォローを解除する.
 func (ufc *UserFollowController) UnfollowUserHandler(w http.ResponseWriter, r *http.Request) {
+	requestUserEmail, errorSet := GetEmail(r)
+
+	if errorSet != nil {
+		errorInResponse(w, errorSet.StatusCode, errorSet.MessageNumber)
+
+		return
+	}
+
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 
@@ -99,33 +85,6 @@ func (ufc *UserFollowController) UnfollowUserHandler(w http.ResponseWriter, r *h
 
 		return
 	}
-
-	headerAuthorization := r.Header.Get("Authorization")
-
-	if len(headerAuthorization) == 0 {
-		errorInResponse(w, http.StatusInternalServerError, 28)
-
-		return
-	}
-
-	bearerToken := strings.Split(headerAuthorization, " ")
-
-	if len(bearerToken) < 2 {
-		errorInResponse(w, http.StatusUnauthorized, 29)
-
-		return
-	}
-
-	authToken := bearerToken[1]
-
-	parsedToken, err := Parse(authToken)
-	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 18)
-
-		return
-	}
-
-	requestUserEmail := parsedToken.Email
 
 	if err := ufc.UserFollowInteractor.Unfollow(requestUserEmail, targetUserID); err != nil {
 		errorInResponse(w, http.StatusInternalServerError, 31)

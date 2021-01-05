@@ -2,11 +2,9 @@ package interfaces
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"golang-songs/model"
 	"strconv"
-	"strings"
-
-	"github.com/gorilla/mux"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
@@ -98,6 +96,14 @@ func (sc *SongController) GetSongHandler(w http.ResponseWriter, r *http.Request)
 
 // 曲を追加.
 func (sc *SongController) CreateSongHandler(w http.ResponseWriter, r *http.Request) {
+	userEmail, errorSet := GetEmail(r)
+
+	if errorSet != nil {
+		errorInResponse(w, errorSet.StatusCode, errorSet.MessageNumber)
+
+		return
+	}
+
 	var d model.Song
 
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
@@ -105,19 +111,6 @@ func (sc *SongController) CreateSongHandler(w http.ResponseWriter, r *http.Reque
 
 		return
 	}
-
-	headerHoge := r.Header.Get("Authorization")
-	bearerToken := strings.Split(headerHoge, " ")
-	authToken := bearerToken[1]
-
-	parsedToken, err := Parse(authToken)
-	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 18)
-
-		return
-	}
-
-	userEmail := parsedToken.Email
 
 	if err := sc.SongInteractor.Store(userEmail, d); err != nil {
 		errorInResponse(w, http.StatusInternalServerError, 19)
@@ -131,6 +124,14 @@ func (sc *SongController) CreateSongHandler(w http.ResponseWriter, r *http.Reque
 
 // idで指定した曲の情報を更新.
 func (sc *SongController) UpdateSongHandler(w http.ResponseWriter, r *http.Request) {
+	userEmail, errorSet := GetEmail(r)
+
+	if errorSet != nil {
+		errorInResponse(w, errorSet.StatusCode, errorSet.MessageNumber)
+
+		return
+	}
+
 	var d model.Song
 
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
@@ -138,19 +139,6 @@ func (sc *SongController) UpdateSongHandler(w http.ResponseWriter, r *http.Reque
 
 		return
 	}
-
-	headerHoge := r.Header.Get("Authorization")
-	bearerToken := strings.Split(headerHoge, " ")
-	authToken := bearerToken[1]
-
-	parsedToken, err := Parse(authToken)
-	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 18)
-
-		return
-	}
-
-	userEmail := parsedToken.Email
 
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
