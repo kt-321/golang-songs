@@ -57,13 +57,14 @@ https://github.com/kt-321/nuxt-songs-go
 - 曲の削除
 - 曲をお気に入り登録する機能
 - Redis(ElastiCache)の利用（曲の取得・追加・更新・削除）
+- 多層キャッシュ構造
 - Clean Architectureを倣ったディレクトリ構成
 - テストコード
 - Github Actionsを用いた自動テスト
 - Github Actionsを用いて、ECR へのimageの自動push, ECS(Fargate)でのコンテナ作成
 
 ## 現在実装中
-- 多層キャッシュ構造
+- 業務での経験を活かし、インフラ周りをTerraformでコード管理
 - 画像をアップロードしてS3に保存する機能
 - CloudFrontの導入
 - Lambda・API Gatewayの導入
