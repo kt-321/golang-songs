@@ -27,7 +27,7 @@ func (bc *BookmarkController) BookmarkHandler(w http.ResponseWriter, r *http.Req
 	userEmail, errorSet := GetEmail(r)
 
 	if errorSet != nil {
-		errorInResponse(w, errorSet.StatusCode, errorSet.MessageNumber)
+		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
 
 		return
 	}
@@ -36,7 +36,7 @@ func (bc *BookmarkController) BookmarkHandler(w http.ResponseWriter, r *http.Req
 	id, ok := vars["id"]
 
 	if !ok {
-		errorInResponse(w, http.StatusBadRequest, 13)
+		errorInResponse(w, http.StatusBadRequest, GetSongIdError)
 
 		return
 	}
@@ -44,13 +44,13 @@ func (bc *BookmarkController) BookmarkHandler(w http.ResponseWriter, r *http.Req
 	songID, err := strconv.Atoi(id)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 14)
+		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
 
 		return
 	}
 
 	if err := bc.BookmarkInteractor.Bookmark(userEmail, songID); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 32)
+		errorInResponse(w, http.StatusInternalServerError, BookmarkSongError)
 
 		return
 	}
@@ -64,7 +64,7 @@ func (bc *BookmarkController) RemoveBookmarkHandler(w http.ResponseWriter, r *ht
 	userEmail, errorSet := GetEmail(r)
 
 	if errorSet != nil {
-		errorInResponse(w, errorSet.StatusCode, errorSet.MessageNumber)
+		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
 
 		return
 	}
@@ -73,7 +73,7 @@ func (bc *BookmarkController) RemoveBookmarkHandler(w http.ResponseWriter, r *ht
 	id, ok := vars["id"]
 
 	if !ok {
-		errorInResponse(w, http.StatusBadRequest, 13)
+		errorInResponse(w, http.StatusBadRequest, GetSongIdError)
 
 		return
 	}
@@ -81,13 +81,13 @@ func (bc *BookmarkController) RemoveBookmarkHandler(w http.ResponseWriter, r *ht
 	songID, err := strconv.Atoi(id)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 14)
+		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
 
 		return
 	}
 
 	if err := bc.BookmarkInteractor.RemoveBookmark(userEmail, songID); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 33)
+		errorInResponse(w, http.StatusInternalServerError, RemoveBookmarkError)
 
 		return
 	}

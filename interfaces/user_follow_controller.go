@@ -27,7 +27,7 @@ func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *htt
 	requestUserEmail, errorSet := GetEmail(r)
 
 	if errorSet != nil {
-		errorInResponse(w, errorSet.StatusCode, errorSet.MessageNumber)
+		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
 
 		return
 	}
@@ -36,7 +36,7 @@ func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *htt
 	id, ok := vars["id"]
 
 	if !ok {
-		errorInResponse(w, http.StatusBadRequest, 26)
+		errorInResponse(w, http.StatusBadRequest, GetUserIdError)
 
 		return
 	}
@@ -44,13 +44,13 @@ func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *htt
 	targetUserID, err := strconv.Atoi(id)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 14)
+		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
 
 		return
 	}
 
 	if err := ufc.UserFollowInteractor.Follow(requestUserEmail, targetUserID); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 30)
+		errorInResponse(w, http.StatusInternalServerError, FollowUserError)
 
 		return
 	}
@@ -64,7 +64,7 @@ func (ufc *UserFollowController) UnfollowUserHandler(w http.ResponseWriter, r *h
 	requestUserEmail, errorSet := GetEmail(r)
 
 	if errorSet != nil {
-		errorInResponse(w, errorSet.StatusCode, errorSet.MessageNumber)
+		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
 
 		return
 	}
@@ -73,7 +73,7 @@ func (ufc *UserFollowController) UnfollowUserHandler(w http.ResponseWriter, r *h
 	id, ok := vars["id"]
 
 	if !ok {
-		errorInResponse(w, http.StatusBadRequest, 26)
+		errorInResponse(w, http.StatusBadRequest, GetUserIdError)
 
 		return
 	}
@@ -81,13 +81,13 @@ func (ufc *UserFollowController) UnfollowUserHandler(w http.ResponseWriter, r *h
 	targetUserID, err := strconv.Atoi(id)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 14)
+		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
 
 		return
 	}
 
 	if err := ufc.UserFollowInteractor.Unfollow(requestUserEmail, targetUserID); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 31)
+		errorInResponse(w, http.StatusInternalServerError, UnfollowUserError)
 
 		return
 	}

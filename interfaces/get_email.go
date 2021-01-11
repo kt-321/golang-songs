@@ -45,19 +45,19 @@ func GetEmail(r *http.Request) (string, *model.ErrorSet) {
 	headerAuthorization := r.Header.Get("Authorization")
 
 	if len(headerAuthorization) == 0 {
-		return "", &model.ErrorSet{http.StatusInternalServerError, 28}
+		return "", &model.ErrorSet{http.StatusInternalServerError, GetAuthenticationTokenError}
 	}
 
 	bearerToken := strings.Split(headerAuthorization, " ")
 
 	if len(bearerToken) < 2 {
-		return "", &model.ErrorSet{http.StatusUnauthorized, 29}
+		return "", &model.ErrorSet{http.StatusUnauthorized, GetBearerTokenError}
 	}
 
 	parsedToken, err := Parse(bearerToken[1])
 
 	if err != nil {
-		return "", &model.ErrorSet{http.StatusInternalServerError, 18}
+		return "", &model.ErrorSet{http.StatusInternalServerError, ParseAuthenticationCodeError}
 	}
 
 	return parsedToken.Email, nil

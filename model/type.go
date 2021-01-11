@@ -23,6 +23,7 @@ type Code struct {
 }
 
 type ErrorSet struct {
-	StatusCode    int
-	MessageNumber int
+	StatusCode int
+	//MessageNumber int
+	Message string
 }
