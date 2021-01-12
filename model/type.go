@@ -21,3 +21,9 @@ type Form struct {
 type Code struct {
 	Code string
 }
+
+type ErrorSet struct {
+	StatusCode int
+	//MessageNumber int
+	Message string
+}
