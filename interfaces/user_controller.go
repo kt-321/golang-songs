@@ -2,13 +2,11 @@ package interfaces
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"golang-songs/model"
 	"golang-songs/usecases"
 	"net/http"
 	"strconv"
-	"strings"
-
-	"github.com/gorilla/mux"
 
 	"github.com/jinzhu/gorm"
 )
@@ -32,7 +30,7 @@ func (uc *UserController) AllUsersHandler(w http.ResponseWriter, r *http.Request
 	allUsers, err := uc.UserInteractor.Index()
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 22)
+		errorInResponse(w, http.StatusInternalServerError, GetUserError)
 
 		return
 	}
@@ -40,13 +38,13 @@ func (uc *UserController) AllUsersHandler(w http.ResponseWriter, r *http.Request
 	v, err := json.Marshal(allUsers)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 23)
+		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 23)
+		errorInResponse(w, http.StatusInternalServerError, GetUsersListError)
 
 		return
 	}
@@ -54,39 +52,33 @@ func (uc *UserController) AllUsersHandler(w http.ResponseWriter, r *http.Request
 
 // リクエストユーザーの情報を返す.
 func (uc *UserController) UserHandler(w http.ResponseWriter, r *http.Request) {
-	headerHoge := r.Header.Get("Authorization")
-	bearerToken := strings.Split(headerHoge, " ")
-	authToken := bearerToken[1]
+	userEmail, errorSet := GetEmail(r)
 
-	parsedToken, err := Parse(authToken)
-
-	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 18)
+	if errorSet != nil {
+		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
 
 		return
 	}
 
-	userEmail := parsedToken.Email
-
 	var user *model.User
 
-	user, err = uc.UserInteractor.User(userEmail)
+	user, err := uc.UserInteractor.User(userEmail)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 24)
+		errorInResponse(w, http.StatusInternalServerError, GetAccountError)
 
 		return
 	}
 
 	v, err := json.Marshal(user)
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 6)
+		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 25)
+		errorInResponse(w, http.StatusInternalServerError, GetUserDetailError)
 
 		return
 	}
@@ -98,7 +90,7 @@ func (uc *UserController) GetUserHandler(w http.ResponseWriter, r *http.Request)
 	id, ok := vars["id"]
 
 	if !ok {
-		errorInResponse(w, http.StatusBadRequest, 26)
+		errorInResponse(w, http.StatusBadRequest, GetUserIdError)
 
 		return
 	}
@@ -106,7 +98,7 @@ func (uc *UserController) GetUserHandler(w http.ResponseWriter, r *http.Request)
 	userID, err := strconv.Atoi(id)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 14)
+		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
 
 		return
 	}
@@ -116,7 +108,7 @@ func (uc *UserController) GetUserHandler(w http.ResponseWriter, r *http.Request)
 	user, err = uc.UserInteractor.Show(userID)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 24)
+		errorInResponse(w, http.StatusInternalServerError, GetAccountError)
 
 		return
 	}
@@ -124,13 +116,13 @@ func (uc *UserController) GetUserHandler(w http.ResponseWriter, r *http.Request)
 	v, err := json.Marshal(user)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 6)
+		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 25)
+		errorInResponse(w, http.StatusInternalServerError, GetUserDetailError)
 
 		return
 	}
@@ -142,7 +134,7 @@ func (uc *UserController) UpdateUserHandler(w http.ResponseWriter, r *http.Reque
 	id, ok := vars["id"]
 
 	if !ok {
-		errorInResponse(w, http.StatusBadRequest, 26)
+		errorInResponse(w, http.StatusBadRequest, GetUserIdError)
 
 		return
 	}
@@ -150,7 +142,7 @@ func (uc *UserController) UpdateUserHandler(w http.ResponseWriter, r *http.Reque
 	userID, err := strconv.Atoi(id)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 14)
+		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
 
 		return
 	}
@@ -158,13 +150,13 @@ func (uc *UserController) UpdateUserHandler(w http.ResponseWriter, r *http.Reque
 	var d model.User
 
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 17)
+		errorInResponse(w, http.StatusInternalServerError, DecodeError)
 
 		return
 	}
 
 	if err := uc.UserInteractor.Update(userID, d); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 27)
+		errorInResponse(w, http.StatusInternalServerError, UpdateUserError)
 
 		return
 	}

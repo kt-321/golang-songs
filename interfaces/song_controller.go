@@ -2,11 +2,9 @@ package interfaces
 
 import (
 	"encoding/json"
+	"github.com/gorilla/mux"
 	"golang-songs/model"
 	"strconv"
-	"strings"
-
-	"github.com/gorilla/mux"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
@@ -35,7 +33,7 @@ func NewSongController(DB *gorm.DB, Redis redis.Conn, SidecarRedis redis.Conn) *
 func (sc *SongController) AllSongsHandler(w http.ResponseWriter, r *http.Request) {
 	songs, err := sc.SongInteractor.Index()
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 11)
+		errorInResponse(w, http.StatusInternalServerError, GetSongError)
 
 		return
 	}
@@ -43,13 +41,13 @@ func (sc *SongController) AllSongsHandler(w http.ResponseWriter, r *http.Request
 	v, err := json.Marshal(songs)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 12)
+		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 12)
+		errorInResponse(w, http.StatusInternalServerError, GetSongsListError)
 
 		return
 	}
@@ -61,14 +59,14 @@ func (sc *SongController) GetSongHandler(w http.ResponseWriter, r *http.Request)
 	id, ok := vars["id"]
 
 	if !ok {
-		errorInResponse(w, http.StatusBadRequest, 13)
+		errorInResponse(w, http.StatusBadRequest, GetSongIdError)
 
 		return
 	}
 
 	songID, err := strconv.Atoi(id)
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 14)
+		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
 
 		return
 	}
@@ -77,20 +75,20 @@ func (sc *SongController) GetSongHandler(w http.ResponseWriter, r *http.Request)
 
 	song, err = sc.SongInteractor.Show(songID)
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 15)
+		errorInResponse(w, http.StatusInternalServerError, GetSongError)
 
 		return
 	}
 
 	v, err := json.Marshal(song)
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 6)
+		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 16)
+		errorInResponse(w, http.StatusInternalServerError, GetSongDetailError)
 
 		return
 	}
@@ -98,29 +96,24 @@ func (sc *SongController) GetSongHandler(w http.ResponseWriter, r *http.Request)
 
 // 曲を追加.
 func (sc *SongController) CreateSongHandler(w http.ResponseWriter, r *http.Request) {
+	userEmail, errorSet := GetEmail(r)
+
+	if errorSet != nil {
+		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
+
+		return
+	}
+
 	var d model.Song
 
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 17)
+		errorInResponse(w, http.StatusInternalServerError, DecodeError)
 
 		return
 	}
-
-	headerHoge := r.Header.Get("Authorization")
-	bearerToken := strings.Split(headerHoge, " ")
-	authToken := bearerToken[1]
-
-	parsedToken, err := Parse(authToken)
-	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 18)
-
-		return
-	}
-
-	userEmail := parsedToken.Email
 
 	if err := sc.SongInteractor.Store(userEmail, d); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 19)
+		errorInResponse(w, http.StatusInternalServerError, PostSongError)
 
 		return
 	}
@@ -131,45 +124,40 @@ func (sc *SongController) CreateSongHandler(w http.ResponseWriter, r *http.Reque
 
 // idで指定した曲の情報を更新.
 func (sc *SongController) UpdateSongHandler(w http.ResponseWriter, r *http.Request) {
+	userEmail, errorSet := GetEmail(r)
+
+	if errorSet != nil {
+		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
+
+		return
+	}
+
 	var d model.Song
 
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 17)
+		errorInResponse(w, http.StatusInternalServerError, DecodeError)
 
 		return
 	}
-
-	headerHoge := r.Header.Get("Authorization")
-	bearerToken := strings.Split(headerHoge, " ")
-	authToken := bearerToken[1]
-
-	parsedToken, err := Parse(authToken)
-	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 18)
-
-		return
-	}
-
-	userEmail := parsedToken.Email
 
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 
 	if !ok {
-		errorInResponse(w, http.StatusBadRequest, 13)
+		errorInResponse(w, http.StatusBadRequest, GetSongIdError)
 
 		return
 	}
 
 	songID, err := strconv.Atoi(id)
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 14)
+		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
 
 		return
 	}
 
 	if err := sc.SongInteractor.Update(userEmail, songID, d); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 20)
+		errorInResponse(w, http.StatusInternalServerError, UpdateSongError)
 
 		return
 	}
@@ -184,20 +172,20 @@ func (sc *SongController) DeleteSongHandler(w http.ResponseWriter, r *http.Reque
 	id, ok := vars["id"]
 
 	if !ok {
-		errorInResponse(w, http.StatusBadRequest, 13)
+		errorInResponse(w, http.StatusBadRequest, GetSongIdError)
 
 		return
 	}
 
 	songID, err := strconv.Atoi(id)
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 14)
+		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
 
 		return
 	}
 
 	if err := sc.SongInteractor.Destroy(songID); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 21)
+		errorInResponse(w, http.StatusInternalServerError, DeleteSongError)
 
 		return
 	}

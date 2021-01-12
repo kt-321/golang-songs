@@ -3,11 +3,10 @@ package interfaces
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"golang-songs/model"
 	"net/http"
 	"os"
-
-	"github.com/dgrijalva/jwt-go"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/jinzhu/gorm"
@@ -34,7 +33,7 @@ func NewAuthController(DB *gorm.DB) *AuthController {
 func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	var d model.Form
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 1)
+		errorInResponse(w, http.StatusInternalServerError, DecodeError)
 
 		return
 	}
@@ -43,20 +42,20 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 	password := d.Password
 
 	if email == "" {
-		errorInResponse(w, http.StatusBadRequest, 2)
+		errorInResponse(w, http.StatusBadRequest, RequiredEmailError)
 
 		return
 	}
 
 	if password == "" {
-		errorInResponse(w, http.StatusBadRequest, 3)
+		errorInResponse(w, http.StatusBadRequest, RequiredPasswordError)
 
 		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
-		errorInResponse(w, http.StatusBadRequest, 4)
+		errorInResponse(w, http.StatusBadRequest, InvalidPasswordError)
 
 		return
 	}
@@ -67,7 +66,7 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 
 	err = ac.AuthInteractor.SignUp(d)
 	if err != nil {
-		errorInResponse(w, http.StatusUnauthorized, 5)
+		errorInResponse(w, http.StatusUnauthorized, CreateAccountError)
 
 		return
 	}
@@ -78,13 +77,13 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 
 	v, err := json.Marshal(user)
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 6)
+		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 7)
+		errorInResponse(w, http.StatusInternalServerError, GetUserDetailError)
 
 		return
 	}
@@ -94,7 +93,7 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var d model.Form
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 1)
+		errorInResponse(w, http.StatusInternalServerError, DecodeError)
 
 		return
 	}
@@ -103,22 +102,20 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	password := d.Password
 
 	if email == "" {
-		errorInResponse(w, http.StatusBadRequest, 2)
+		errorInResponse(w, http.StatusBadRequest, RequiredEmailError)
 
 		return
 	}
 
 	if password == "" {
-		errorInResponse(w, http.StatusBadRequest, 3)
+		errorInResponse(w, http.StatusBadRequest, RequiredPasswordError)
 
 		return
 	}
 
-	user := model.User{Email: email, Password: password}
-
 	userData, err := ac.AuthInteractor.Login(d)
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 8)
+		errorInResponse(w, http.StatusInternalServerError, GetUserDetailError)
 
 		return
 	}
@@ -127,15 +124,17 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = bcrypt.CompareHashAndPassword([]byte(passwordData), []byte(password))
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 8)
+		errorInResponse(w, http.StatusInternalServerError, InvalidPasswordError)
 
 		return
 	}
 
+	user := model.User{Email: email, Password: password}
+
 	// トークン作成
 	token, err := createToken(user)
 	if err != nil {
-		errorInResponse(w, http.StatusUnauthorized, 9)
+		errorInResponse(w, http.StatusUnauthorized, CreateTokenError)
 
 		return
 	}
@@ -148,13 +147,13 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	v, err := json.Marshal(jwt)
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 6)
+		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 10)
+		errorInResponse(w, http.StatusInternalServerError, GetJwtTokenError)
 
 		return
 	}

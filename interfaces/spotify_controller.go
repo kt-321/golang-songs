@@ -51,7 +51,7 @@ func (spc *SpotifyController) GetRedirectURLHandler(w http.ResponseWriter, r *ht
 	encoder.SetEscapeHTML(false)
 
 	if err := encoder.Encode(url); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 6)
+		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 
 		return
 	}
@@ -62,7 +62,7 @@ func (spc *SpotifyController) GetTokenHandler(w http.ResponseWriter, r *http.Req
 	var d model.Code
 
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 17)
+		errorInResponse(w, http.StatusInternalServerError, DecodeError)
 
 		return
 	}
@@ -80,7 +80,7 @@ func (spc *SpotifyController) GetTokenHandler(w http.ResponseWriter, r *http.Req
 	token, err := config.Exchange(context.TODO(), d.Code)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 34)
+		errorInResponse(w, http.StatusInternalServerError, GetSpotifyTokenError)
 
 		return
 	}
@@ -90,13 +90,13 @@ func (spc *SpotifyController) GetTokenHandler(w http.ResponseWriter, r *http.Req
 	v, err := json.Marshal(token.AccessToken)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 6)
+		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 35)
+		errorInResponse(w, http.StatusInternalServerError, GetUrlError)
 
 		return
 	}
@@ -107,13 +107,13 @@ func (spc *SpotifyController) GetTracksHandler(w http.ResponseWriter, r *http.Re
 	var d model.SearchTitle
 
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 17)
+		errorInResponse(w, http.StatusInternalServerError, DecodeError)
 
 		return
 	}
 
 	if d.Token == "" {
-		errorInResponse(w, http.StatusInternalServerError, 36)
+		errorInResponse(w, http.StatusInternalServerError, GetSpotifyTokenFromReqBodyError)
 
 		return
 	}
@@ -122,7 +122,7 @@ func (spc *SpotifyController) GetTracksHandler(w http.ResponseWriter, r *http.Re
 	tracks, err := spc.SpotifyInteractor.GetTracks(d.Token, d.Title)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 37)
+		errorInResponse(w, http.StatusInternalServerError, GetTraksError)
 
 		return
 	}
@@ -132,13 +132,13 @@ func (spc *SpotifyController) GetTracksHandler(w http.ResponseWriter, r *http.Re
 	v, err := json.Marshal(tracks)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 6)
+		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, 37)
+		errorInResponse(w, http.StatusInternalServerError, GetTraksError)
 
 		return
 	}
