@@ -3,10 +3,11 @@ package interfaces
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
 	"golang-songs/model"
 	"net/http"
 	"os"
+
+	"github.com/dgrijalva/jwt-go"
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/jinzhu/gorm"
@@ -38,22 +39,22 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	email := d.Email
-	password := d.Password
-
-	if email == "" {
+	if d.Email == "" {
 		errorInResponse(w, http.StatusBadRequest, RequiredEmailError)
 
 		return
 	}
 
-	if password == "" {
+	if d.Password == "" {
 		errorInResponse(w, http.StatusBadRequest, RequiredPasswordError)
 
 		return
 	}
 
+	email, password := d.Email, d.Password
+
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+
 	if err != nil {
 		errorInResponse(w, http.StatusBadRequest, InvalidPasswordError)
 
@@ -65,6 +66,7 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 	d.Password = string(hash)
 
 	err = ac.AuthInteractor.SignUp(d)
+
 	if err != nil {
 		errorInResponse(w, http.StatusUnauthorized, CreateAccountError)
 
@@ -76,6 +78,7 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Content-Type", "application/json")
 
 	v, err := json.Marshal(user)
+
 	if err != nil {
 		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 
@@ -92,28 +95,29 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 // ログイン.
 func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var d model.Form
+
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
 		errorInResponse(w, http.StatusInternalServerError, DecodeError)
 
 		return
 	}
 
-	email := d.Email
-	password := d.Password
-
-	if email == "" {
+	if d.Email == "" {
 		errorInResponse(w, http.StatusBadRequest, RequiredEmailError)
 
 		return
 	}
 
-	if password == "" {
+	if d.Password == "" {
 		errorInResponse(w, http.StatusBadRequest, RequiredPasswordError)
 
 		return
 	}
 
+	email, password := d.Email, d.Password
+
 	userData, err := ac.AuthInteractor.Login(d)
+
 	if err != nil {
 		errorInResponse(w, http.StatusInternalServerError, GetUserDetailError)
 
@@ -123,6 +127,7 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	passwordData := userData.Password
 
 	err = bcrypt.CompareHashAndPassword([]byte(passwordData), []byte(password))
+
 	if err != nil {
 		errorInResponse(w, http.StatusInternalServerError, InvalidPasswordError)
 
@@ -133,6 +138,7 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	// トークン作成
 	token, err := createToken(user)
+
 	if err != nil {
 		errorInResponse(w, http.StatusUnauthorized, CreateTokenError)
 
@@ -146,6 +152,7 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	jwt.Token = token
 
 	v, err := json.Marshal(jwt)
+
 	if err != nil {
 		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 
