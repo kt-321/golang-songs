@@ -66,26 +66,18 @@ func GetEmail(r *http.Request) (string, *model.ErrorSet) {
 	return parsedToken.Email, nil
 }
 
-//func GetIdFromRequest(r *http.Request) (int, error){
 // パスパラメータからターゲットとなるidの値を取得するメソッド
 func GetId(r *http.Request) (int, *model.ErrorSet) {
 	vars := mux.Vars(r)
 	id, ok := vars["id"]
 
 	if !ok {
-		//errorInResponse(w, http.StatusBadRequest, GetSongIdError)
-
-		//return
-
 		return 0, &model.ErrorSet{http.StatusBadRequest, GetIdError}
 	}
 
 	parsedId, err := strconv.Atoi(id)
+
 	if err != nil {
-		//errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
-
-		//return
-
 		return 0, &model.ErrorSet{http.StatusInternalServerError, ConvertIdToIntError}
 	}
 
@@ -97,19 +89,12 @@ func GetEmailAndId(r *http.Request) (string, int, *model.ErrorSet) {
 	userEmail, errorSet := GetEmail(r)
 
 	if errorSet != nil {
-		//errorInResponse(w, errorSet.StatusCode, errorSet.Message)
-		//
-		//return
-
 		return "", 0, errorSet
 	}
 
 	id, errorSet := GetId(r)
-	if errorSet != nil {
-		//errorInResponse(w, errorSet.StatusCode, errorSet.Message)
-		//
-		//return
 
+	if errorSet != nil {
 		return "", 0, errorSet
 	}
 
