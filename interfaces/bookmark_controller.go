@@ -1,11 +1,10 @@
 package interfaces
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 	"golang-songs/usecases"
 	"net/http"
-	"strconv"
+
+	"github.com/jinzhu/gorm"
 )
 
 type BookmarkController struct {
@@ -24,27 +23,11 @@ func NewBookmarkController(DB *gorm.DB) *BookmarkController {
 
 // 曲をお気に入りに登録.
 func (bc *BookmarkController) BookmarkHandler(w http.ResponseWriter, r *http.Request) {
-	userEmail, errorSet := GetEmail(r)
+	// リクエストユーザーのメアドと対象の曲idを取得.
+	userEmail, songID, errorSet := GetEmailAndId(r)
 
 	if errorSet != nil {
 		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
-
-		return
-	}
-
-	vars := mux.Vars(r)
-	id, ok := vars["id"]
-
-	if !ok {
-		errorInResponse(w, http.StatusBadRequest, GetSongIdError)
-
-		return
-	}
-
-	songID, err := strconv.Atoi(id)
-
-	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
 
 		return
 	}
@@ -61,27 +44,11 @@ func (bc *BookmarkController) BookmarkHandler(w http.ResponseWriter, r *http.Req
 
 // 曲をお気に入り登録から解除.
 func (bc *BookmarkController) RemoveBookmarkHandler(w http.ResponseWriter, r *http.Request) {
-	userEmail, errorSet := GetEmail(r)
+	// リクエストユーザーのメアドと対象の曲idを取得.
+	userEmail, songID, errorSet := GetEmailAndId(r)
 
 	if errorSet != nil {
 		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
-
-		return
-	}
-
-	vars := mux.Vars(r)
-	id, ok := vars["id"]
-
-	if !ok {
-		errorInResponse(w, http.StatusBadRequest, GetSongIdError)
-
-		return
-	}
-
-	songID, err := strconv.Atoi(id)
-
-	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
 
 		return
 	}

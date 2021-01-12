@@ -2,11 +2,9 @@ package interfaces
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"golang-songs/model"
 	"golang-songs/usecases"
 	"net/http"
-	"strconv"
 
 	"github.com/jinzhu/gorm"
 )
@@ -52,6 +50,7 @@ func (uc *UserController) AllUsersHandler(w http.ResponseWriter, r *http.Request
 
 // リクエストユーザーの情報を返す.
 func (uc *UserController) UserHandler(w http.ResponseWriter, r *http.Request) {
+	// リクエストユーザーのメアドを取得.
 	userEmail, errorSet := GetEmail(r)
 
 	if errorSet != nil {
@@ -71,6 +70,7 @@ func (uc *UserController) UserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	v, err := json.Marshal(user)
+
 	if err != nil {
 		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 
@@ -86,26 +86,16 @@ func (uc *UserController) UserHandler(w http.ResponseWriter, r *http.Request) {
 
 // idで指定したユーザーの情報を返す.
 func (uc *UserController) GetUserHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, ok := vars["id"]
+	// 対象のユーザーidを取得.
+	userID, errorSet := GetId(r)
 
-	if !ok {
-		errorInResponse(w, http.StatusBadRequest, GetUserIdError)
-
-		return
-	}
-
-	userID, err := strconv.Atoi(id)
-
-	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
+	if errorSet != nil {
+		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
 
 		return
 	}
 
-	var user *model.User
-
-	user, err = uc.UserInteractor.Show(userID)
+	user, err := uc.UserInteractor.Show(userID)
 
 	if err != nil {
 		errorInResponse(w, http.StatusInternalServerError, GetAccountError)
@@ -130,19 +120,11 @@ func (uc *UserController) GetUserHandler(w http.ResponseWriter, r *http.Request)
 
 // idで指定したユーザーの情報を更新する.
 func (uc *UserController) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, ok := vars["id"]
+	// 対象のユーザーidを取得.
+	userID, errorSet := GetId(r)
 
-	if !ok {
-		errorInResponse(w, http.StatusBadRequest, GetUserIdError)
-
-		return
-	}
-
-	userID, err := strconv.Atoi(id)
-
-	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
+	if errorSet != nil {
+		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
 
 		return
 	}

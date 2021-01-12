@@ -2,9 +2,7 @@ package interfaces
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"golang-songs/model"
-	"strconv"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
@@ -55,25 +53,17 @@ func (sc *SongController) AllSongsHandler(w http.ResponseWriter, r *http.Request
 
 // idで指定した曲を返す.
 func (sc *SongController) GetSongHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, ok := vars["id"]
+	// 対象の曲idを取得.
+	songID, errorSet := GetId(r)
 
-	if !ok {
-		errorInResponse(w, http.StatusBadRequest, GetSongIdError)
-
-		return
-	}
-
-	songID, err := strconv.Atoi(id)
-	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
+	if errorSet != nil {
+		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
 
 		return
 	}
 
-	var song *model.Song
+	song, err := sc.SongInteractor.Show(songID)
 
-	song, err = sc.SongInteractor.Show(songID)
 	if err != nil {
 		errorInResponse(w, http.StatusInternalServerError, GetSongError)
 
@@ -81,6 +71,7 @@ func (sc *SongController) GetSongHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	v, err := json.Marshal(song)
+
 	if err != nil {
 		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 
@@ -96,6 +87,7 @@ func (sc *SongController) GetSongHandler(w http.ResponseWriter, r *http.Request)
 
 // 曲を追加.
 func (sc *SongController) CreateSongHandler(w http.ResponseWriter, r *http.Request) {
+	// リクエストユーザーのメアドを取得.
 	userEmail, errorSet := GetEmail(r)
 
 	if errorSet != nil {
@@ -124,7 +116,8 @@ func (sc *SongController) CreateSongHandler(w http.ResponseWriter, r *http.Reque
 
 // idで指定した曲の情報を更新.
 func (sc *SongController) UpdateSongHandler(w http.ResponseWriter, r *http.Request) {
-	userEmail, errorSet := GetEmail(r)
+	// リクエストユーザーのメアドと対象の曲idを取得.
+	userEmail, songID, errorSet := GetEmailAndId(r)
 
 	if errorSet != nil {
 		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
@@ -136,22 +129,6 @@ func (sc *SongController) UpdateSongHandler(w http.ResponseWriter, r *http.Reque
 
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
 		errorInResponse(w, http.StatusInternalServerError, DecodeError)
-
-		return
-	}
-
-	vars := mux.Vars(r)
-	id, ok := vars["id"]
-
-	if !ok {
-		errorInResponse(w, http.StatusBadRequest, GetSongIdError)
-
-		return
-	}
-
-	songID, err := strconv.Atoi(id)
-	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
 
 		return
 	}
@@ -168,18 +145,11 @@ func (sc *SongController) UpdateSongHandler(w http.ResponseWriter, r *http.Reque
 
 // idで指定した曲を削除.
 func (sc *SongController) DeleteSongHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id, ok := vars["id"]
+	// 対象の曲idを取得.
+	songID, errorSet := GetId(r)
 
-	if !ok {
-		errorInResponse(w, http.StatusBadRequest, GetSongIdError)
-
-		return
-	}
-
-	songID, err := strconv.Atoi(id)
-	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
+	if errorSet != nil {
+		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
 
 		return
 	}
