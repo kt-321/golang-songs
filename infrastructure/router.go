@@ -3,13 +3,14 @@ package infrastructure
 import (
 	"context"
 	"fmt"
-	stats_api "github.com/fukata/golang-stats-api-handler"
 	"golang-songs/interfaces"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	stats_api "github.com/fukata/golang-stats-api-handler"
 
 	"github.com/jinzhu/gorm"
 	"golang.org/x/sync/errgroup"
@@ -31,33 +32,35 @@ func Dispatch(DB *gorm.DB, Redis redis.Conn, SidecarRedis redis.Conn) {
 	spotifyController := interfaces.NewSpotifyController(DB)
 
 	r := mux.NewRouter()
+	s := r.PathPrefix("/api").Subrouter()
 
-	r.HandleFunc("/api/signup", authController.SignUpHandler).Methods("POST")
-	r.HandleFunc("/api/login", authController.LoginHandler).Methods("POST")
+	s.HandleFunc("/signup", authController.SignUpHandler).Methods("POST")
+	s.HandleFunc("/login", authController.LoginHandler).Methods("POST")
 
-	r.Handle("/api/user", JwtMiddleware.Handler(http.HandlerFunc(userController.UserHandler))).Methods("GET")
-	r.Handle("/api/users", JwtMiddleware.Handler(http.HandlerFunc(userController.AllUsersHandler))).Methods("GET")
-	r.Handle("/api/user/{id}", JwtMiddleware.Handler(http.HandlerFunc(userController.GetUserHandler))).Methods("GET")
-	r.Handle("/api/user/{id}/update", JwtMiddleware.Handler(http.HandlerFunc(userController.UpdateUserHandler))).Methods("PUT")
+	s.Handle("/user", JwtMiddleware.Handler(http.HandlerFunc(userController.UserHandler))).Methods("GET")
+	s.Handle("/users", JwtMiddleware.Handler(http.HandlerFunc(userController.AllUsersHandler))).Methods("GET")
+	s.Handle("/user/{id}", JwtMiddleware.Handler(http.HandlerFunc(userController.GetUserHandler))).Methods("GET")
+	s.Handle("/user/{id}/update", JwtMiddleware.Handler(http.HandlerFunc(userController.UpdateUserHandler))).Methods("PUT")
 
-	r.Handle("/api/songs", JwtMiddleware.Handler(http.HandlerFunc(songController.AllSongsHandler))).Methods("GET")
-	r.Handle("/api/song/{id}", JwtMiddleware.Handler(http.HandlerFunc(songController.GetSongHandler))).Methods("GET")
-	r.Handle("/api/song", JwtMiddleware.Handler(http.HandlerFunc(songController.CreateSongHandler))).Methods("POST")
-	r.Handle("/api/song/{id}", JwtMiddleware.Handler(http.HandlerFunc(songController.UpdateSongHandler))).Methods("PUT")
-	r.Handle("/api/song/{id}", JwtMiddleware.Handler(http.HandlerFunc(songController.DeleteSongHandler))).Methods("DELETE")
+	s.Handle("/songs", JwtMiddleware.Handler(http.HandlerFunc(songController.AllSongsHandler))).Methods("GET")
+	s.Handle("/song/{id}", JwtMiddleware.Handler(http.HandlerFunc(songController.GetSongHandler))).Methods("GET")
+	s.Handle("/song", JwtMiddleware.Handler(http.HandlerFunc(songController.CreateSongHandler))).Methods("POST")
+	s.Handle("/song/{id}", JwtMiddleware.Handler(http.HandlerFunc(songController.UpdateSongHandler))).Methods("PUT")
+	s.Handle("/song/{id}", JwtMiddleware.Handler(http.HandlerFunc(songController.DeleteSongHandler))).Methods("DELETE")
 
-	r.Handle("/api/get-redirect-url", JwtMiddleware.Handler(http.HandlerFunc(spotifyController.GetRedirectURLHandler))).Methods("GET")
-	r.Handle("/api/get-token", JwtMiddleware.Handler(http.HandlerFunc(spotifyController.GetTokenHandler))).Methods("POST")
-	r.Handle("/api/tracks", JwtMiddleware.Handler(http.HandlerFunc(spotifyController.GetTracksHandler))).Methods("POST")
+	s.Handle("/get-redirect-url", JwtMiddleware.Handler(http.HandlerFunc(spotifyController.GetRedirectURLHandler))).Methods("GET")
+	s.Handle("/get-token", JwtMiddleware.Handler(http.HandlerFunc(spotifyController.GetTokenHandler))).Methods("POST")
+	s.Handle("/tracks", JwtMiddleware.Handler(http.HandlerFunc(spotifyController.GetTracksHandler))).Methods("POST")
 
-	r.Handle("/api/song/{id}/bookmark", JwtMiddleware.Handler(http.HandlerFunc(bookmarkController.BookmarkHandler))).Methods("POST")
-	r.Handle("/api/song/{id}/remove-bookmark", JwtMiddleware.Handler(http.HandlerFunc(bookmarkController.RemoveBookmarkHandler))).Methods("POST")
+	s.Handle("/song/{id}/bookmark", JwtMiddleware.Handler(http.HandlerFunc(bookmarkController.BookmarkHandler))).Methods("POST")
+	s.Handle("/song/{id}/remove-bookmark", JwtMiddleware.Handler(http.HandlerFunc(bookmarkController.RemoveBookmarkHandler))).Methods("POST")
 
-	r.Handle("/api/user/{id}/follow", JwtMiddleware.Handler(http.HandlerFunc(userFollowController.FollowUserHandler))).Methods("POST")
-	r.Handle("/api/user/{id}/unfollow", JwtMiddleware.Handler(http.HandlerFunc(userFollowController.UnfollowUserHandler))).Methods("POST")
+	s.Handle("/user/{id}/follow", JwtMiddleware.Handler(http.HandlerFunc(userFollowController.FollowUserHandler))).Methods("POST")
+	s.Handle("/user/{id}/unfollow", JwtMiddleware.Handler(http.HandlerFunc(userFollowController.UnfollowUserHandler))).Methods("POST")
+
+	s.HandleFunc("/stats", stats_api.Handler)
 
 	r.HandleFunc("/", healthzHandler).Methods("GET")
-	r.HandleFunc("/api/stats", stats_api.Handler)
 
 	os.Exit(run(context.Background(), r))
 }
