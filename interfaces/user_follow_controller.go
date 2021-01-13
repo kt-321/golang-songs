@@ -1,11 +1,10 @@
 package interfaces
 
 import (
-	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 	"golang-songs/usecases"
 	"net/http"
-	"strconv"
+
+	"github.com/jinzhu/gorm"
 )
 
 type UserFollowController struct {
@@ -24,27 +23,11 @@ func NewUserFollowController(DB *gorm.DB) *UserFollowController {
 
 // idで指定したユーザーをフォローする.
 func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *http.Request) {
-	requestUserEmail, errorSet := GetEmail(r)
+	// リクエストユーザーのメアドと対象のユーザーidを取得.
+	requestUserEmail, targetUserID, errorSet := GetEmailAndId(r)
 
 	if errorSet != nil {
 		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
-
-		return
-	}
-
-	vars := mux.Vars(r)
-	id, ok := vars["id"]
-
-	if !ok {
-		errorInResponse(w, http.StatusBadRequest, GetUserIdError)
-
-		return
-	}
-
-	targetUserID, err := strconv.Atoi(id)
-
-	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
 
 		return
 	}
@@ -61,27 +44,11 @@ func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *htt
 
 // idで指定したユーザーのフォローを解除する.
 func (ufc *UserFollowController) UnfollowUserHandler(w http.ResponseWriter, r *http.Request) {
-	requestUserEmail, errorSet := GetEmail(r)
+	// リクエストユーザーのメアドと対象のユーザーidを取得.
+	requestUserEmail, targetUserID, errorSet := GetEmailAndId(r)
 
 	if errorSet != nil {
 		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
-
-		return
-	}
-
-	vars := mux.Vars(r)
-	id, ok := vars["id"]
-
-	if !ok {
-		errorInResponse(w, http.StatusBadRequest, GetUserIdError)
-
-		return
-	}
-
-	targetUserID, err := strconv.Atoi(id)
-
-	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, ConvertIdToIntError)
 
 		return
 	}

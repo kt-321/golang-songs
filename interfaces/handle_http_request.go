@@ -5,7 +5,10 @@ import (
 	"golang-songs/model"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
+
+	"github.com/gorilla/mux"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
@@ -61,4 +64,39 @@ func GetEmail(r *http.Request) (string, *model.ErrorSet) {
 	}
 
 	return parsedToken.Email, nil
+}
+
+// パスパラメータからターゲットとなるidの値を取得するメソッド
+func GetId(r *http.Request) (int, *model.ErrorSet) {
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+
+	if !ok {
+		return 0, &model.ErrorSet{http.StatusBadRequest, GetIdError}
+	}
+
+	parsedId, err := strconv.Atoi(id)
+
+	if err != nil {
+		return 0, &model.ErrorSet{http.StatusInternalServerError, ConvertIdToIntError}
+	}
+
+	return parsedId, nil
+}
+
+// リクエストユーザーのメールアドレスとターゲットのidを取得するメソッド
+func GetEmailAndId(r *http.Request) (string, int, *model.ErrorSet) {
+	userEmail, errorSet := GetEmail(r)
+
+	if errorSet != nil {
+		return "", 0, errorSet
+	}
+
+	id, errorSet := GetId(r)
+
+	if errorSet != nil {
+		return "", 0, errorSet
+	}
+
+	return userEmail, id, nil
 }
