@@ -18,11 +18,35 @@
           "protocol": "tcp"
         }
       ],
+      "command": ["sql-migrate", "up"],
       "cpu": 0,
       "environment": [
-        { "name" : "SIDECAR_REDIS_ADDRESS", "value": "127.0.0.1:6379"}
+        { "name" : "SIDECAR_REDIS_ADDRESS", "value": "127.0.0.1:6379"},
+        { "name" : "redirect_url", "value": "http://your-songs-go.com/spotify/songs"}
       ],
       "mountPoints": [],
+      "secrets": [
+        {
+          "name": "mysqlConfig",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:024070793477:secret:MYSQL_CONFIG-mW0aFd"
+        },
+        {
+          "name": "SIGNINGKEY",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:024070793477:secret:SIGNINGKEY-Rc4FBw"
+        },
+        {
+          "name": "client_id",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:024070793477:secret:CLIENT_ID-VnNGuc"
+        },
+        {
+          "name": "client_secret",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:024070793477:secret:CLIENT_SECRET-ZMN56T"
+        },
+        {
+          "name": "REDIS_URL",
+          "valueFrom": "arn:aws:secretsmanager:ap-northeast-1:024070793477:secret:REDIS_URL-L0o7qq"
+        }
+      ],
       "volumesFrom": [],
       "image": "024070793477.dkr.ecr.ap-northeast-1.amazonaws.com/your-songs-api",
       "essential": true,
