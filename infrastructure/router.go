@@ -65,8 +65,15 @@ func Dispatch(DB *gorm.DB, Redis redis.Conn, SidecarRedis redis.Conn) {
 
 	r.HandleFunc("/", healthzHandler).Methods("GET")
 
+	p, _ := os.Getwd()
+	log.Println(p)
+
+	//migrations := &migrate.FileMigrationSource{
+	//	Dir: "./db/migrations",
+	//}
+
 	migrations := &migrate.FileMigrationSource{
-		Dir: "./db/migrations",
+		Dir: "app/db/migrations",
 	}
 
 	db, err := sql.Open("mysql", os.Getenv("mysqlConfig"))
