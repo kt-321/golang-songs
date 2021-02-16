@@ -73,7 +73,7 @@ func Dispatch(DB *gorm.DB, Redis redis.Conn, SidecarRedis redis.Conn) {
 	//}
 
 	migrations := &migrate.FileMigrationSource{
-		Dir: "db/migrations",
+		Dir: "/db/migrations",
 	}
 
 	db, err := sql.Open("mysql", os.Getenv("mysqlConfig"))
