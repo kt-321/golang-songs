@@ -21,7 +21,8 @@
       "cpu": 0,
       "environment": [
         { "name" : "SIDECAR_REDIS_ADDRESS", "value": "127.0.0.1:6379"},
-        { "name" : "redirect_url", "value": "http://your-songs-go.com/spotify/songs"}
+        { "name" : "redirect_url", "value": "http://your-songs-go.com/spotify/songs"},
+        { "name" : "migrationDir", "value": "../db/migrations"}
       ],
       "mountPoints": [],
       "secrets": [
