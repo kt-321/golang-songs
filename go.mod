@@ -15,6 +15,7 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/lib/pq v1.2.0 // indirect
 	github.com/pkg/errors v0.8.1
+	github.com/rubenv/sql-migrate v0.0.0-20210215143335-f84234893558 // indirect
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/urfave/negroni v1.0.0 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
