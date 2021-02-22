@@ -2,6 +2,7 @@ package usecases
 
 import "golang-songs/model"
 
+// インタフェースAuthRepositoryInterfaceを満たしている
 type AuthInteractor struct {
 	AuthRepository AuthRepositoryInterface
 }

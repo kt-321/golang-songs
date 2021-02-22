@@ -14,6 +14,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// インタフェースAuthRepositoryInterfaceを満たす.DBのモック化.型AuthRepositoryと違いフィールドDBはない.
 type FakeAuthRepository struct{}
 
 func (far *FakeAuthRepository) SignUp(form model.Form) error {

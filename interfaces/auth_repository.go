@@ -6,6 +6,7 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+// インタフェースAuthRepositoryInterfaceを満たす
 type AuthRepository struct {
 	DB *gorm.DB
 }
