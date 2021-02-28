@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"golang-songs/interfaces"
 	"log"
@@ -9,6 +10,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	migrate "github.com/rubenv/sql-migrate"
 
 	stats_api "github.com/fukata/golang-stats-api-handler"
 
@@ -61,6 +64,23 @@ func Dispatch(DB *gorm.DB, Redis redis.Conn, SidecarRedis redis.Conn) {
 	s.HandleFunc("/stats", stats_api.Handler)
 
 	r.HandleFunc("/", healthzHandler).Methods("GET")
+
+	//マイグレーション実行
+	migrations := &migrate.FileMigrationSource{
+		Dir: os.Getenv("migrationDir"),
+	}
+
+	db, err := sql.Open("mysql", os.Getenv("mysqlConfig"))
+	if err != nil {
+		log.Println(err)
+	}
+	defer db.Close()
+
+	appliedCount, err := migrate.Exec(db, "mysql", migrations, migrate.Up)
+	if err != nil {
+		log.Println(err)
+	}
+	log.Printf("Applied %v migrations", appliedCount)
 
 	os.Exit(run(context.Background(), r))
 }

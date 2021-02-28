@@ -11,5 +11,6 @@ RUN make
 FROM alpine
 RUN apk add --no-cache ca-certificates
 COPY --from=builder /go/src/golang-songs/app /app
+COPY --from=builder /go/src/golang-songs/db/ /db/
 EXPOSE 8080
 ENTRYPOINT ["/app"]
