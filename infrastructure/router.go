@@ -76,11 +76,17 @@ func Dispatch(DB *gorm.DB, Redis redis.Conn, SidecarRedis redis.Conn) {
 	}
 	defer db.Close()
 
-	appliedCount, err := migrate.Exec(db, "mysql", migrations, migrate.Up)
+	//appliedCount, err := migrate.Exec(db, "mysql", migrations, migrate.Up)
+	//if err != nil {
+	//	log.Println(err)
+	//}
+	//log.Printf("Applied %v migrations", appliedCount)
+
+	appliedCount, err := migrate.Exec(db, "mysql", migrations, migrate.Down)
 	if err != nil {
 		log.Println(err)
 	}
-	log.Printf("Applied %v migrations", appliedCount)
+	log.Printf("Applied %v migration down", appliedCount)
 
 	os.Exit(run(context.Background(), r))
 }
