@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
@@ -15,7 +17,9 @@ func main() {
 	// RDBに接続.
 	db, err := gorm.Open("mysql", os.Getenv("mysqlConfig"))
 	if err != nil {
-		log.Println(err)
+		log.Println("RDBの接続成功")
+	} else {
+		log.Println("RDBの接続失敗:", errors.WithStack(err))
 	}
 
 	db.DB().SetMaxIdleConns(10)

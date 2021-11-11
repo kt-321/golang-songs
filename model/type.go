@@ -26,4 +26,5 @@ type ErrorSet struct {
 	StatusCode int
 	//MessageNumber int
 	Message string
+	Err     *error
 }

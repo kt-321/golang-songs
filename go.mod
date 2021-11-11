@@ -13,15 +13,12 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/jinzhu/gorm v1.9.12
 	github.com/joho/godotenv v1.3.0
-	github.com/lib/pq v1.2.0 // indirect
 	github.com/pkg/errors v0.8.1
-	github.com/rubenv/sql-migrate v0.0.0-20210215143335-f84234893558 // indirect
-	github.com/smartystreets/goconvey v1.6.4 // indirect
+	github.com/rubenv/sql-migrate v0.0.0-20210215143335-f84234893558
 	github.com/urfave/negroni v1.0.0 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/net v0.0.0-20201021035429-f5854403a974 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
-	google.golang.org/appengine v1.6.5 // indirect
 )

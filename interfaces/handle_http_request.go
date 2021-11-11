@@ -48,19 +48,19 @@ func GetEmail(r *http.Request) (string, *model.ErrorSet) {
 	headerAuthorization := r.Header.Get("Authorization")
 
 	if len(headerAuthorization) == 0 {
-		return "", &model.ErrorSet{http.StatusInternalServerError, GetAuthenticationTokenError}
+		return "", &model.ErrorSet{StatusCode: http.StatusInternalServerError, Message: GetAuthenticationTokenError}
 	}
 
 	bearerToken := strings.Split(headerAuthorization, " ")
 
 	if len(bearerToken) < 2 {
-		return "", &model.ErrorSet{http.StatusUnauthorized, GetBearerTokenError}
+		return "", &model.ErrorSet{StatusCode: http.StatusUnauthorized, Message: GetBearerTokenError}
 	}
 
 	parsedToken, err := Parse(bearerToken[1])
 
 	if err != nil {
-		return "", &model.ErrorSet{http.StatusInternalServerError, ParseAuthenticationCodeError}
+		return "", &model.ErrorSet{StatusCode: http.StatusInternalServerError, Message: ParseAuthenticationCodeError}
 	}
 
 	return parsedToken.Email, nil
@@ -72,13 +72,15 @@ func GetId(r *http.Request) (int, *model.ErrorSet) {
 	id, ok := vars["id"]
 
 	if !ok {
-		return 0, &model.ErrorSet{http.StatusBadRequest, GetIdError}
+		e := errors.New("key'id'が存在しない")
+		return 0, &model.ErrorSet{StatusCode: http.StatusBadRequest, Message: GetIdError, Err: &e}
 	}
 
 	parsedId, err := strconv.Atoi(id)
 
 	if err != nil {
-		return 0, &model.ErrorSet{http.StatusInternalServerError, ConvertIdToIntError}
+		e := errors.WithStack(err)
+		return 0, &model.ErrorSet{StatusCode: http.StatusInternalServerError, Message: ConvertIdToIntError, Err: &e}
 	}
 
 	return parsedId, nil

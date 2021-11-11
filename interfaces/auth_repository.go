@@ -4,6 +4,7 @@ import (
 	"golang-songs/model"
 
 	"github.com/jinzhu/gorm"
+	"github.com/pkg/errors"
 )
 
 // インタフェースAuthRepositoryInterfaceを満たす
@@ -23,7 +24,7 @@ func (ar *AuthRepository) Login(form model.Form) (*model.User, error) {
 	var user model.User
 
 	if err := ar.DB.Where("email = ?", form.Email).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return &user, nil

@@ -11,6 +11,8 @@ import (
 func errorInResponse(w http.ResponseWriter, status int, message string) {
 	w.WriteHeader(status)
 
+	log.Printf("%v: %v", status, message)
+
 	error2 := model.Error{Message: message}
 
 	if err := json.NewEncoder(w).Encode(error2); err != nil {

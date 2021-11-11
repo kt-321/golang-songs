@@ -3,6 +3,9 @@ package interfaces
 import (
 	"encoding/json"
 	"golang-songs/model"
+	"log"
+
+	"github.com/pkg/errors"
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
@@ -58,6 +61,7 @@ func (sc *SongController) GetSongHandler(w http.ResponseWriter, r *http.Request)
 
 	if errorSet != nil {
 		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
+		log.Printf("%v", errorSet.Err)
 
 		return
 	}
@@ -66,6 +70,7 @@ func (sc *SongController) GetSongHandler(w http.ResponseWriter, r *http.Request)
 
 	if err != nil {
 		errorInResponse(w, http.StatusInternalServerError, GetSongError)
+		log.Printf("%v", err)
 
 		return
 	}
@@ -74,12 +79,14 @@ func (sc *SongController) GetSongHandler(w http.ResponseWriter, r *http.Request)
 
 	if err != nil {
 		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
+		log.Printf("%v", errors.WithStack(err))
 
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
 		errorInResponse(w, http.StatusInternalServerError, GetSongDetailError)
+		log.Printf("%v", errors.WithStack(err))
 
 		return
 	}

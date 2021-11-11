@@ -43,9 +43,7 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 		errorInResponse(w, http.StatusBadRequest, RequiredEmailError)
 
 		return
-	}
-
-	if d.Password == "" {
+	} else if d.Password == "" {
 		errorInResponse(w, http.StatusBadRequest, RequiredPasswordError)
 
 		return
