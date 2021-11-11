@@ -1,7 +1,6 @@
 package interfaces
 
 import (
-	"errors"
 	"fmt"
 	"golang-songs/model"
 	"strconv"
@@ -9,6 +8,7 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
+	"github.com/pkg/errors"
 	"golang.org/x/sync/singleflight"
 )
 
@@ -252,7 +252,7 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 	})
 
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	// model.Song型に戻す.
@@ -263,7 +263,7 @@ func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
 	}
 
 	if err := sr.DB.Preload("Bookmarkers", "bookmarks.deleted_at is null").Find(&responseSong).Error; err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
 
 	return &responseSong, nil
