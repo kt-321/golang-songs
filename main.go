@@ -57,7 +57,7 @@ func main() {
 	// コネクションの取得.
 	redis := pool.Get()
 	if redis.Err() != nil {
-		log.Println(redis.Err())
+		log.Println("リモートのRedisに接続失敗: ", redis.Err())
 	} else {
 		log.Println("リモートのRedisに接続成功")
 	}
@@ -67,7 +67,7 @@ func main() {
 	// コネクションの取得.
 	sidecarRedis := pool2.Get()
 	if sidecarRedis.Err() != nil {
-		log.Println(sidecarRedis.Err())
+		log.Println("サイドカーのRedisに接続失敗: ", sidecarRedis.Err())
 	} else {
 		log.Println("サイドカーのRedisに接続成功")
 	}
