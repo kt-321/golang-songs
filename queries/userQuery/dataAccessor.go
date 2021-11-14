@@ -1,4 +1,4 @@
-package usersQuery
+package userQuery
 
 import (
 	"golang-songs/model"
@@ -45,13 +45,3 @@ func (ur *dataAccessor) FindByID(userID int) (*model.User, error) {
 
 	return &user, nil
 }
-
-//func (ur *dataAccessor) Update(userID int, p model.User) error {
-//	var user model.User
-//
-//	if err := ur.DB.Model(&user).Where("id = ?", userID).Update(model.User{Email: p.Email, Name: p.Name, Age: p.Age, Gender: p.Gender, FavoriteMusicAge: p.FavoriteMusicAge, FavoriteArtist: p.FavoriteArtist, Comment: p.Comment}).Error; err != nil {
-//		return err
-//	}
-//
-//	return nil
-//}

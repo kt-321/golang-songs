@@ -1,4 +1,4 @@
-package usersQuery
+package userQuery
 
 import (
 	"golang-songs/model"
@@ -19,7 +19,3 @@ func (ui *usecase) User(userEmail string) (*model.User, error) {
 func (ui *usecase) Show(userID int) (*model.User, error) {
 	return ui.da.FindByID(userID)
 }
-
-//func (ui *usecase) Update(userID int, p model.User) error {
-//	return ui.da.Update(userID, p)
-//}

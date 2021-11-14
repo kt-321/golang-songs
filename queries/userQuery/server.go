@@ -1,11 +1,11 @@
-package usersQuery
+package userQuery
 
 import (
 	"encoding/json"
 	"golang-songs/interfaces"
 	"golang-songs/model"
 
-	//"golang-songs/queries/usersQuery"
+	//"golang-songs/queries/userQuery"
 	//"golang-songs/usecases"
 
 	"net/http"
@@ -13,12 +13,12 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-type usersQueryServer struct {
+type userQueryServer struct {
 	usecase usecase
 }
 
-func NewUserQueryServer(DB *gorm.DB) *usersQueryServer {
-	return &usersQueryServer{
+func NewUserQueryServer(DB *gorm.DB) *userQueryServer {
+	return &userQueryServer{
 		usecase: usecase{
 			da: dataAccessor{
 				DB: DB,
@@ -28,8 +28,8 @@ func NewUserQueryServer(DB *gorm.DB) *usersQueryServer {
 }
 
 // 全てのユーザーを返す.
-func (uc *usersQueryServer) AllUsers(w http.ResponseWriter, r *http.Request) {
-	allUsers, err := uc.usecase.Index()
+func (uqs *userQueryServer) AllUsers(w http.ResponseWriter, r *http.Request) {
+	allUsers, err := uqs.usecase.Index()
 
 	if err != nil {
 		interfaces.ErrorInResponse(w, http.StatusInternalServerError, interfaces.GetUserError)
@@ -53,7 +53,7 @@ func (uc *usersQueryServer) AllUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 // リクエストユーザーの情報を返す.
-func (uc *usersQueryServer) User(w http.ResponseWriter, r *http.Request) {
+func (uqs *userQueryServer) User(w http.ResponseWriter, r *http.Request) {
 	// リクエストユーザーのメアドを取得.
 	userEmail, errorSet := interfaces.GetEmail(r)
 
@@ -65,7 +65,7 @@ func (uc *usersQueryServer) User(w http.ResponseWriter, r *http.Request) {
 
 	var user *model.User
 
-	user, err := uc.usecase.User(userEmail)
+	user, err := uqs.usecase.User(userEmail)
 
 	if err != nil {
 		interfaces.ErrorInResponse(w, http.StatusInternalServerError, interfaces.GetAccountError)
@@ -89,7 +89,7 @@ func (uc *usersQueryServer) User(w http.ResponseWriter, r *http.Request) {
 }
 
 // idで指定したユーザーの情報を返す.
-func (uc *usersQueryServer) GetUser(w http.ResponseWriter, r *http.Request) {
+func (uqs *userQueryServer) GetUser(w http.ResponseWriter, r *http.Request) {
 	// 対象のユーザーidを取得.
 	userID, errorSet := interfaces.GetId(r)
 
@@ -99,7 +99,7 @@ func (uc *usersQueryServer) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := uc.usecase.Show(userID)
+	user, err := uqs.usecase.Show(userID)
 
 	if err != nil {
 		interfaces.ErrorInResponse(w, http.StatusInternalServerError, interfaces.GetAccountError)
@@ -121,32 +121,3 @@ func (uc *usersQueryServer) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
-// idで指定したユーザーの情報を更新する.
-//func (uc *UserController) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
-//	// 対象のユーザーidを取得.
-//	userID, errorSet := GetId(r)
-//
-//	if errorSet != nil {
-//		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
-//
-//		return
-//	}
-//
-//	var d model.User
-//
-//	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-//		errorInResponse(w, http.StatusInternalServerError, DecodeError)
-//
-//		return
-//	}
-//
-//	if err := uc.UserInteractor.Update(userID, d); err != nil {
-//		errorInResponse(w, http.StatusInternalServerError, UpdateUserError)
-//
-//		return
-//	}
-//
-//	// 204 No Content.
-//	w.WriteHeader(204)
-//}

@@ -1,27 +1,25 @@
 package interfaces
 
-import (
-	"encoding/json"
-	"golang-songs/model"
-	"golang-songs/usecases"
-	"net/http"
-
-	"github.com/jinzhu/gorm"
-)
-
-type UserController struct {
-	UserInteractor usecases.UserInteractor
-}
-
-func NewUserController(DB *gorm.DB) *UserController {
-	return &UserController{
-		UserInteractor: usecases.UserInteractor{
-			UserRepository: &UserRepository{
-				DB: DB,
-			},
-		},
-	}
-}
+//
+//import (
+//	"golang-songs/usecases"
+//
+//	"github.com/jinzhu/gorm"
+//)
+//
+//type UserController struct {
+//	UserInteractor usecases.UserInteractor
+//}
+//
+//func NewUserController(DB *gorm.DB) *UserController {
+//	return &UserController{
+//		UserInteractor: usecases.UserInteractor{
+//			UserRepository: &UserRepository{
+//				DB: DB,
+//			},
+//		},
+//	}
+//}
 
 // 全てのユーザーを返す.
 //func (uc *UserController) AllUsersHandler(w http.ResponseWriter, r *http.Request) {
@@ -119,30 +117,30 @@ func NewUserController(DB *gorm.DB) *UserController {
 //}
 
 // idで指定したユーザーの情報を更新する.
-func (uc *UserController) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
-	// 対象のユーザーidを取得.
-	userID, errorSet := GetId(r)
-
-	if errorSet != nil {
-		ErrorInResponse(w, errorSet.StatusCode, errorSet.Message)
-
-		return
-	}
-
-	var d model.User
-
-	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		ErrorInResponse(w, http.StatusInternalServerError, DecodeError)
-
-		return
-	}
-
-	if err := uc.UserInteractor.Update(userID, d); err != nil {
-		ErrorInResponse(w, http.StatusInternalServerError, UpdateUserError)
-
-		return
-	}
-
-	// 204 No Content.
-	w.WriteHeader(204)
-}
+//func (uc *UserController) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
+//	// 対象のユーザーidを取得.
+//	userID, errorSet := GetId(r)
+//
+//	if errorSet != nil {
+//		ErrorInResponse(w, errorSet.StatusCode, errorSet.Message)
+//
+//		return
+//	}
+//
+//	var d model.User
+//
+//	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
+//		ErrorInResponse(w, http.StatusInternalServerError, DecodeError)
+//
+//		return
+//	}
+//
+//	if err := uc.UserInteractor.Update(userID, d); err != nil {
+//		ErrorInResponse(w, http.StatusInternalServerError, UpdateUserError)
+//
+//		return
+//	}
+//
+//	// 204 No Content.
+//	w.WriteHeader(204)
+//}
