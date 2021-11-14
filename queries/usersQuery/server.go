@@ -13,12 +13,12 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-type UserController struct {
+type usersQueryServer struct {
 	usecase usecase
 }
 
-func NewUserController(DB *gorm.DB) *UserController {
-	return &UserController{
+func NewUserQueryServer(DB *gorm.DB) *usersQueryServer {
+	return &usersQueryServer{
 		usecase: usecase{
 			da: dataAccessor{
 				DB: DB,
@@ -28,7 +28,7 @@ func NewUserController(DB *gorm.DB) *UserController {
 }
 
 // 全てのユーザーを返す.
-func (uc *UserController) AllUsersHandler(w http.ResponseWriter, r *http.Request) {
+func (uc *usersQueryServer) AllUsers(w http.ResponseWriter, r *http.Request) {
 	allUsers, err := uc.usecase.Index()
 
 	if err != nil {
@@ -53,7 +53,7 @@ func (uc *UserController) AllUsersHandler(w http.ResponseWriter, r *http.Request
 }
 
 // リクエストユーザーの情報を返す.
-func (uc *UserController) UserHandler(w http.ResponseWriter, r *http.Request) {
+func (uc *usersQueryServer) User(w http.ResponseWriter, r *http.Request) {
 	// リクエストユーザーのメアドを取得.
 	userEmail, errorSet := interfaces.GetEmail(r)
 
@@ -89,7 +89,7 @@ func (uc *UserController) UserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // idで指定したユーザーの情報を返す.
-func (uc *UserController) GetUserHandler(w http.ResponseWriter, r *http.Request) {
+func (uc *usersQueryServer) GetUser(w http.ResponseWriter, r *http.Request) {
 	// 対象のユーザーidを取得.
 	userID, errorSet := interfaces.GetId(r)
 
