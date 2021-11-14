@@ -34,7 +34,7 @@ func NewSongController(DB *gorm.DB, Redis redis.Conn, SidecarRedis redis.Conn) *
 func (sc *SongController) AllSongsHandler(w http.ResponseWriter, r *http.Request) {
 	songs, err := sc.SongInteractor.Index()
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, GetSongError)
+		ErrorInResponse(w, http.StatusInternalServerError, GetSongError)
 
 		return
 	}
@@ -42,13 +42,13 @@ func (sc *SongController) AllSongsHandler(w http.ResponseWriter, r *http.Request
 	v, err := json.Marshal(songs)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
+		ErrorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, GetSongsListError)
+		ErrorInResponse(w, http.StatusInternalServerError, GetSongsListError)
 
 		return
 	}
@@ -60,7 +60,7 @@ func (sc *SongController) GetSongHandler(w http.ResponseWriter, r *http.Request)
 	songID, errorSet := GetId(r)
 
 	if errorSet != nil {
-		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
+		ErrorInResponse(w, errorSet.StatusCode, errorSet.Message)
 		log.Printf("%v", errorSet.Err)
 
 		return
@@ -69,7 +69,7 @@ func (sc *SongController) GetSongHandler(w http.ResponseWriter, r *http.Request)
 	song, err := sc.SongInteractor.Show(songID)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, GetSongError)
+		ErrorInResponse(w, http.StatusInternalServerError, GetSongError)
 		log.Printf("%v", err)
 
 		return
@@ -78,14 +78,14 @@ func (sc *SongController) GetSongHandler(w http.ResponseWriter, r *http.Request)
 	v, err := json.Marshal(song)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
+		ErrorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 		log.Printf("%v", errors.WithStack(err))
 
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, GetSongDetailError)
+		ErrorInResponse(w, http.StatusInternalServerError, GetSongDetailError)
 		log.Printf("%v", errors.WithStack(err))
 
 		return
@@ -98,7 +98,7 @@ func (sc *SongController) CreateSongHandler(w http.ResponseWriter, r *http.Reque
 	userEmail, errorSet := GetEmail(r)
 
 	if errorSet != nil {
-		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
+		ErrorInResponse(w, errorSet.StatusCode, errorSet.Message)
 
 		return
 	}
@@ -106,13 +106,13 @@ func (sc *SongController) CreateSongHandler(w http.ResponseWriter, r *http.Reque
 	var d model.Song
 
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, DecodeError)
+		ErrorInResponse(w, http.StatusInternalServerError, DecodeError)
 
 		return
 	}
 
 	if err := sc.SongInteractor.Store(userEmail, d); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, PostSongError)
+		ErrorInResponse(w, http.StatusInternalServerError, PostSongError)
 
 		return
 	}
@@ -127,7 +127,7 @@ func (sc *SongController) UpdateSongHandler(w http.ResponseWriter, r *http.Reque
 	userEmail, songID, errorSet := GetEmailAndId(r)
 
 	if errorSet != nil {
-		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
+		ErrorInResponse(w, errorSet.StatusCode, errorSet.Message)
 
 		return
 	}
@@ -135,13 +135,13 @@ func (sc *SongController) UpdateSongHandler(w http.ResponseWriter, r *http.Reque
 	var d model.Song
 
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, DecodeError)
+		ErrorInResponse(w, http.StatusInternalServerError, DecodeError)
 
 		return
 	}
 
 	if err := sc.SongInteractor.Update(userEmail, songID, d); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, UpdateSongError)
+		ErrorInResponse(w, http.StatusInternalServerError, UpdateSongError)
 
 		return
 	}
@@ -156,13 +156,13 @@ func (sc *SongController) DeleteSongHandler(w http.ResponseWriter, r *http.Reque
 	songID, errorSet := GetId(r)
 
 	if errorSet != nil {
-		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
+		ErrorInResponse(w, errorSet.StatusCode, errorSet.Message)
 
 		return
 	}
 
 	if err := sc.SongInteractor.Destroy(songID); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, DeleteSongError)
+		ErrorInResponse(w, http.StatusInternalServerError, DeleteSongError)
 
 		return
 	}

@@ -27,13 +27,13 @@ func (bc *BookmarkController) BookmarkHandler(w http.ResponseWriter, r *http.Req
 	userEmail, songID, errorSet := GetEmailAndId(r)
 
 	if errorSet != nil {
-		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
+		ErrorInResponse(w, errorSet.StatusCode, errorSet.Message)
 
 		return
 	}
 
 	if err := bc.BookmarkInteractor.Bookmark(userEmail, songID); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, BookmarkSongError)
+		ErrorInResponse(w, http.StatusInternalServerError, BookmarkSongError)
 
 		return
 	}
@@ -48,13 +48,13 @@ func (bc *BookmarkController) RemoveBookmarkHandler(w http.ResponseWriter, r *ht
 	userEmail, songID, errorSet := GetEmailAndId(r)
 
 	if errorSet != nil {
-		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
+		ErrorInResponse(w, errorSet.StatusCode, errorSet.Message)
 
 		return
 	}
 
 	if err := bc.BookmarkInteractor.RemoveBookmark(userEmail, songID); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, RemoveBookmarkError)
+		ErrorInResponse(w, http.StatusInternalServerError, RemoveBookmarkError)
 
 		return
 	}

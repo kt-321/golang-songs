@@ -34,17 +34,17 @@ func NewAuthController(DB *gorm.DB) *AuthController {
 func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) {
 	var d model.Form
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, DecodeError)
+		ErrorInResponse(w, http.StatusInternalServerError, DecodeError)
 
 		return
 	}
 
 	if d.Email == "" {
-		errorInResponse(w, http.StatusBadRequest, RequiredEmailError)
+		ErrorInResponse(w, http.StatusBadRequest, RequiredEmailError)
 
 		return
 	} else if d.Password == "" {
-		errorInResponse(w, http.StatusBadRequest, RequiredPasswordError)
+		ErrorInResponse(w, http.StatusBadRequest, RequiredPasswordError)
 
 		return
 	}
@@ -54,7 +54,7 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 
 	if err != nil {
-		errorInResponse(w, http.StatusBadRequest, InvalidPasswordError)
+		ErrorInResponse(w, http.StatusBadRequest, InvalidPasswordError)
 
 		return
 	}
@@ -66,7 +66,7 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 	err = ac.AuthInteractor.SignUp(d)
 
 	if err != nil {
-		errorInResponse(w, http.StatusUnauthorized, CreateAccountError)
+		ErrorInResponse(w, http.StatusUnauthorized, CreateAccountError)
 
 		return
 	}
@@ -78,13 +78,13 @@ func (ac *AuthController) SignUpHandler(w http.ResponseWriter, r *http.Request) 
 	v, err := json.Marshal(user)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
+		ErrorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, GetUserDetailError)
+		ErrorInResponse(w, http.StatusInternalServerError, GetUserDetailError)
 
 		return
 	}
@@ -95,19 +95,19 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var d model.Form
 
 	if err := json.NewDecoder(r.Body).Decode(&d); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, DecodeError)
+		ErrorInResponse(w, http.StatusInternalServerError, DecodeError)
 
 		return
 	}
 
 	if d.Email == "" {
-		errorInResponse(w, http.StatusBadRequest, RequiredEmailError)
+		ErrorInResponse(w, http.StatusBadRequest, RequiredEmailError)
 
 		return
 	}
 
 	if d.Password == "" {
-		errorInResponse(w, http.StatusBadRequest, RequiredPasswordError)
+		ErrorInResponse(w, http.StatusBadRequest, RequiredPasswordError)
 
 		return
 	}
@@ -117,7 +117,7 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	userData, err := ac.AuthInteractor.Login(d)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, GetUserDetailError)
+		ErrorInResponse(w, http.StatusInternalServerError, GetUserDetailError)
 
 		return
 	}
@@ -127,7 +127,7 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	err = bcrypt.CompareHashAndPassword([]byte(passwordData), []byte(password))
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, InvalidPasswordError)
+		ErrorInResponse(w, http.StatusInternalServerError, InvalidPasswordError)
 
 		return
 	}
@@ -138,7 +138,7 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	token, err := createToken(user)
 
 	if err != nil {
-		errorInResponse(w, http.StatusUnauthorized, CreateTokenError)
+		ErrorInResponse(w, http.StatusUnauthorized, CreateTokenError)
 
 		return
 	}
@@ -152,13 +152,13 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	v, err := json.Marshal(jwt)
 
 	if err != nil {
-		errorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
+		ErrorInResponse(w, http.StatusInternalServerError, JsonEncodeError)
 
 		return
 	}
 
 	if _, err := w.Write(v); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, GetJwtTokenError)
+		ErrorInResponse(w, http.StatusInternalServerError, GetJwtTokenError)
 
 		return
 	}
