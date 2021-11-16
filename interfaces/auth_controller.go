@@ -135,7 +135,7 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	user := model.User{Email: email, Password: password}
 
 	// トークン作成
-	token, err := createToken(user)
+	token, err := CreateToken(user)
 
 	if err != nil {
 		ErrorInResponse(w, http.StatusUnauthorized, CreateTokenError)
@@ -165,7 +165,7 @@ func (ac *AuthController) LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // JWT.
-func createToken(user model.User) (string, error) {
+func CreateToken(user model.User) (string, error) {
 	var err error
 
 	secret := os.Getenv("SIGNINGKEY")

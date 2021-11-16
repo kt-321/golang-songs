@@ -1,5 +1,11 @@
 package interfaces
 
+import (
+	"golang-songs/usecases"
+
+	"github.com/jinzhu/gorm"
+)
+
 //
 //import (
 //	"golang-songs/usecases"
@@ -7,19 +13,20 @@ package interfaces
 //	"github.com/jinzhu/gorm"
 //)
 //
-//type UserController struct {
-//	UserInteractor usecases.UserInteractor
-//}
+type UserController struct {
+	UserInteractor usecases.UserInteractor
+}
+
 //
-//func NewUserController(DB *gorm.DB) *UserController {
-//	return &UserController{
-//		UserInteractor: usecases.UserInteractor{
-//			UserRepository: &UserRepository{
-//				DB: DB,
-//			},
-//		},
-//	}
-//}
+func NewUserController(DB *gorm.DB) *UserController {
+	return &UserController{
+		UserInteractor: usecases.UserInteractor{
+			UserRepository: &UserRepository{
+				DB: DB,
+			},
+		},
+	}
+}
 
 // 全てのユーザーを返す.
 //func (uc *UserController) AllUsersHandler(w http.ResponseWriter, r *http.Request) {

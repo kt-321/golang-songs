@@ -94,7 +94,7 @@ func TestLoginHandler(t *testing.T) {
 	user := model.User{Email: email, Password: password}
 
 	// トークン作成.
-	token, err := createToken(user)
+	token, err := CreateToken(user)
 
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")

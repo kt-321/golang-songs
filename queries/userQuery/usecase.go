@@ -5,7 +5,19 @@ import (
 )
 
 type usecase struct {
-	da dataAccessor
+	da DataAccessor
+}
+
+type Usecase interface {
+	Index() (*[]model.User, error)
+	User(string) (*model.User, error)
+	Show(int) (*model.User, error)
+}
+
+type DataAccessor interface {
+	FindAll() (*[]model.User, error)
+	GetUser(string) (*model.User, error)
+	FindByID(int) (*model.User, error)
 }
 
 func (ui *usecase) Index() (*[]model.User, error) {

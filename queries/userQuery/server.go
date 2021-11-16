@@ -20,7 +20,7 @@ type userQueryServer struct {
 func NewUserQueryServer(DB *gorm.DB) *userQueryServer {
 	return &userQueryServer{
 		usecase: usecase{
-			da: dataAccessor{
+			da: &dataAccessor{
 				DB: DB,
 			},
 		},

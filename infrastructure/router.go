@@ -31,7 +31,7 @@ import (
 
 func Dispatch(DB *gorm.DB, Redis redis.Conn, SidecarRedis redis.Conn) {
 	authController := interfaces.NewAuthController(DB)
-	usersQueryServer := userQuery.NewUserQueryServer(DB)
+	userQueryServer := userQuery.NewUserQueryServer(DB)
 	userCommandsServer := userCommands.NewUserController(DB)
 	songController := interfaces.NewSongController(DB, Redis, SidecarRedis)
 	bookmarkController := interfaces.NewBookmarkController(DB)
@@ -44,9 +44,9 @@ func Dispatch(DB *gorm.DB, Redis redis.Conn, SidecarRedis redis.Conn) {
 	s.HandleFunc("/signup", authController.SignUpHandler).Methods("POST")
 	s.HandleFunc("/login", authController.LoginHandler).Methods("POST")
 
-	s.Handle("/user", JwtMiddleware.Handler(http.HandlerFunc(usersQueryServer.User))).Methods("GET")
-	s.Handle("/users", JwtMiddleware.Handler(http.HandlerFunc(usersQueryServer.AllUsers))).Methods("GET")
-	s.Handle("/user/{id}", JwtMiddleware.Handler(http.HandlerFunc(usersQueryServer.GetUser))).Methods("GET")
+	s.Handle("/user", JwtMiddleware.Handler(http.HandlerFunc(userQueryServer.User))).Methods("GET")
+	s.Handle("/users", JwtMiddleware.Handler(http.HandlerFunc(userQueryServer.AllUsers))).Methods("GET")
+	s.Handle("/user/{id}", JwtMiddleware.Handler(http.HandlerFunc(userQueryServer.GetUser))).Methods("GET")
 
 	s.Handle("/user/{id}/update", JwtMiddleware.Handler(http.HandlerFunc(userCommandsServer.UpdateUser))).Methods("PUT")
 
