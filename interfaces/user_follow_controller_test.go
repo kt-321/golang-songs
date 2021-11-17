@@ -27,7 +27,7 @@ func TestFollowUserHandler(t *testing.T) {
 	// リクエストユーザー作成.
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 	// トークン作成.
-	token, err := createToken(user)
+	token, err := CreateToken(user)
 	if err != nil {
 		log.Println("err:", err)
 	}
@@ -61,7 +61,7 @@ func TestUnfollowUserHandler(t *testing.T) {
 	// リクエストユーザー作成.
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 	// トークン作成.
-	token, err := createToken(user)
+	token, err := CreateToken(user)
 	if err != nil {
 		log.Println("err:", err)
 	}

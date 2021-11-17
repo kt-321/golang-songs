@@ -106,7 +106,7 @@ func TestGetUserHandler(t *testing.T) {
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 
 	// トークン作成.
-	token, err := createToken(user)
+	token, err := CreateToken(user)
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
 	}
@@ -172,7 +172,7 @@ func TestUserHandler(t *testing.T) {
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 
 	// トークン作成.
-	token, err := createToken(user)
+	token, err := CreateToken(user)
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
 	}
@@ -233,7 +233,7 @@ func TestAllUsersHandler(t *testing.T) {
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 
 	// トークン作成.
-	token, err := createToken(user)
+	token, err := CreateToken(user)
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
 	}
@@ -317,7 +317,7 @@ func TestUpdateUserHandler(t *testing.T) {
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 
 	// トークン作成.
-	token, err := createToken(user)
+	token, err := CreateToken(user)
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
 	}
