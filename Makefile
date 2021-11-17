@@ -5,6 +5,7 @@ build:
 
 test:
 	go test ./interfaces
+	go test ./queries/userQuery
 
 clear:
 	go clean --testcache
