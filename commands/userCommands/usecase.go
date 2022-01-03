@@ -5,10 +5,14 @@ import (
 	"golang-songs/model"
 )
 
-type Usecase struct {
+type usecase struct {
 	UserRepository domain.UserRepositoryInterface
 }
 
-func (ui *Usecase) Update(userID int, p model.User) error {
+type Usecase interface {
+	Update(int, model.User) error
+}
+
+func (ui *usecase) Update(userID int, p model.User) error {
 	return ui.UserRepository.Update(userID, p)
 }

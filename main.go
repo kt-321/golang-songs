@@ -17,9 +17,9 @@ func main() {
 	// RDBに接続.
 	db, err := gorm.Open("mysql", os.Getenv("mysqlConfig"))
 	if err != nil {
-		log.Println("RDBの接続成功")
-	} else {
 		log.Println("RDBの接続失敗:", errors.WithStack(err))
+	} else {
+		log.Println("RDBの接続成功")
 	}
 
 	db.DB().SetMaxIdleConns(10)
