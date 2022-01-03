@@ -5,10 +5,10 @@ import (
 	"golang-songs/model"
 	"log"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 
 	"github.com/garyburd/redigo/redis"
-	"github.com/jinzhu/gorm"
 
 	"golang-songs/usecases"
 	"net/http"
@@ -18,7 +18,7 @@ type SongController struct {
 	SongInteractor usecases.SongInteractor
 }
 
-func NewSongController(DB *gorm.DB, Redis redis.Conn, SidecarRedis redis.Conn) *SongController {
+func NewSongController(DB *sqlx.DB, Redis redis.Conn, SidecarRedis redis.Conn) *SongController {
 	return &SongController{
 		SongInteractor: usecases.SongInteractor{
 			SongRepository: &SongRepository{

@@ -4,10 +4,11 @@ import (
 	"golang-songs/model"
 
 	"github.com/jinzhu/gorm"
+	"github.com/jmoiron/sqlx"
 )
 
 type dataAccessor struct {
-	DB *gorm.DB
+	DB *sqlx.DB
 }
 
 func (ur *dataAccessor) FindAll() (*[]model.User, error) {

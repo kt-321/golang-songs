@@ -4,14 +4,14 @@ import (
 	"golang-songs/usecases"
 	"net/http"
 
-	"github.com/jinzhu/gorm"
+	"github.com/jmoiron/sqlx"
 )
 
 type UserFollowController struct {
 	UserFollowInteractor usecases.UserFollowInteractor
 }
 
-func NewUserFollowController(DB *gorm.DB) *UserFollowController {
+func NewUserFollowController(DB *sqlx.DB) *UserFollowController {
 	return &UserFollowController{
 		UserFollowInteractor: usecases.UserFollowInteractor{
 			UserFollowRepository: &UserFollowRepository{

@@ -7,11 +7,11 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/jinzhu/gorm"
+	"github.com/jmoiron/sqlx"
 )
 
 type SpotifyRepository struct {
-	DB *gorm.DB
+	DB *sqlx.DB
 }
 
 func (spr *SpotifyRepository) GetTracks(token string, title string) (*model.Response, error) {

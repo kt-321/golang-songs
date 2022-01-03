@@ -7,18 +7,14 @@ import (
 	"golang-songs/model"
 	"net/http"
 
-	"github.com/jinzhu/gorm"
+	"github.com/jmoiron/sqlx"
 )
-
-//type UserController struct {
-//	UserInteractor usecases.UserInteractor
-//}
 
 type userCommandsServer struct {
 	usecase usecase
 }
 
-func NewUserController(DB *gorm.DB) *userCommandsServer {
+func NewUserController(DB *sqlx.DB) *userCommandsServer {
 	return &userCommandsServer{
 		usecase: usecase{
 			UserRepository: &domain.UserRepository{

@@ -7,18 +7,17 @@ import (
 	"golang-songs/usecases"
 	"net/http"
 
+	"github.com/jmoiron/sqlx"
 	"golang.org/x/oauth2"
 
 	"os"
-
-	"github.com/jinzhu/gorm"
 )
 
 type SpotifyController struct {
 	SpotifyInteractor usecases.SpotifyInteractor
 }
 
-func NewSpotifyController(DB *gorm.DB) *SpotifyController {
+func NewSpotifyController(DB *sqlx.DB) *SpotifyController {
 	return &SpotifyController{
 		SpotifyInteractor: usecases.SpotifyInteractor{
 			SpotifyRepository: &SpotifyRepository{

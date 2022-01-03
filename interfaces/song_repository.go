@@ -8,12 +8,13 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/jinzhu/gorm"
+	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/singleflight"
 )
 
 type SongRepository struct {
-	DB           *gorm.DB
+	DB           *sqlx.DB
 	Redis        redis.Conn
 	SidecarRedis redis.Conn
 }

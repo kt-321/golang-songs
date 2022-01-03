@@ -12,6 +12,7 @@ require (
 	github.com/google/go-cmp v0.4.1
 	github.com/gorilla/mux v1.7.4
 	github.com/jinzhu/gorm v1.9.12
+	github.com/jmoiron/sqlx v1.3.4
 	github.com/joho/godotenv v1.3.0
 	github.com/pkg/errors v0.8.1
 	github.com/rubenv/sql-migrate v0.0.0-20210215143335-f84234893558

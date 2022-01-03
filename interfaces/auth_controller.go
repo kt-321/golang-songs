@@ -7,10 +7,11 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/jmoiron/sqlx"
+
 	"github.com/dgrijalva/jwt-go"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 
 	"golang-songs/usecases"
@@ -20,7 +21,7 @@ type AuthController struct {
 	AuthInteractor usecases.AuthInteractor
 }
 
-func NewAuthController(DB *gorm.DB) *AuthController {
+func NewAuthController(DB *sqlx.DB) *AuthController {
 	return &AuthController{
 		AuthInteractor: usecases.AuthInteractor{
 			AuthRepository: &AuthRepository{

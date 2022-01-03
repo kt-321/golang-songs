@@ -3,11 +3,11 @@ package domain
 import (
 	"golang-songs/model"
 
-	"github.com/jinzhu/gorm"
+	"github.com/jmoiron/sqlx"
 )
 
 type UserDataAccessor struct {
-	DB *gorm.DB
+	DB *sqlx.DB
 }
 
 type DataAccessor interface {

@@ -4,14 +4,14 @@ import (
 	"golang-songs/usecases"
 	"net/http"
 
-	"github.com/jinzhu/gorm"
+	"github.com/jmoiron/sqlx"
 )
 
 type BookmarkController struct {
 	BookmarkInteractor usecases.BookmarkInteractor
 }
 
-func NewBookmarkController(DB *gorm.DB) *BookmarkController {
+func NewBookmarkController(DB *sqlx.DB) *BookmarkController {
 	return &BookmarkController{
 		BookmarkInteractor: usecases.BookmarkInteractor{
 			BookmarkRepository: &BookmarkRepository{

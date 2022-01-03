@@ -10,14 +10,14 @@ import (
 
 	"net/http"
 
-	"github.com/jinzhu/gorm"
+	"github.com/jmoiron/sqlx"
 )
 
 type userQueryServer struct {
 	usecase usecase
 }
 
-func NewUserQueryServer(DB *gorm.DB) *userQueryServer {
+func NewUserQueryServer(DB *sqlx.DB) *userQueryServer {
 	return &userQueryServer{
 		usecase: usecase{
 			da: &dataAccessor{

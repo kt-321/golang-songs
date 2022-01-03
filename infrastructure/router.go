@@ -11,11 +11,12 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/jmoiron/sqlx"
+
 	migrate "github.com/rubenv/sql-migrate"
 
 	stats_api "github.com/fukata/golang-stats-api-handler"
 
-	"github.com/jinzhu/gorm"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/garyburd/redigo/redis"
@@ -29,7 +30,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func Dispatch(DB *gorm.DB, Redis redis.Conn, SidecarRedis redis.Conn) {
+//func Dispatch(DB *sqlx.DB, Redis redis.Conn, SidecarRedis redis.Conn) {
+func Dispatch(DB *sqlx.DB, Redis redis.Conn, SidecarRedis redis.Conn) {
 	authController := interfaces.NewAuthController(DB)
 	userQueryServer := userQuery.NewUserQueryServer(DB)
 	userCommandsServer := userCommands.NewUserController(DB)

@@ -1,12 +1,14 @@
 package interfaces
 
 import (
-	"github.com/jinzhu/gorm"
 	"golang-songs/model"
+
+	"github.com/jinzhu/gorm"
+	"github.com/jmoiron/sqlx"
 )
 
 type UserFollowRepository struct {
-	DB *gorm.DB
+	DB *sqlx.DB
 }
 
 func (ufr *UserFollowRepository) Follow(requestUserEmail string, targetUserID int) error {
