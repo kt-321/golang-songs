@@ -1,10 +1,9 @@
-package interfaces
+package userQuery
 
 import (
-	"bytes"
 	"encoding/json"
+	"golang-songs/interfaces"
 	"golang-songs/model"
-	"golang-songs/usecases"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -15,9 +14,9 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type FakeUserRepository struct{}
+type FakeDataAccessor struct{}
 
-func (fur *FakeUserRepository) FindAll() (*[]model.User, error) {
+func (fur *FakeDataAccessor) FindAll() (*[]model.User, error) {
 	user1 := model.User{
 		ID:               1,
 		CreatedAt:        time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
@@ -53,7 +52,7 @@ func (fur *FakeUserRepository) FindAll() (*[]model.User, error) {
 	return &users, nil
 }
 
-func (fur *FakeUserRepository) GetUser(userEmail string) (*model.User, error) {
+func (fur *FakeDataAccessor) GetUser(userEmail string) (*model.User, error) {
 	user := model.User{
 		ID:               1,
 		CreatedAt:        time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
@@ -72,7 +71,7 @@ func (fur *FakeUserRepository) GetUser(userEmail string) (*model.User, error) {
 	return &user, nil
 }
 
-func (fur *FakeUserRepository) FindByID(userID int) (*model.User, error) {
+func (fur *FakeDataAccessor) FindByID(userID int) (*model.User, error) {
 	user := model.User{
 		ID:               1,
 		CreatedAt:        time.Date(2020, 6, 1, 9, 0, 0, 0, time.Local),
@@ -89,10 +88,6 @@ func (fur *FakeUserRepository) FindByID(userID int) (*model.User, error) {
 	}
 
 	return &user, nil
-}
-
-func (fur *FakeUserRepository) Update(userID int, p model.User) error {
-	return nil
 }
 
 // idで指定したユーザーの情報を返すハンドラのテスト.
@@ -106,7 +101,7 @@ func TestGetUserHandler(t *testing.T) {
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 
 	// トークン作成.
-	token, err := createToken(user)
+	token, err := interfaces.CreateToken(user)
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
 	}
@@ -118,14 +113,14 @@ func TestGetUserHandler(t *testing.T) {
 	// テスト用のレスポンス作成.
 	res := httptest.NewRecorder()
 
-	fakeUserController := &UserController{
-		UserInteractor: usecases.UserInteractor{
-			UserRepository: &FakeUserRepository{},
+	fakeUserController := &userQueryServer{
+		usecase: usecase{
+			da: &FakeDataAccessor{},
 		},
 	}
 
 	r := mux.NewRouter()
-	r.Handle("/api/user/{id}", http.HandlerFunc(fakeUserController.GetUserHandler)).Methods("GET")
+	r.Handle("/api/user/{id}", http.HandlerFunc(fakeUserController.GetUser)).Methods("GET")
 	r.ServeHTTP(res, req)
 
 	// レスポンスのステータスコードのテスト
@@ -172,7 +167,7 @@ func TestUserHandler(t *testing.T) {
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 
 	// トークン作成.
-	token, err := createToken(user)
+	token, err := interfaces.CreateToken(user)
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
 	}
@@ -184,10 +179,12 @@ func TestUserHandler(t *testing.T) {
 	// テスト用のレスポンス作成.
 	res := httptest.NewRecorder()
 
-	f := &UserController{UserInteractor: usecases.UserInteractor{
-		UserRepository: &FakeUserRepository{},
-	}}
-	f.UserHandler(res, req)
+	fakeUserController := &userQueryServer{
+		usecase: usecase{
+			da: &FakeDataAccessor{},
+		},
+	}
+	fakeUserController.User(res, req)
 
 	// レスポンスのステータスコードのテスト.
 	if res.Code != http.StatusOK {
@@ -233,7 +230,7 @@ func TestAllUsersHandler(t *testing.T) {
 	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
 
 	// トークン作成.
-	token, err := createToken(user)
+	token, err := interfaces.CreateToken(user)
 	if err != nil {
 		t.Fatal("トークンの作成に失敗しました")
 	}
@@ -245,10 +242,12 @@ func TestAllUsersHandler(t *testing.T) {
 	// テスト用のレスポンス作成.
 	res := httptest.NewRecorder()
 
-	f := &UserController{UserInteractor: usecases.UserInteractor{
-		UserRepository: &FakeUserRepository{},
-	}}
-	f.AllUsersHandler(res, req)
+	fakeUserController := &userQueryServer{
+		usecase: usecase{
+			da: &FakeDataAccessor{},
+		},
+	}
+	fakeUserController.AllUsers(res, req)
 
 	// レスポンスのステータスコードのテスト.
 	if res.Code != http.StatusOK {
@@ -296,51 +295,5 @@ func TestAllUsersHandler(t *testing.T) {
 	if diff := cmp.Diff(p, expected); diff != "" {
 		t.Errorf("handler returned unexpected body: %v",
 			diff)
-	}
-}
-
-// idで指定したユーザーの情報を更新するハンドラのテスト.
-func TestUpdateUserHandler(t *testing.T) {
-	// テスト用の JSON ボディ作成.
-	b, err := json.Marshal(model.User{Email: "hoge@test.co.jp", Name: "hogehoge", Age: 0, Gender: 0, FavoriteMusicAge: 0, FavoriteArtist: "椎名林檎", Comment: "テストユーザーです。"})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// テスト用のリクエスト作成.
-	req := httptest.NewRequest("PUT", "/api/user/2/update", bytes.NewBuffer(b))
-
-	// headerをセット.
-	req.Header.Set("Content-Type", "application/json")
-
-	// リクエストユーザー作成.
-	user := model.User{Email: "a@test.co.jp", Password: "aaaaaa"}
-
-	// トークン作成.
-	token, err := createToken(user)
-	if err != nil {
-		t.Fatal("トークンの作成に失敗しました")
-	}
-
-	jointToken := "Bearer" + " " + token
-
-	req.Header.Set("Authorization", jointToken)
-
-	// テスト用のレスポンス作成.
-	res := httptest.NewRecorder()
-
-	fakeUserController := &UserController{
-		UserInteractor: usecases.UserInteractor{
-			UserRepository: &FakeUserRepository{},
-		},
-	}
-
-	r := mux.NewRouter()
-	r.Handle("/api/user/{id}/update", http.HandlerFunc(fakeUserController.UpdateUserHandler)).Methods("PUT")
-	r.ServeHTTP(res, req)
-
-	// レスポンスのステータスコードのテスト(204).
-	if res.Code != http.StatusNoContent {
-		t.Errorf("invalid code: %d", res.Code)
 	}
 }

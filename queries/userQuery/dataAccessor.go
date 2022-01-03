@@ -1,4 +1,4 @@
-package interfaces
+package userQuery
 
 import (
 	"golang-songs/model"
@@ -6,11 +6,11 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-type UserRepository struct {
+type dataAccessor struct {
 	DB *gorm.DB
 }
 
-func (ur *UserRepository) FindAll() (*[]model.User, error) {
+func (ur *dataAccessor) FindAll() (*[]model.User, error) {
 	var users []model.User
 	if err := ur.DB.Find(&users).Error; gorm.IsRecordNotFoundError(err) {
 		return nil, err
@@ -19,7 +19,7 @@ func (ur *UserRepository) FindAll() (*[]model.User, error) {
 	return &users, nil
 }
 
-func (ur *UserRepository) GetUser(userEmail string) (*model.User, error) {
+func (ur *dataAccessor) GetUser(userEmail string) (*model.User, error) {
 	var user model.User
 	if err := ur.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
 		return nil, err
@@ -32,7 +32,7 @@ func (ur *UserRepository) GetUser(userEmail string) (*model.User, error) {
 	return &user, nil
 }
 
-func (ur *UserRepository) FindByID(userID int) (*model.User, error) {
+func (ur *dataAccessor) FindByID(userID int) (*model.User, error) {
 	var user model.User
 
 	if err := ur.DB.Where("id = ?", userID).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
@@ -44,14 +44,4 @@ func (ur *UserRepository) FindByID(userID int) (*model.User, error) {
 	}
 
 	return &user, nil
-}
-
-func (ur *UserRepository) Update(userID int, p model.User) error {
-	var user model.User
-
-	if err := ur.DB.Model(&user).Where("id = ?", userID).Update(model.User{Email: p.Email, Name: p.Name, Age: p.Age, Gender: p.Gender, FavoriteMusicAge: p.FavoriteMusicAge, FavoriteArtist: p.FavoriteArtist, Comment: p.Comment}).Error; err != nil {
-		return err
-	}
-
-	return nil
 }

@@ -27,13 +27,13 @@ func (ufc *UserFollowController) FollowUserHandler(w http.ResponseWriter, r *htt
 	requestUserEmail, targetUserID, errorSet := GetEmailAndId(r)
 
 	if errorSet != nil {
-		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
+		ErrorInResponse(w, errorSet.StatusCode, errorSet.Message)
 
 		return
 	}
 
 	if err := ufc.UserFollowInteractor.Follow(requestUserEmail, targetUserID); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, FollowUserError)
+		ErrorInResponse(w, http.StatusInternalServerError, FollowUserError)
 
 		return
 	}
@@ -48,13 +48,13 @@ func (ufc *UserFollowController) UnfollowUserHandler(w http.ResponseWriter, r *h
 	requestUserEmail, targetUserID, errorSet := GetEmailAndId(r)
 
 	if errorSet != nil {
-		errorInResponse(w, errorSet.StatusCode, errorSet.Message)
+		ErrorInResponse(w, errorSet.StatusCode, errorSet.Message)
 
 		return
 	}
 
 	if err := ufc.UserFollowInteractor.Unfollow(requestUserEmail, targetUserID); err != nil {
-		errorInResponse(w, http.StatusInternalServerError, UnfollowUserError)
+		ErrorInResponse(w, http.StatusInternalServerError, UnfollowUserError)
 
 		return
 	}

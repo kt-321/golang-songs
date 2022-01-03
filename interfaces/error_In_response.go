@@ -8,7 +8,7 @@ import (
 )
 
 // レスポンスにエラーメッセージを突っ込んで返却するメソッド.
-func errorInResponse(w http.ResponseWriter, status int, message string) {
+func ErrorInResponse(w http.ResponseWriter, status int, message string) {
 	w.WriteHeader(status)
 
 	log.Printf("%v: %v", status, message)

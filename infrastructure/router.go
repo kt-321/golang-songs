@@ -23,12 +23,16 @@ import (
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	"github.com/dgrijalva/jwt-go"
 
+	"golang-songs/commands/userCommands"
+	"golang-songs/queries/userQuery"
+
 	"github.com/gorilla/mux"
 )
 
 func Dispatch(DB *gorm.DB, Redis redis.Conn, SidecarRedis redis.Conn) {
 	authController := interfaces.NewAuthController(DB)
-	userController := interfaces.NewUserController(DB)
+	userQueryServer := userQuery.NewUserQueryServer(DB)
+	userCommandsServer := userCommands.NewUserController(DB)
 	songController := interfaces.NewSongController(DB, Redis, SidecarRedis)
 	bookmarkController := interfaces.NewBookmarkController(DB)
 	userFollowController := interfaces.NewUserFollowController(DB)
@@ -40,10 +44,11 @@ func Dispatch(DB *gorm.DB, Redis redis.Conn, SidecarRedis redis.Conn) {
 	s.HandleFunc("/signup", authController.SignUpHandler).Methods("POST")
 	s.HandleFunc("/login", authController.LoginHandler).Methods("POST")
 
-	s.Handle("/user", JwtMiddleware.Handler(http.HandlerFunc(userController.UserHandler))).Methods("GET")
-	s.Handle("/users", JwtMiddleware.Handler(http.HandlerFunc(userController.AllUsersHandler))).Methods("GET")
-	s.Handle("/user/{id}", JwtMiddleware.Handler(http.HandlerFunc(userController.GetUserHandler))).Methods("GET")
-	s.Handle("/user/{id}/update", JwtMiddleware.Handler(http.HandlerFunc(userController.UpdateUserHandler))).Methods("PUT")
+	s.Handle("/user", JwtMiddleware.Handler(http.HandlerFunc(userQueryServer.User))).Methods("GET")
+	s.Handle("/users", JwtMiddleware.Handler(http.HandlerFunc(userQueryServer.AllUsers))).Methods("GET")
+	s.Handle("/user/{id}", JwtMiddleware.Handler(http.HandlerFunc(userQueryServer.GetUser))).Methods("GET")
+
+	s.Handle("/user/{id}/update", JwtMiddleware.Handler(http.HandlerFunc(userCommandsServer.UpdateUser))).Methods("PUT")
 
 	s.Handle("/songs", JwtMiddleware.Handler(http.HandlerFunc(songController.AllSongsHandler))).Methods("GET")
 	s.Handle("/song/{id}", JwtMiddleware.Handler(http.HandlerFunc(songController.GetSongHandler))).Methods("GET")
