@@ -5,30 +5,31 @@ import (
 	"golang-songs/domain"
 	"golang-songs/interfaces"
 	"golang-songs/model"
-	"golang-songs/usecases"
 	"net/http"
 
 	"github.com/jinzhu/gorm"
 )
 
-type UserController struct {
-	UserInteractor usecases.UserInteractor
+//type UserController struct {
+//	UserInteractor usecases.UserInteractor
+//}
+
+type userCommandsServer struct {
+	usecase usecase
 }
 
-func NewUserController(DB *gorm.DB) *UserController {
-	return &UserController{
-		UserInteractor: usecases.UserInteractor{
+func NewUserController(DB *gorm.DB) *userCommandsServer {
+	return &userCommandsServer{
+		usecase: usecase{
 			UserRepository: &domain.UserRepository{
-				Da: domain.UserDataAccessor{
-					DB: DB,
-				},
+				Da: domain.UserDataAccessor{DB: DB},
 			},
 		},
 	}
 }
 
 // idで指定したユーザーの情報を更新する.
-func (uc *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
+func (uc *userCommandsServer) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	// 対象のユーザーidを取得.
 	userID, errorSet := interfaces.GetId(r)
 
@@ -46,7 +47,7 @@ func (uc *UserController) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := uc.UserInteractor.Update(userID, d); err != nil {
+	if err := uc.usecase.UserRepository.Update(userID, d); err != nil {
 		interfaces.ErrorInResponse(w, http.StatusInternalServerError, interfaces.UpdateUserError)
 
 		return
