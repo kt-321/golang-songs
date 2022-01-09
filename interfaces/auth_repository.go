@@ -3,9 +3,7 @@ package interfaces
 import (
 	"golang-songs/model"
 
-	"github.com/jinzhu/gorm"
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
 )
 
 // インタフェースAuthRepositoryInterfaceを満たす
@@ -19,31 +17,34 @@ func (ar *AuthRepository) SignUp(form model.Form) error {
 	//}
 
 	// https://codehex.hateblo.jp/entry/2018/05/21/100000
-	tx := ar.DB.MustBegin()
-	defer func() error {
-		if err := tx.Rollback(); err != nil {
-			return err
-		}
-		return nil
-	}()
-
-	q := `insert ignore into users (email, password) values (?, ?);`
-
-	tx.MustExec(q, form.Email, form.Password)
-
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-
+	//tx := ar.DB.MustBegin()
+	//defer func() error {
+	//	if err := tx.Rollback(); err != nil {
+	//		return err
+	//	}
+	//	return nil
+	//}()
+	//
+	//q := `insert ignore into users (email, password) values (?, ?);`
+	//
+	//tx.MustExec(q, form.Email, form.Password)
+	//
+	//if err := tx.Commit(); err != nil {
+	//	return err
+	//}
+	//TODO
 	return nil
 }
 
 func (ar *AuthRepository) Login(form model.Form) (*model.User, error) {
-	var user model.User
+	//var user model.User
+	//
+	//if err := ar.DB.Where("email = ?", form.Email).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+	//	return nil, errors.WithStack(err)
+	//}
 
-	if err := ar.DB.Where("email = ?", form.Email).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
-		return nil, errors.WithStack(err)
-	}
+	//return &user, nil
 
-	return &user, nil
+	//TODO
+	return nil, nil
 }

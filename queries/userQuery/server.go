@@ -3,7 +3,6 @@ package userQuery
 import (
 	"encoding/json"
 	"golang-songs/interfaces"
-	"golang-songs/model"
 
 	//"golang-songs/queries/userQuery"
 	//"golang-songs/usecases"
@@ -27,9 +26,11 @@ func NewUserQueryServer(DB *sqlx.DB) *userQueryServer {
 	}
 }
 
+//TODO interface
+
 // 全てのユーザーを返す.
-func (uqs *userQueryServer) AllUsers(w http.ResponseWriter, r *http.Request) {
-	allUsers, err := uqs.usecase.Index()
+func (uqs *userQueryServer) GetAllUsers(w http.ResponseWriter, r *http.Request) {
+	allUsers, err := uqs.usecase.GetAllUsers()
 
 	if err != nil {
 		interfaces.ErrorInResponse(w, http.StatusInternalServerError, interfaces.GetUserError)
@@ -53,7 +54,7 @@ func (uqs *userQueryServer) AllUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 // リクエストユーザーの情報を返す.
-func (uqs *userQueryServer) User(w http.ResponseWriter, r *http.Request) {
+func (uqs *userQueryServer) GetAuthUser(w http.ResponseWriter, r *http.Request) {
 	// リクエストユーザーのメアドを取得.
 	userEmail, errorSet := interfaces.GetEmail(r)
 
@@ -63,9 +64,7 @@ func (uqs *userQueryServer) User(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var user *model.User
-
-	user, err := uqs.usecase.User(userEmail)
+	user, err := uqs.usecase.FindUserByEmail(userEmail)
 
 	if err != nil {
 		interfaces.ErrorInResponse(w, http.StatusInternalServerError, interfaces.GetAccountError)
@@ -99,7 +98,7 @@ func (uqs *userQueryServer) GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := uqs.usecase.Show(userID)
+	user, err := uqs.usecase.FindUserByID(userID)
 
 	if err != nil {
 		interfaces.ErrorInResponse(w, http.StatusInternalServerError, interfaces.GetAccountError)

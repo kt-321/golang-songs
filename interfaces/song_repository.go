@@ -7,10 +7,7 @@ import (
 	"time"
 
 	"github.com/garyburd/redigo/redis"
-	"github.com/jinzhu/gorm"
 	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
-	"golang.org/x/sync/singleflight"
 )
 
 type SongRepository struct {
@@ -150,262 +147,275 @@ func rdsSongToMap(song model.Song) map[string]string {
 }
 
 func (sr *SongRepository) FindAll() (*[]model.Song, error) {
-	var songs []model.Song
+	//var songs []model.Song
+	//
+	//if err := sr.DB.Find(&songs).Error; gorm.IsRecordNotFoundError(err) {
+	//	return nil, err
+	//}
+	//
+	//return &songs, nil
 
-	if err := sr.DB.Find(&songs).Error; gorm.IsRecordNotFoundError(err) {
-		return nil, err
-	}
-
-	return &songs, nil
+	//TODO
+	return nil, nil
 }
 
 func (sr *SongRepository) FindByID(songID int) (*model.Song, error) {
-	var song model.Song
+	//var song model.Song
 
 	// singleflightで同時関数呼び出しを1度に抑える.
-	var g singleflight.Group
-	v, err, _ := g.Do("key", func() (interface{}, error) {
-		// サイドカーコンテナのRedisにキャッシュがあるか確認
-		exists, err := ExistsSongByID(songID, sr.SidecarRedis)
+	//var g singleflight.Group
+	//v, err, _ := g.Do("key", func() (interface{}, error) {
+	//	// サイドカーコンテナのRedisにキャッシュがあるか確認
+	//	exists, err := ExistsSongByID(songID, sr.SidecarRedis)
+	//
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//
+	//	// サイドカーコンテナのRedisにキャッシュが存在する場合.
+	//	if exists > 0 {
+	//		// サイドカーのRedisのキャッシュを取得.
+	//		t, err := GetSongByID(songID, sr.SidecarRedis)
+	//
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//
+	//		// mapから構造体Songへと変換.
+	//		value, err := MapToSong(t)
+	//
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//		song = *value
+	//	} else {
+	//		// サイドカーコンテナのRedisにキャッシュが存在しない場合、リモートのRedisにキャッシュがあるか確認.
+	//		exists, err := ExistsSongByID(songID, sr.Redis)
+	//
+	//		if err != nil {
+	//			return nil, err
+	//		}
+	//
+	//		// リモートのRedisにキャッシュが存在する場合.
+	//		if exists > 0 {
+	//			// リモートのRedisのキャッシュを取得.
+	//			t, err := GetSongByID(songID, sr.Redis)
+	//
+	//			if err != nil {
+	//				return nil, err
+	//			}
+	//
+	//			// mapから構造体Songへと変換.
+	//			value, err := MapToSong(t)
+	//
+	//			if err != nil {
+	//				return nil, err
+	//			}
+	//
+	//			song = *value
+	//
+	//			// サイドカーコンテナのRedisに保存。キャッシュのTTLは1800秒(30分).
+	//			err = SetSongByID(songID, t, sr.SidecarRedis, 1800)
+	//
+	//			if err != nil {
+	//				return nil, err
+	//			}
+	//		} else {
+	//			// リモートのRedisにキャッシュが存在しない場合RDSに値を取りに行く.
+	//			result := sr.DB.Where("id = ?", songID).Find(&song)
+	//
+	//			// RDSからの値取得に成功した場合
+	//			if result.Error == nil {
+	//				// RDSから取得した曲情報をmapへと変換.
+	//				t := rdsSongToMap(song)
+	//
+	//				// リモートのRedisに保存。キャッシュのTTLは1800秒(30分).
+	//				err = SetSongByID(songID, t, sr.Redis, 1800)
+	//
+	//				if err != nil {
+	//					return nil, err
+	//				}
+	//
+	//				// サイドカーコンテナのRedisに保存。キャッシュのTTLは1800秒(30分).
+	//				err = SetSongByID(songID, t, sr.SidecarRedis, 1800)
+	//
+	//				if err != nil {
+	//					return nil, err
+	//				}
+	//			} else {
+	//				// RDSからの値取得に失敗した場合.
+	//				return nil, result.Error
+	//			}
+	//		}
+	//	}
+	//
+	//	return song, nil
+	//})
+	//
+	//if err != nil {
+	//	return nil, errors.WithStack(err)
+	//}
+	//
+	//// model.Song型に戻す.
+	//responseSong, ok := v.(model.Song)
+	//
+	//if !ok {
+	//	return nil, errors.New("型変換に失敗")
+	//}
+	//
+	//if err := sr.DB.Preload("Bookmarkers", "bookmarks.deleted_at is null").Find(&responseSong).Error; err != nil {
+	//	return nil, errors.WithStack(err)
+	//}
 
-		if err != nil {
-			return nil, err
-		}
+	//return &responseSong, nil
 
-		// サイドカーコンテナのRedisにキャッシュが存在する場合.
-		if exists > 0 {
-			// サイドカーのRedisのキャッシュを取得.
-			t, err := GetSongByID(songID, sr.SidecarRedis)
-
-			if err != nil {
-				return nil, err
-			}
-
-			// mapから構造体Songへと変換.
-			value, err := MapToSong(t)
-
-			if err != nil {
-				return nil, err
-			}
-			song = *value
-		} else {
-			// サイドカーコンテナのRedisにキャッシュが存在しない場合、リモートのRedisにキャッシュがあるか確認.
-			exists, err := ExistsSongByID(songID, sr.Redis)
-
-			if err != nil {
-				return nil, err
-			}
-
-			// リモートのRedisにキャッシュが存在する場合.
-			if exists > 0 {
-				// リモートのRedisのキャッシュを取得.
-				t, err := GetSongByID(songID, sr.Redis)
-
-				if err != nil {
-					return nil, err
-				}
-
-				// mapから構造体Songへと変換.
-				value, err := MapToSong(t)
-
-				if err != nil {
-					return nil, err
-				}
-
-				song = *value
-
-				// サイドカーコンテナのRedisに保存。キャッシュのTTLは1800秒(30分).
-				err = SetSongByID(songID, t, sr.SidecarRedis, 1800)
-
-				if err != nil {
-					return nil, err
-				}
-			} else {
-				// リモートのRedisにキャッシュが存在しない場合RDSに値を取りに行く.
-				result := sr.DB.Where("id = ?", songID).Find(&song)
-
-				// RDSからの値取得に成功した場合
-				if result.Error == nil {
-					// RDSから取得した曲情報をmapへと変換.
-					t := rdsSongToMap(song)
-
-					// リモートのRedisに保存。キャッシュのTTLは1800秒(30分).
-					err = SetSongByID(songID, t, sr.Redis, 1800)
-
-					if err != nil {
-						return nil, err
-					}
-
-					// サイドカーコンテナのRedisに保存。キャッシュのTTLは1800秒(30分).
-					err = SetSongByID(songID, t, sr.SidecarRedis, 1800)
-
-					if err != nil {
-						return nil, err
-					}
-				} else {
-					// RDSからの値取得に失敗した場合.
-					return nil, result.Error
-				}
-			}
-		}
-
-		return song, nil
-	})
-
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	// model.Song型に戻す.
-	responseSong, ok := v.(model.Song)
-
-	if !ok {
-		return nil, errors.New("型変換に失敗")
-	}
-
-	if err := sr.DB.Preload("Bookmarkers", "bookmarks.deleted_at is null").Find(&responseSong).Error; err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	return &responseSong, nil
+	//TODO
+	return nil, nil
 }
 
 func (sr *SongRepository) Save(userEmail string, p model.Song) error {
-	var user model.User
+	//var user model.User
+	//
+	//if err := sr.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+	//	return err
+	//}
+	//
+	//result := sr.DB.Create(&model.Song{
+	//	Title:          p.Title,
+	//	Artist:         p.Artist,
+	//	MusicAge:       p.MusicAge,
+	//	Image:          p.Image,
+	//	Video:          p.Video,
+	//	Album:          p.Album,
+	//	Description:    p.Description,
+	//	SpotifyTrackId: p.SpotifyTrackId,
+	//	UserID:         user.ID})
+	//
+	//// RDSへのInsertに成功した場合.
+	//if result.Error == nil {
+	//	var song model.Song
+	//
+	//	scanResult := result.Scan(&song)
+	//
+	//	if scanResult.Error != nil {
+	//		return scanResult.Error
+	//	}
+	//
+	//	// 曲情報をmapへと変換.
+	//	t := rdsSongToMap(song)
+	//
+	//	// リモートのRedisに入れる。キャッシュのTTLは1800秒(30分).
+	//	err := SetSongByID(int(song.ID), t, sr.Redis, 1800)
+	//
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	// サイドカーコンテナのRedisに入れる。キャッシュのTTLは1800秒(30分).
+	//	err = SetSongByID(int(song.ID), t, sr.SidecarRedis, 1800)
+	//
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	return nil
+	//}
+	//// RDBへのInsertに失敗した場合.
+	//return result.Error
 
-	if err := sr.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
-		return err
-	}
-
-	result := sr.DB.Create(&model.Song{
-		Title:          p.Title,
-		Artist:         p.Artist,
-		MusicAge:       p.MusicAge,
-		Image:          p.Image,
-		Video:          p.Video,
-		Album:          p.Album,
-		Description:    p.Description,
-		SpotifyTrackId: p.SpotifyTrackId,
-		UserID:         user.ID})
-
-	// RDSへのInsertに成功した場合.
-	if result.Error == nil {
-		var song model.Song
-
-		scanResult := result.Scan(&song)
-
-		if scanResult.Error != nil {
-			return scanResult.Error
-		}
-
-		// 曲情報をmapへと変換.
-		t := rdsSongToMap(song)
-
-		// リモートのRedisに入れる。キャッシュのTTLは1800秒(30分).
-		err := SetSongByID(int(song.ID), t, sr.Redis, 1800)
-
-		if err != nil {
-			return err
-		}
-
-		// サイドカーコンテナのRedisに入れる。キャッシュのTTLは1800秒(30分).
-		err = SetSongByID(int(song.ID), t, sr.SidecarRedis, 1800)
-
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
-	// RDBへのInsertに失敗した場合.
-	return result.Error
+	//TODO
+	return nil
 }
 
 func (sr *SongRepository) UpdateByID(userEmail string, songID int, p model.Song) error {
-	var user model.User
-	// RDSからリクエストユーザーの情報を取得.
-	if err := sr.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
-		return err
-	}
+	//var user model.User
+	//// RDSからリクエストユーザーの情報を取得.
+	//if err := sr.DB.Where("email = ?", userEmail).Find(&user).Error; gorm.IsRecordNotFoundError(err) {
+	//	return err
+	//}
+	//
+	//var song model.Song
+	//
+	//// RDSの該当する曲のデータを更新.
+	//result := sr.DB.Model(&song).Where("id = ?", songID).Update(model.Song{
+	//	Title:          p.Title,
+	//	Artist:         p.Artist,
+	//	MusicAge:       p.MusicAge,
+	//	Image:          p.Image,
+	//	Video:          p.Video,
+	//	Album:          p.Album,
+	//	Description:    p.Description,
+	//	SpotifyTrackId: p.SpotifyTrackId})
+	//
+	//if result.Error == nil {
+	//	var updatedSong model.Song
+	//
+	//	scanResult := result.Scan(&updatedSong)
+	//
+	//	if scanResult.Error != nil {
+	//		return scanResult.Error
+	//	}
+	//
+	//	// 曲情報をmapへと変換.
+	//	t := rdsSongToMap(updatedSong)
+	//
+	//	// リモートのRedisに保存。キャッシュのTTLは1800秒(30分).
+	//	err := SetSongByID(int(updatedSong.ID), t, sr.Redis, 1800)
+	//
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	// サイドカーコンテナのRedisに保存。キャッシュのTTLは1800秒(30分).
+	//	err = SetSongByID(int(updatedSong.ID), t, sr.SidecarRedis, 1800)
+	//	if err != nil {
+	//		return err
+	//	}
+	//
+	//	return nil
+	//}
+	//// RDBにInsertするのに失敗した場合.
+	//return result.Error
 
-	var song model.Song
-
-	// RDSの該当する曲のデータを更新.
-	result := sr.DB.Model(&song).Where("id = ?", songID).Update(model.Song{
-		Title:          p.Title,
-		Artist:         p.Artist,
-		MusicAge:       p.MusicAge,
-		Image:          p.Image,
-		Video:          p.Video,
-		Album:          p.Album,
-		Description:    p.Description,
-		SpotifyTrackId: p.SpotifyTrackId})
-
-	if result.Error == nil {
-		var updatedSong model.Song
-
-		scanResult := result.Scan(&updatedSong)
-
-		if scanResult.Error != nil {
-			return scanResult.Error
-		}
-
-		// 曲情報をmapへと変換.
-		t := rdsSongToMap(updatedSong)
-
-		// リモートのRedisに保存。キャッシュのTTLは1800秒(30分).
-		err := SetSongByID(int(updatedSong.ID), t, sr.Redis, 1800)
-
-		if err != nil {
-			return err
-		}
-
-		// サイドカーコンテナのRedisに保存。キャッシュのTTLは1800秒(30分).
-		err = SetSongByID(int(updatedSong.ID), t, sr.SidecarRedis, 1800)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}
-	// RDBにInsertするのに失敗した場合.
-	return result.Error
+	//TODO
+	return nil
 }
 
 func (sr *SongRepository) DeleteByID(songID int) error {
-	var song model.Song
+	//var song model.Song
+	//
+	//if err := sr.DB.Where("id = ?", songID).Delete(&song).Error; err != nil {
+	//	return err
+	//}
+	//
+	//// リモートのRedisに入っている場合のみに削除.
+	//remoteExists, err := redis.Int(sr.Redis.Do("EXISTS", fmt.Sprintf("song:%d", songID)))
+	//
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//if remoteExists > 0 {
+	//	err := DeleteSongByID(songID, sr.Redis)
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
+	//
+	//// サイドカーコンテナのRedisに入っている場合のみに削除.
+	//sidecarExists, err := redis.Int(sr.SidecarRedis.Do("EXISTS", fmt.Sprintf("song:%d", songID)))
+	//
+	//if err != nil {
+	//	return err
+	//}
+	//
+	//if sidecarExists > 0 {
+	//	err := DeleteSongByID(songID, sr.SidecarRedis)
+	//	if err != nil {
+	//		return err
+	//	}
+	//}
 
-	if err := sr.DB.Where("id = ?", songID).Delete(&song).Error; err != nil {
-		return err
-	}
-
-	// リモートのRedisに入っている場合のみに削除.
-	remoteExists, err := redis.Int(sr.Redis.Do("EXISTS", fmt.Sprintf("song:%d", songID)))
-
-	if err != nil {
-		return err
-	}
-
-	if remoteExists > 0 {
-		err := DeleteSongByID(songID, sr.Redis)
-		if err != nil {
-			return err
-		}
-	}
-
-	// サイドカーコンテナのRedisに入っている場合のみに削除.
-	sidecarExists, err := redis.Int(sr.SidecarRedis.Do("EXISTS", fmt.Sprintf("song:%d", songID)))
-
-	if err != nil {
-		return err
-	}
-
-	if sidecarExists > 0 {
-		err := DeleteSongByID(songID, sr.SidecarRedis)
-		if err != nil {
-			return err
-		}
-	}
-
+	//TODO
 	return nil
 }
