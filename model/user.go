@@ -4,6 +4,7 @@ import "time"
 
 type Users []User
 
+//TODO 調整
 type User struct {
 	ID               uint       `json:"id"`
 	CreatedAt        time.Time  `json:"createdAt"`

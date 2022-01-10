@@ -12,7 +12,6 @@ type usecase struct {
 type Usecase interface {
 	GetAllUsers() (*[]model.User, error)
 	FindUserByEmail(userEmail string) (*findUserByEmailRes, error)
-	//GetUserByEail(string) (*model.User, error)
 	FindUserByID(userID int) (*findUserByIDRes, error)
 }
 
@@ -55,12 +54,30 @@ type findUserByIDRes struct {
 type DataAccessor interface {
 	GetAllUsers() (*[]model.User, error)
 	GetUserInfoByEmail(userEmail string) (*getUserInfoByEmailRes, error)
-	GetUserInfoByID(userID int) (*model.User, error)
+	GetUserInfoByID(userID int) (*getUserInfoByIDRes, error)
 	GetBookmarkings(userID int) (*getBookmarkingsRes, error)
 	GetFollowees(userID int) (*getFolloweesRes, error)
 }
 
 type getUserInfoByEmailRes struct {
+	ID               uint
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	DeletedAt        *time.Time
+	Name             string
+	Email            string
+	Age              int
+	Gender           int
+	ImageUrl         string
+	FavoriteMusicAge int
+	FavoriteArtist   string
+	Comment          string
+	Password         string
+	//Bookmarkings     []*model.Song
+	//Followings       []*model.User
+}
+
+type getUserInfoByIDRes struct {
 	ID               uint
 	CreatedAt        time.Time
 	UpdatedAt        time.Time

@@ -48,7 +48,7 @@ func Dispatch(DB *sqlx.DB, Redis redis.Conn, SidecarRedis redis.Conn) {
 
 	s.Handle("/user", JwtMiddleware.Handler(http.HandlerFunc(userQueryServer.GetAuthUser))).Methods("GET")
 	s.Handle("/users", JwtMiddleware.Handler(http.HandlerFunc(userQueryServer.GetAllUsers))).Methods("GET")
-	s.Handle("/user/{id}", JwtMiddleware.Handler(http.HandlerFunc(userQueryServer.GetUser))).Methods("GET")
+	s.Handle("/user/{id}", JwtMiddleware.Handler(http.HandlerFunc(userQueryServer.FindUser))).Methods("GET")
 
 	s.Handle("/user/{id}/update", JwtMiddleware.Handler(http.HandlerFunc(userCommandsServer.UpdateUser))).Methods("PUT")
 

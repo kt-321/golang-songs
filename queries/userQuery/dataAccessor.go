@@ -13,7 +13,7 @@ type dataAccessor struct {
 func (ur *dataAccessor) GetAllUsers() (*[]model.User, error) {
 	var users []model.User
 
-	rows, err := ur.DB.Queryx("SELCT * from users")
+	rows, err := ur.DB.Queryx("SELCT * from users where deleted_at is null")
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +36,7 @@ func (ur *dataAccessor) GetUserInfoByEmail(userEmail string) (*getUserInfoByEmai
 	q := `
 	select *
 	from users
-	where email = ?
+	where email = ? and deleted_at is null
 `
 
 	res := &getUserInfoByEmailRes{}
@@ -53,16 +53,14 @@ func (ur *dataAccessor) GetUserInfoByEmail(userEmail string) (*getUserInfoByEmai
 	return res, nil
 }
 
-func (ur *dataAccessor) GetUserInfoByID(userID int) (*model.User, error) {
-	var user model.User
-
+func (ur *dataAccessor) GetUserInfoByID(userID int) (*getUserInfoByIDRes, error) {
 	q := `
 	select *
 	from users
-	where id = ?
+	where id = ? and deleted_at is null
 `
 
-	res := &getUserInfoByEmailRes{}
+	res := &getUserInfoByIDRes{}
 
 	rows, err := ur.DB.Queryx(q, userID)
 	if err != nil {
@@ -73,7 +71,7 @@ func (ur *dataAccessor) GetUserInfoByID(userID int) (*model.User, error) {
 		return nil, err
 	}
 
-	return &user, nil
+	return res, nil
 }
 
 func (ur *dataAccessor) GetFollowees(userID int) (*getFolloweesRes, error) {
@@ -82,7 +80,7 @@ func (ur *dataAccessor) GetFollowees(userID int) (*getFolloweesRes, error) {
 	from users u1
 	inner join user_follows uf on uf.user_id = u1.id
 	inner join users u2 on u2.id = uf.follow_id
-	where id = ?
+	where id = ? and u2.deleted_at is null
 `
 
 	rows, err := ur.DB.Queryx(q, userID)
@@ -113,7 +111,9 @@ func (ur *dataAccessor) GetBookmarkings(userID int) (*getBookmarkingsRes, error)
 	from users u
 	inner join bookmarks b on b.user_id = u.id
 	inner join songs s on s.id = b.song_id
-	where id = ?
+	where id = ? 
+	and b.deleted_at is null
+	and s.deleted_at is null
 `
 
 	rows, err := ur.DB.Queryx(q, userID)

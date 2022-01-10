@@ -18,5 +18,4 @@ type Song struct {
 	Description    string     `json:"description"`
 	SpotifyTrackId string     `json:"spotifyTrackId"`
 	UserID         uint       `json:"userId"`
-	Bookmarkers    []*User    `json:"bookmarkers" gorm:"many2many:bookmarks;""`
 }

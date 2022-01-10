@@ -88,7 +88,7 @@ func (uqs *userQueryServer) GetAuthUser(w http.ResponseWriter, r *http.Request) 
 }
 
 // idで指定したユーザーの情報を返す.
-func (uqs *userQueryServer) GetUser(w http.ResponseWriter, r *http.Request) {
+func (uqs *userQueryServer) FindUser(w http.ResponseWriter, r *http.Request) {
 	// 対象のユーザーidを取得.
 	userID, errorSet := interfaces.GetId(r)
 
